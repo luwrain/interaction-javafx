@@ -1,0 +1,26 @@
+<project name="luwrain-interaction-javafx" default="jar" basedir=".">
+  <path id="classpath">
+    <pathelement location="."/>
+     <fileset dir="lib">
+      <include name="**/*.jar"/>
+    </fileset>
+  </path>
+  <target name="clean">
+    <delete dir="build"/>
+    <delete dir="jar"/>
+  </target>
+  <target name="compile" depends="clean">
+    <mkdir dir="build"/>
+    <javac srcdir="src/main/java" destdir="build" source="1.7" target="1.7">
+      <classpath refid="classpath"/>
+    </javac>
+  </target>
+  <target name="jar" depends="compile">
+    <mkdir dir="jar"/>
+    <jar jarfile="jar/luwrain-interaction-javafx.jar">
+      <fileset dir="./build">
+        <include name="**/*.class"/>
+      </fileset>
+    </jar>
+  </target>
+</project>
