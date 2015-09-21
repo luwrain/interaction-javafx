@@ -345,6 +345,22 @@ public class WebElementList implements ElementList
 	
 	public void clickEmulate()
 	{
+		if(current.node.getClass()==com.sun.webkit.dom.HTMLInputElementImpl.class)
+		{
+			if(((HTMLInputElementImpl)current.node).getType().equals("submit"))
+			{ // submit button
+				Platform.runLater(new Runnable()
+				{
+					@Override public void run()
+					{
+						page.htmlWnd.setMember(GET_NODE_TEXT, current.node);
+						try{page.webEngine.executeScript("(function(){var x=window."+GET_NODE_TEXT+";x.form.submit();})()");}
+						catch(Exception e){} // can't click - no reaction
+					}
+				});
+				return;
+			};
+		}
 		Platform.runLater(new Runnable()
 		{
 			@Override public void run()

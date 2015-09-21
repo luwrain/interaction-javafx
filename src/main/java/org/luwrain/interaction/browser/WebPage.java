@@ -63,6 +63,8 @@ public class WebPage implements Browser
 	
 	public JSObject window=null;
 	
+	private boolean userStops=false;
+	
 	@Override public String getBrowserTitle()
 	{
 		return "ВебБраузер";
@@ -209,6 +211,13 @@ public class WebPage implements Browser
 						Log.debug("web","State changed to: "+newState.name()+", "+webEngine.getLoadWorker().getState().toString()+", url:"+webEngine.getLocation());
 						SwingUtilities.invokeLater(new Runnable() { @Override public void run()
 						{
+							if(newState==State.CANCELLED)
+							{ // if canceled not by user, so that is a file downloads
+								if(!userStops)
+								{ // if it not by user
+									if(events.onDownloadStart(webEngine.getLocation())) return;
+								}
+							}
 							events.onChangeState(newState);
 						}});
 					}
