@@ -29,7 +29,7 @@ import org.luwrain.core.Interaction;
 import org.luwrain.core.InteractionParams;
 import org.luwrain.core.Log;
 
-public class WebAwtInteraction implements Interaction
+@Deprecated public class WebAwtInteraction implements Interaction
 {
 	private static final int MIN_FONT_SIZE=4;
 	private static final String FRAME_TITLE="Luwrain";
@@ -186,6 +186,7 @@ public class WebAwtInteraction implements Interaction
 
 	private void onKeyTyping(KeyEvent event)
 	{
+		System.out.println(event.toString());
 		if(eventConsumer==null) return;
 		int code;
 		switch(event.getKeyChar())
@@ -402,6 +403,6 @@ public class WebAwtInteraction implements Interaction
 
 	@Override public Browser createBrowser()
 	{
-		return (Browser)new WebPage(this);
+		return null;//(Browser)new WebPage(this);
 	}
 }

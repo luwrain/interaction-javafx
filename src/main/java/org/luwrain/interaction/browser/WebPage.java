@@ -31,6 +31,7 @@ import org.luwrain.browser.ElementList;
 import org.luwrain.core.Interaction;
 import org.luwrain.core.Log;
 import org.luwrain.core.events.KeyboardEvent;
+import org.luwrain.interaction.javafx.JavaFxInteraction;
 import org.w3c.dom.html.HTMLDocument;
 import org.w3c.dom.views.DocumentView;
 
@@ -38,12 +39,12 @@ import com.sun.webkit.dom.DOMWindowImpl;
 
 public class WebPage implements Browser
 {
-	private WebAwtInteraction wi;
+	private JavaFxInteraction wi;
 	
 	public WebView webView;
 	public WebEngine webEngine;
 	
-	public JFXPanel jfx=new JFXPanel();
+	//public JFXPanel jfx=new JFXPanel();
 	
 	// used to save DOM structure with RescanDOM
 	public static class NodeInfo
@@ -71,11 +72,11 @@ public class WebPage implements Browser
 	}
 	@Override public Browser setInteraction(Interaction interactiion)
 	{
-		wi=(WebAwtInteraction)interactiion;
+		wi=(JavaFxInteraction)interactiion;
 		return null;
 	}
 	
-	public WebPage(WebAwtInteraction interactiion)
+	public WebPage(JavaFxInteraction interactiion)
 	{
 		wi=interactiion;
 	}
@@ -86,7 +87,6 @@ public class WebPage implements Browser
 		final boolean emptyList=wi.webPages.isEmpty();
 		wi.webPages.add(this);
 
-		wi.frame.add(jfx);
 		Platform.runLater(new Runnable()
 		{
 			@Override public void run()
@@ -94,6 +94,20 @@ public class WebPage implements Browser
 				webView=new WebView();
 				webEngine=webView.getEngine();
 
+				webView.setOnKeyReleased(new EventHandler<KeyEvent>()
+				{
+					@Override public void handle(KeyEvent event)
+					{
+						Log.debug("web","KeyReleased: "+event.toString());
+						switch(event.getCode())
+						{
+							case ESCAPE:wi.setCurPageVisibility(false);break;
+							default:break;
+						}
+						
+					}
+				});
+				/*
 				webView.setOnKeyReleased(new EventHandler<KeyEvent>()
 				{
 					@Override public void handle(KeyEvent event)
@@ -204,6 +218,7 @@ public class WebPage implements Browser
 						}});
 					}
 				});
+				*/
 				webEngine.getLoadWorker().stateProperty().addListener(new ChangeListener<State>()
 				{
 					@Override public void changed(ObservableValue<? extends State> ov,State oldState,final State newState)
@@ -273,9 +288,11 @@ public class WebPage implements Browser
 					}
 				});
 
-				Scene scene = new Scene(webView);
-				jfx.setVisible(false);				
-				jfx.setScene(scene);
+				//Scene scene = new Scene(webView);
+				//jfx.setVisible(false);
+				webView.setVisible(false);
+				//jfx.setScene(scene);
+				wi.frame.root.getChildren().add(webView);
 				
 				if(emptyList) wi.setCurPage(that);
 			}
@@ -305,7 +322,7 @@ public class WebPage implements Browser
 	{
 		if(enable)
 		{ // set visibility for this webpage on and change focus to it later (text page visibility is off)
-			jfx.setVisible(true);
+			webView.setVisible(true);
 			wi.frame.doPaint=false;
 			Platform.runLater(new Runnable(){@Override public void run()
 			{
@@ -314,15 +331,15 @@ public class WebPage implements Browser
 			}});
 		} else
 		{ // set text page visibility to on and current webpage to off
-			wi.frame.setVisible(true);
-			wi.frame.requestFocus();
+			//wi.frame.setVisible(true);
+			wi.frame.primary.requestFocus();
 			wi.frame.doPaint=true;
-			jfx.setVisible(false);
+			webView.setVisible(false);
 		}
 	}
 	@Override public boolean getVisibility()
 	{
-		return jfx.isVisible();
+		return webView.isVisible();
 	}
 	
 	// rescan current page DOM model and refill list of nodes with it bounded rectangles
