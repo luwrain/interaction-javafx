@@ -8,6 +8,7 @@ import java.util.concurrent.FutureTask;
 import org.luwrain.browser.Browser;
 import org.luwrain.core.EventConsumer;
 import org.luwrain.core.Interaction;
+import org.luwrain.core.InteractionParamColor;
 import org.luwrain.core.InteractionParams;
 import org.luwrain.core.Log;
 import org.luwrain.core.events.KeyboardEvent;
@@ -24,17 +25,28 @@ import javafx.scene.text.Font;
 
 public class JavaFxInteraction implements Interaction
 {
-	public javafx.scene.paint.Color Color_AwtToJavaFx(java.awt.Color awtColor)
+	public static Color InteractionParamColorToFx(InteractionParamColor ipc)
 	{
-		int r = awtColor.getRed();
-		int g = awtColor.getGreen();
-		int b = awtColor.getBlue();
-		int a = awtColor.getAlpha();
-		double opacity = a / 255.0 ;
-		return Color.rgb(r, g, b, opacity);
+		switch(ipc.getPredefined())
+		{
+			case BLACK:		return Color.BLACK;
+			case BLUE:		return Color.BLUE;
+			case CYAN:		return Color.CYAN;
+			case DARK_GRAY:	return Color.DARKGRAY;
+			case GRAY:		return Color.GRAY;
+			case GREEN:		return Color.GREEN;
+			case LIGHT_GRAY:return Color.LIGHTGRAY;
+			case MAGENTA:	return Color.MAGENTA;
+			case ORANGE:	return Color.ORANGE;
+			case PINK:		return Color.PINK;
+			case RED:		return Color.RED;
+			case WHITE:		return Color.WHITE;
+			case YELLOW:	return Color.YELLOW;	
+			// WARN: not predefined colors have opacity = 1
+			default: 		return new Color(ipc.getRed(),ipc.getGreen(),ipc.getBlue(),1);
+		}
 	}
 
-	
 	private static final int MIN_FONT_SIZE = 4;
     private static final String FRAME_TITLE = "Luwrain";
     private boolean drawingInProgress=false;
@@ -120,9 +132,9 @@ public class JavaFxInteraction implements Interaction
 				
 				frame.setInteractionFont(createFont(currentFontSize));
 				frame.setColors(
-						Color_AwtToJavaFx(params.fontColor),
-						Color_AwtToJavaFx(params.bkgColor),
-						Color_AwtToJavaFx(params.splitterColor));
+						InteractionParamColorToFx(params.fontColor),
+						InteractionParamColorToFx(params.bkgColor),
+						InteractionParamColorToFx(params.splitterColor));
 				frame.setMargin(params.marginLeft,params.marginTop,params.marginRight,params.marginBottom);
 				frame.setSize(wndWidth,wndHeight);
 				//frame.primary.requestFocus();

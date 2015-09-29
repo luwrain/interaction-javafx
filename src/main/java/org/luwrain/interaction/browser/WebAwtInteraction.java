@@ -26,6 +26,7 @@ import org.luwrain.core.events.KeyboardEvent;
 import org.luwrain.browser.Browser;
 import org.luwrain.core.EventConsumer;
 import org.luwrain.core.Interaction;
+import org.luwrain.core.InteractionParamColor;
 import org.luwrain.core.InteractionParams;
 import org.luwrain.core.Log;
 
@@ -46,6 +47,29 @@ import org.luwrain.core.Log;
 	boolean shiftPressed=false;
 	
 	public static WebAwtInteraction that;
+	
+	public static Color InteractionParamColorToAWT(InteractionParamColor ipc)
+	{
+		if(ipc.getPredefined()==null)
+			return new Color(ipc.getRed(),ipc.getGreen(),ipc.getBlue());
+		switch(ipc.getPredefined())
+		{
+			case BLACK:		return Color.BLACK;
+			case BLUE:		return Color.BLUE;
+			case CYAN:		return Color.CYAN;
+			case DARK_GRAY:	return Color.DARK_GRAY;
+			case GRAY:		return Color.GRAY;
+			case GREEN:		return Color.GREEN;
+			case LIGHT_GRAY:return Color.LIGHT_GRAY;
+			case MAGENTA:	return Color.MAGENTA;
+			case ORANGE:	return Color.ORANGE;
+			case PINK:		return Color.PINK;
+			case RED:		return Color.RED;
+			case WHITE:		return Color.WHITE;
+			case YELLOW:	return Color.YELLOW;	
+			default: 		return new Color(ipc.getRed(),ipc.getGreen(),ipc.getBlue());
+		}
+	}
 
 	private void onKeyPress(KeyEvent event)
 	{
@@ -240,7 +264,7 @@ import org.luwrain.core.Log;
 
 		frame=new org.luwrain.interaction.browser.MainFrame("awt");
 		frame.setInteractionFont(createFont(currentFontSize));
-		frame.setColors(params.fontColor,params.bkgColor,params.splitterColor);
+		frame.setColors(InteractionParamColorToAWT(params.fontColor),InteractionParamColorToAWT(params.bkgColor),InteractionParamColorToAWT(params.splitterColor));
 		frame.setMargin(params.marginLeft,params.marginTop,params.marginRight,params.marginBottom);
 		frame.setSize(wndWidth,wndHeight);
 		frame.setFocusTraversalKeysEnabled(false);

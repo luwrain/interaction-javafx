@@ -48,9 +48,10 @@ public class MainJavafxApp extends Application
     public Stage primary;
     
 
-	class ResizableCanvas extends Canvas {
-
-		public ResizableCanvas() {
+	class ResizableCanvas extends Canvas
+	{
+		public ResizableCanvas()
+		{
 			// Redraw canvas when size changes.
 			//widthProperty().addListener(evt -> draw());
 			//heightProperty().addListener(evt -> draw());

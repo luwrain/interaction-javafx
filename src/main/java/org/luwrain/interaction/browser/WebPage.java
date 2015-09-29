@@ -276,6 +276,13 @@ public class WebPage implements Browser
 						{e.printStackTrace();return null;}
 					}
 				});
+				webEngine.setConfirmHandler(new Callback<String,Boolean>()
+				{
+					@Override public Boolean call(String param)
+					{
+						return events.onConfirm(param);
+					}
+				});
 				webEngine.setOnError(new EventHandler<WebErrorEvent>()
 				{
 					@Override public void handle(final WebErrorEvent event)
