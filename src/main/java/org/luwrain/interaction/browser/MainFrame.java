@@ -23,8 +23,6 @@ import java.awt.event.*;
 import java.awt.font.*;
 
 import org.luwrain.core.Log;
-import org.luwrain.interaction.OnScreenLine;
-import org.luwrain.interaction.OnScreenLineTracker;
 
 
 public class MainFrame extends Frame
