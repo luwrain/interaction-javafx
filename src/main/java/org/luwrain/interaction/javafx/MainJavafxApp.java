@@ -3,9 +3,9 @@ package org.luwrain.interaction.javafx;
 import org.luwrain.core.Log;
 import org.luwrain.interaction.OnScreenLine;
 import org.luwrain.interaction.OnScreenLineTracker;
+import org.luwrain.interaction.javafx.JavaFxInteraction.MainJavafxThread;
 
 import javafx.application.Application;
-import javafx.beans.property.Property;
 import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
 import javafx.scene.*;
@@ -19,7 +19,6 @@ import javafx.scene.text.TextBuilder;
 public class MainJavafxApp extends Application
 {
 	final Boolean awaiting=new Boolean(false);
-	static public MainJavafxApp that=null;
 	
 	private static final int MIN_TABLE_WIDTH = 16;
     private static final int MIN_TABLE_HEIGHT = 8;
@@ -46,31 +45,15 @@ public class MainJavafxApp extends Application
     public boolean doPaint=true;
 
     public Stage primary;
-    
 
-	class ResizableCanvas extends Canvas
+	// make canvas resizable
+    class ResizableCanvas extends Canvas
 	{
 		public ResizableCanvas()
 		{
+			// hack for 
 			super(1024,768);
-			// Redraw canvas when size changes.
-			//widthProperty().addListener(evt -> draw());
-			//heightProperty().addListener(evt -> draw());
 		}
-
-		/*
-		private void draw() {
-			double width = getWidth();
-			double height = getHeight();
-
-			GraphicsContext gc = getGraphicsContext2D();
-			gc.clearRect(0, 0, width, height);
-
-			gc.setStroke(Color.RED);
-			gc.strokeLine(0, 0, width, height);
-			gc.strokeLine(0, height, width, 0);
-		}
-		*/
 
 		@Override
 		public boolean isResizable() {
@@ -88,14 +71,14 @@ public class MainJavafxApp extends Application
 		}
 	}
     
-    
-	public MainJavafxApp()
+	// one way to give access JavaFx object (created inside Application.launch)
+	static MainJavafxApp that=null;
+	public MainJavafxApp(){that=this;}
+	static public MainJavafxApp getClassObject(){return that;}
+
+	@Override public void start(final Stage primary) throws Exception
 	{
-		that=this;
-	}
-    @Override public void start(final Stage primary) throws Exception
-	{
-		synchronized(awaiting){awaiting.notifyAll();}
+    	MainJavafxThread.notifyJavaFx();
 		
 		this.primary=primary;
 		primary.setResizable(true);
@@ -192,12 +175,19 @@ public class MainJavafxApp extends Application
 		this.marginRight = marginRight;
 		this.marginBottom = marginBottom;
     }
-    public void setSize(int width,int height)
+    public void setSizeAndShow(int width,int height)
     {
-    	primary.setWidth(width);
-    	primary.setHeight(height);
-    	//primary.sizeToScene();
-    	//double sx=canvas.getWidth(),sy=canvas.getHeight();
+    	root.resize(width,height);
+    	primary.sizeToScene();
+    	primary.show();
+    }
+    public void setUndecoratedSizeAndShow(double width,double height)
+    {
+    	root.resize(width,height);
+    	primary.setResizable(false);
+    	// WARN: can't change style after first window show
+    	primary.initStyle(StageStyle.UNDECORATED);
+    	primary.show();
     }
     public void setHotPoint(int x, int y)
     {

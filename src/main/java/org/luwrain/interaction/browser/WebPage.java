@@ -295,11 +295,8 @@ public class WebPage implements Browser
 					}
 				});
 
-				//Scene scene = new Scene(webView);
-				//jfx.setVisible(false);
 				webView.setVisible(false);
-				//jfx.setScene(scene);
-				wi.frame.root.getChildren().add(webView);
+				wi.addWebViewControl(webView);
 				
 				if(emptyList) wi.setCurPage(that);
 			}
@@ -330,7 +327,7 @@ public class WebPage implements Browser
 		if(enable)
 		{ // set visibility for this webpage on and change focus to it later (text page visibility is off)
 			webView.setVisible(true);
-			wi.frame.doPaint=false;
+			wi.disablePaint();
 			Platform.runLater(new Runnable(){@Override public void run()
 			{
 				Log.debug("web","request focus "+webView);
@@ -339,8 +336,7 @@ public class WebPage implements Browser
 		} else
 		{ // set text page visibility to on and current webpage to off
 			//wi.frame.setVisible(true);
-			wi.frame.primary.requestFocus();
-			wi.frame.doPaint=true;
+			wi.enablePaint();
 			webView.setVisible(false);
 		}
 	}

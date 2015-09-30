@@ -22,6 +22,7 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
+import javafx.scene.web.WebView;
 
 public class JavaFxInteraction implements Interaction
 {
@@ -62,7 +63,7 @@ public class JavaFxInteraction implements Interaction
     public boolean controlPressed = false;
     public boolean shiftPressed = false;
     
-    public MainJavafxApp frame;
+    private MainJavafxApp frame;
     
     // in javafx keyTyped have no information about pressed alphabetic key
     String lastKeyPressed=null;
@@ -86,17 +87,38 @@ public class JavaFxInteraction implements Interaction
 		try {query.get();} catch(InterruptedException|ExecutionException e) {e.printStackTrace();}
     }
     
-	class MainJavafxThread implements Runnable
+	static class MainJavafxThread implements Runnable
 	{
+		static Object sync=new Object();
+		static boolean ready=false;
+		public static void waitJavaFx()
+		{
+			synchronized(sync)
+			{
+				try
+				{
+					while(!ready) sync.wait();
+				} catch(InterruptedException e)
+				{
+					// TODO: make better error handling
+					e.printStackTrace();
+				}
+			}
+		}
+		public static void notifyJavaFx()
+		{
+			synchronized(sync){ready=true;sync.notify();}
+		}
+		
 		@Override public void run()
 		{
 			System.out.println("thread");
 			MainJavafxApp.launch(MainJavafxApp.class);
+			// closed via Alt+F4 or any other window based task killer
 			System.exit(2);
 		}
 	}
-	MainJavafxThread javafx=new MainJavafxThread();
-	Thread threadfx=new Thread(javafx);
+	Thread threadfx=new Thread(new MainJavafxThread());
 	
 	@Override public boolean init(final InteractionParams params)
 	{
@@ -104,11 +126,11 @@ public class JavaFxInteraction implements Interaction
 		    return false;
 		if (params.fontName != null && !params.fontName.trim().isEmpty())
 		    fontName = params.fontName;
-		
 		threadfx.start();
-		// FIXME: replace sleep to wait from Application init
-		try{Thread.sleep(1000);}catch(Exception e){}
-		frame=MainJavafxApp.that;
+		// wait for thread starts and finished javafx init
+		MainJavafxThread.waitJavaFx();
+		frame=MainJavafxApp.getClassObject();
+		
 		//synchronized(frame.awaiting){try{frame.awaiting.wait();}catch(Exception e) {e.printStackTrace();}}
 
 		Callable<Boolean> task=new Callable<Boolean>()
@@ -118,27 +140,13 @@ public class JavaFxInteraction implements Interaction
 				currentFontSize = params.initialFontSize;
 				int wndWidth = params.wndWidth;
 				int wndHeight = params.wndHeight;
-				Rectangle2D screenSize=Screen.getPrimary().getBounds();
-				if(wndWidth<0)
-				{
-					Log.debug("javafx","interaction params have window width equal to "+wndWidth+", taking screen width "+screenSize.getWidth());
-					wndWidth=(int)(screenSize.getWidth()-5);// FIXME:+5 eliminates white line in empty X area;
-				}
-				if(wndHeight<0)
-				{
-					Log.debug("javafx","interaction params have window height equal to "+wndHeight+", taking screen height "+screenSize.getHeight());
-					wndHeight=(int)(screenSize.getHeight()-5);// FIXME:+5 eliminates white line in empty X area;
-				}
-				Log.info("javafx","creating window "+wndWidth+"x"+wndHeight+" at position ("+params.wndLeft+","+params.wndTop+")");
-				Log.info("javafx","initial font size is "+params.initialFontSize);
-				
+
 				frame.setInteractionFont(createFont(currentFontSize));
 				frame.setColors(
 						InteractionParamColorToFx(params.fontColor),
 						InteractionParamColorToFx(params.bkgColor),
 						InteractionParamColorToFx(params.splitterColor));
 				frame.setMargin(params.marginLeft,params.marginTop,params.marginRight,params.marginBottom);
-				frame.setSize(wndWidth,wndHeight);
 				//frame.primary.requestFocus();
 				
 				frame.primary.addEventHandler(KeyEvent.KEY_PRESSED,new EventHandler<KeyEvent>()
@@ -152,24 +160,24 @@ public class JavaFxInteraction implements Interaction
 					@Override public void handle(KeyEvent event) {onKeyTyped(event);}
 				});
 					
+				if(wndWidth<0||wndHeight<0)
+				{
+					// undecorated full visible screen size
+					Rectangle2D screenSize=Screen.getPrimary().getVisualBounds();
+					frame.setUndecoratedSizeAndShow(screenSize.getWidth(),screenSize.getHeight());
+				} else
+				{
+					frame.setSizeAndShow(wndWidth,wndHeight);
+				}
+
 				return true;
 			}
 		};
 		boolean res=fxcall(task,false);
 		if(!res) return false;
 		
-		// enable window
-		task=new Callable<Boolean>()
-		{
-			@Override public Boolean call() throws Exception
-			{
-				frame.primary.show();
-				return null;
-			}};
-		fxcall(task);
-
 		// FIXME: uggly javafx window resize was not size childs in the moment
-		try{Thread.sleep(500);}catch(Exception e){}
+		//try{Thread.sleep(500);}catch(Exception e){}
 		
 		if(!frame.initTable())
 		{
@@ -179,6 +187,11 @@ public class JavaFxInteraction implements Interaction
 		return true;
 	}
 
+	private void syncronized()
+	{
+		// TODO Auto-generated method stub
+		
+	}
 	@Override public void close()
 	{
 		// FIXME:
@@ -409,6 +422,20 @@ public class JavaFxInteraction implements Interaction
 	@Override public Browser createBrowser()
 	{
 		return (Browser)new WebPage(this);
+	}
+	
+	public void addWebViewControl(WebView webView)
+	{
+		frame.root.getChildren().add(webView);
+	}
+	public void disablePaint()
+	{
+		frame.doPaint=false;
+	}
+	public void enablePaint()
+	{
+		frame.primary.requestFocus();
+		frame.doPaint=true;
 	}
 
 }
