@@ -158,9 +158,6 @@ public class JavaFxInteraction implements Interaction
 		boolean res=fxcall(task,false);
 		if(!res) return false;
 		
-		// FIXME: uggly javafx window resize was not size childs in the moment
-		try{Thread.sleep(100);}catch(Exception e){}
-		
 		// enable window
 		task=new Callable<Boolean>()
 		{
@@ -171,6 +168,9 @@ public class JavaFxInteraction implements Interaction
 			}};
 		fxcall(task);
 
+		// FIXME: uggly javafx window resize was not size childs in the moment
+		try{Thread.sleep(500);}catch(Exception e){}
+		
 		if(!frame.initTable())
 		{
 			Log.fatal("javafx","error occurred on table initialization");
