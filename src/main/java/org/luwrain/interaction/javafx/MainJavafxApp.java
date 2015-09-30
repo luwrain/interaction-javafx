@@ -52,6 +52,7 @@ public class MainJavafxApp extends Application
 	{
 		public ResizableCanvas()
 		{
+			super(1024,768);
 			// Redraw canvas when size changes.
 			//widthProperty().addListener(evt -> draw());
 			//heightProperty().addListener(evt -> draw());
