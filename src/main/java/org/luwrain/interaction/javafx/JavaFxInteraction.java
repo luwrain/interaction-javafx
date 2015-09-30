@@ -27,6 +27,8 @@ public class JavaFxInteraction implements Interaction
 {
 	public static Color InteractionParamColorToFx(InteractionParamColor ipc)
 	{
+		if(ipc.getPredefined()==null)
+			return new Color(ipc.getRed()/256,ipc.getGreen()/256,ipc.getBlue()/256,1);
 		switch(ipc.getPredefined())
 		{
 			case BLACK:		return Color.BLACK;
@@ -43,7 +45,7 @@ public class JavaFxInteraction implements Interaction
 			case WHITE:		return Color.WHITE;
 			case YELLOW:	return Color.YELLOW;	
 			// WARN: not predefined colors have opacity = 1
-			default: 		return new Color(ipc.getRed(),ipc.getGreen(),ipc.getBlue(),1);
+			default: 		return new Color(ipc.getRed()/256,ipc.getGreen()/256,ipc.getBlue()/256,1);
 		}
 	}
 
@@ -96,7 +98,7 @@ public class JavaFxInteraction implements Interaction
 	MainJavafxThread javafx=new MainJavafxThread();
 	Thread threadfx=new Thread(javafx);
 	
-	@Override public boolean init(InteractionParams params)
+	@Override public boolean init(final InteractionParams params)
 	{
 		if (params == null)
 		    return false;
@@ -239,7 +241,7 @@ public class JavaFxInteraction implements Interaction
 		}});
 	}
 
-	@Override public void setHotPoint(int x,int y)
+	@Override public void setHotPoint(final int x,final int y)
 	{
 		fxcall(new Callable<Boolean>(){@Override public Boolean call() throws Exception
 		{
