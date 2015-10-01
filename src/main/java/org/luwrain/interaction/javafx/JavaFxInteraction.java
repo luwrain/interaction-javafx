@@ -164,9 +164,11 @@ public class JavaFxInteraction implements Interaction
 				{
 					// undecorated full visible screen size
 					Rectangle2D screenSize=Screen.getPrimary().getVisualBounds();
+					Log.debug("javafx", "Undecorated mode, visible screen size: "+screenSize.getWidth()+"x"+screenSize.getHeight());
 					frame.setUndecoratedSizeAndShow(screenSize.getWidth(),screenSize.getHeight());
 				} else
 				{
+					Log.debug("javafx", "Typical window mode, size:"+wndWidth+"x"+wndHeight);
 					frame.setSizeAndShow(wndWidth,wndHeight);
 				}
 
