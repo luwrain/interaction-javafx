@@ -7,15 +7,11 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.FutureTask;
 
-import javax.swing.SwingUtilities;
-
 import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.concurrent.Worker.State;
-import javafx.embed.swing.JFXPanel;
 import javafx.event.EventHandler;
-import javafx.scene.Scene;
 import javafx.scene.web.PromptData;
 import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebErrorEvent;
@@ -30,7 +26,6 @@ import org.luwrain.browser.BrowserEvents;
 import org.luwrain.browser.ElementList;
 import org.luwrain.core.Interaction;
 import org.luwrain.core.Log;
-import org.luwrain.core.events.KeyboardEvent;
 import org.luwrain.interaction.javafx.JavaFxInteraction;
 import org.w3c.dom.html.HTMLDocument;
 import org.w3c.dom.views.DocumentView;
@@ -224,8 +219,8 @@ public class WebPage implements Browser
 					@Override public void changed(ObservableValue<? extends State> ov,State oldState,final State newState)
 					{
 						Log.debug("web","State changed to: "+newState.name()+", "+webEngine.getLoadWorker().getState().toString()+", url:"+webEngine.getLocation());
-						SwingUtilities.invokeLater(new Runnable() { @Override public void run()
-						{
+						//SwingUtilities.invokeLater(new Runnable() { @Override public void run()
+						//{
 							if(newState==State.CANCELLED)
 							{ // if canceled not by user, so that is a file downloads
 								if(!userStops)
@@ -234,7 +229,7 @@ public class WebPage implements Browser
 								}
 							}
 							events.onChangeState(newState);
-						}});
+						//}});
 					}
 				});
 				webEngine.getLoadWorker().progressProperty().addListener(new ChangeListener<Number>()
@@ -242,10 +237,10 @@ public class WebPage implements Browser
 					@Override public void changed(ObservableValue<? extends Number> ov,Number o,final Number n)
 					{
 						//Log.debug("web","progress: from "+o+" to "+n);
-						SwingUtilities.invokeLater(new Runnable() { @Override public void run()
-						{
+						//SwingUtilities.invokeLater(new Runnable() { @Override public void run()
+						//{
 							events.onProgress(n);
-						}});
+						//}});
 					}
 				});
 				webEngine.setOnAlert(new EventHandler<WebEvent<String>>()
@@ -253,10 +248,10 @@ public class WebPage implements Browser
 					@Override public void handle(final WebEvent<String> event)
 					{
 						Log.debug("web","ALERT: "+event.getData());
-						SwingUtilities.invokeLater(new Runnable() { @Override public void run()
-						{
+						//SwingUtilities.invokeLater(new Runnable() { @Override public void run()
+						//{
 							events.onAlert(event.getData());
-						}});
+						//}});
 					}
 				});
 				webEngine.setPromptHandler(new Callback<PromptData,String>()
@@ -264,16 +259,16 @@ public class WebPage implements Browser
 					@Override public String call(final PromptData event)
 					{
 						Log.debug("web","PROMPT: '"+event.getMessage()+"', default '"+event.getDefaultValue()+"'");
-						FutureTask<String> query=new FutureTask<String>(new Callable<String>(){
-							@Override public String call() throws Exception
-							{
+						//FutureTask<String> query=new FutureTask<String>(new Callable<String>(){
+						//	@Override public String call() throws Exception
+						//	{
 								return events.onPrompt(event.getMessage(),event.getDefaultValue());
-							}
-						});
-						SwingUtilities.invokeLater(query);
+						//	}
+						//});
+						//SwingUtilities.invokeLater(query);
 						// FIXME: make error handling better
-						try {return query.get();} catch(InterruptedException|ExecutionException e)
-						{e.printStackTrace();return null;}
+						//try {return query.get();} catch(InterruptedException|ExecutionException e)
+						//{e.printStackTrace();return null;}
 					}
 				});
 				webEngine.setConfirmHandler(new Callback<String,Boolean>()
@@ -288,10 +283,10 @@ public class WebPage implements Browser
 					@Override public void handle(final WebErrorEvent event)
 					{
 						Log.debug("web","ERROR: type="+event.getEventType().getName()+", '"+event.getMessage()+"'");
-						SwingUtilities.invokeLater(new Runnable() { @Override public void run()
-						{
+						//SwingUtilities.invokeLater(new Runnable() { @Override public void run()
+						//{
 							events.onError(event.getMessage());
-						}});
+						//}});
 					}
 				});
 
