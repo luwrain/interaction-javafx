@@ -18,8 +18,6 @@ import javafx.scene.text.TextBuilder;
 
 public class MainJavafxApp extends Application
 {
-	final Boolean awaiting=new Boolean(false);
-	
 	private static final int MIN_TABLE_WIDTH = 16;
     private static final int MIN_TABLE_HEIGHT = 8;
 
@@ -36,6 +34,7 @@ public class MainJavafxApp extends Application
 
     private int hotPointX = -1, hotPointY = -1;
     private int marginLeft = 0, marginTop = 0, marginRight = 0, marginBottom = 0;
+    private double canvasWidth,canvasHeight;
     private int tableWidth = 0;
     private int tableHeight = 0;
     private char[][] table;
@@ -84,6 +83,7 @@ public class MainJavafxApp extends Application
 		primary.setResizable(true);
 
 		root=new StackPane();
+		root.resize(1024, 768);
         canvas = new ResizableCanvas();
 
         root.getChildren().add(canvas);
@@ -111,8 +111,8 @@ public class MainJavafxApp extends Application
 
 	public boolean initTable()
     {
-		double width = canvas.getWidth();
-		double height = canvas.getHeight();//primary.getHeight();
+		double width = canvasWidth;
+		double height = canvasHeight;
 		if (width < marginLeft + marginRight)
 		{
 		    Log.error("javafx", "table initialization failure: left + right margins are greater than window width (" + marginLeft + "+" + marginRight + "<" + width + ")");
@@ -177,16 +177,22 @@ public class MainJavafxApp extends Application
     }
     public void setSizeAndShow(int width,int height)
     {
+    	canvasWidth=width;
+    	canvasHeight=height;
     	root.resize(width,height);
     	primary.sizeToScene();
     	primary.show();
     }
     public void setUndecoratedSizeAndShow(double width,double height)
     {
+    	canvasWidth=width;
+    	canvasHeight=height;
     	root.resize(width,height);
+    	//canvas.resize(width, height);
+    	primary.initStyle(StageStyle.UNDECORATED); // WARN: can't change style after first window show
+    	primary.setWidth(width);
+    	primary.setHeight(height);
     	primary.setResizable(false);
-    	// WARN: can't change style after first window show
-    	primary.initStyle(StageStyle.UNDECORATED);
     	primary.show();
     }
     public void setHotPoint(int x, int y)
