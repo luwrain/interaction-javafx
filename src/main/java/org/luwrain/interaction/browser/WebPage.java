@@ -247,7 +247,7 @@ public class WebPage implements Browser
 				{
 					@Override public void handle(final WebEvent<String> event)
 					{
-						Log.debug("web","ALERT: "+event.getData());
+						Log.debug("web","t:"+Thread.currentThread().getId()+" ALERT:"+event.getData());
 						//SwingUtilities.invokeLater(new Runnable() { @Override public void run()
 						//{
 							events.onAlert(event.getData());
@@ -258,7 +258,7 @@ public class WebPage implements Browser
 				{
 					@Override public String call(final PromptData event)
 					{
-						Log.debug("web","PROMPT: '"+event.getMessage()+"', default '"+event.getDefaultValue()+"'");
+						Log.debug("web","t:"+Thread.currentThread().getId()+" PROMPT:"+event.getMessage()+"', default '"+event.getDefaultValue()+"'");
 						//FutureTask<String> query=new FutureTask<String>(new Callable<String>(){
 						//	@Override public String call() throws Exception
 						//	{
@@ -275,6 +275,7 @@ public class WebPage implements Browser
 				{
 					@Override public Boolean call(String param)
 					{
+						Log.debug("web","t:"+Thread.currentThread().getId()+" CONFIRM: "+param);
 						return events.onConfirm(param);
 					}
 				});
@@ -282,7 +283,7 @@ public class WebPage implements Browser
 				{
 					@Override public void handle(final WebErrorEvent event)
 					{
-						Log.debug("web","ERROR: type="+event.getEventType().getName()+", '"+event.getMessage()+"'");
+						Log.debug("web","thread:"+(Platform.isFxApplicationThread()?"javafx":"main")+"ERROR:"+event.getMessage());
 						//SwingUtilities.invokeLater(new Runnable() { @Override public void run()
 						//{
 							events.onError(event.getMessage());
@@ -321,18 +322,21 @@ public class WebPage implements Browser
 	{
 		if(enable)
 		{ // set visibility for this webpage on and change focus to it later (text page visibility is off)
-			webView.setVisible(true);
 			wi.disablePaint();
 			Platform.runLater(new Runnable(){@Override public void run()
 			{
 				Log.debug("web","request focus "+webView);
+				webView.setVisible(true);
 				webView.requestFocus();
 			}});
 		} else
 		{ // set text page visibility to on and current webpage to off
 			//wi.frame.setVisible(true);
 			wi.enablePaint();
-			webView.setVisible(false);
+			Platform.runLater(new Runnable(){@Override public void run()
+			{
+				webView.setVisible(false);
+			}});
 		}
 	}
 	@Override public boolean getVisibility()

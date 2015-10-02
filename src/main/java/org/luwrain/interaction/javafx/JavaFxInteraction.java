@@ -249,21 +249,22 @@ public class JavaFxInteraction implements Interaction
 	@Override public void endDrawSession()
 	{
 		drawingInProgress=false;
-		fxcall(new Callable<Boolean>(){@Override public Boolean call() throws Exception
+		Platform.runLater(new Runnable(){@Override public void run()
 		{
 			frame.paint();
-			return true;
 		}});
 	}
 
 	@Override public void setHotPoint(final int x,final int y)
 	{
-		fxcall(new Callable<Boolean>(){@Override public Boolean call() throws Exception
-		{
+		//fxcall(new Callable<Boolean>(){@Override public Boolean call() throws Exception
+		//{
 			frame.setHotPoint(x,y);
-			if(!drawingInProgress) frame.paint();
-			return true;
-		}});
+			Platform.runLater(new Runnable(){@Override public void run()
+			{
+				if(!drawingInProgress) frame.paint();
+			}});
+		//}});
 	}
 
 	@Override public void drawVerticalLine(int top,int bottom,int x)
@@ -299,7 +300,7 @@ public class JavaFxInteraction implements Interaction
 		controlPressed=event.isControlDown();
 		shiftPressed=event.isShiftDown();
 		leftAltPressed=event.isAltDown();
-		//Log.debug("web","KeyPressed: "+event.getCode().getName()+" "+(event.isControlDown()?"ctrl ":"")+(event.isAltDown()?"alt ":"")+(event.isShiftDown()?"shift ":"")+(event.isMetaDown()?"meta ":""));
+		Log.debug("web","KeyPressed: "+event.getCode().getName()+" "+(event.isControlDown()?"ctrl ":"")+(event.isAltDown()?"alt ":"")+(event.isShiftDown()?"shift ":"")+(event.isMetaDown()?"meta ":""));
 		//if(event.) rightAltPressed=true; // todo: make decision about left/right ALT modifiers
 		
 		if(eventConsumer==null) return;
@@ -353,14 +354,14 @@ public class JavaFxInteraction implements Interaction
 		controlPressed=event.isControlDown();
 		shiftPressed=event.isShiftDown();
 		leftAltPressed=event.isAltDown();
-		//Log.debug("web","KeyReleased: "+event.getCode().getName()+" "+(event.isControlDown()?"ctrl ":"")+(event.isAltDown()?"alt ":"")+(event.isShiftDown()?"shift ":"")+(event.isMetaDown()?"meta ":""));
+		Log.debug("web","KeyReleased: "+event.getCode().getName()+" "+(event.isControlDown()?"ctrl ":"")+(event.isAltDown()?"alt ":"")+(event.isShiftDown()?"shift ":"")+(event.isMetaDown()?"meta ":""));
 	}
 	void onKeyTyped(KeyEvent event)
 	{
 		controlPressed=event.isControlDown();
 		shiftPressed=event.isShiftDown();
 		leftAltPressed=event.isAltDown();
-		//Log.debug("web","KeyTyped: "+lastKeyPressed+" "+(event.isControlDown()?"ctrl ":"")+(event.isAltDown()?"alt ":"")+(event.isShiftDown()?"shift ":"")+(event.isMetaDown()?"meta ":"")+event.toString());
+		Log.debug("web","KeyTyped: "+lastKeyPressed+" "+(event.isControlDown()?"ctrl ":"")+(event.isAltDown()?"alt ":"")+(event.isShiftDown()?"shift ":"")+(event.isMetaDown()?"meta ":"")+event.toString());
 		if(eventConsumer==null) return;
 		int code;
 		String keychar=event.getCharacter();
