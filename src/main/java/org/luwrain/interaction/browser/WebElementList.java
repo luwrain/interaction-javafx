@@ -1,5 +1,6 @@
 package org.luwrain.interaction.browser;
 
+import java.util.Vector;
 import java.util.concurrent.Callable;
 import java.util.concurrent.FutureTask;
 
@@ -19,7 +20,7 @@ public class WebElementList implements ElementList
 	static final String GET_NODE_TEXT="get_node_text";
 	
 	// select filter all nodes on page
-	public static abstract class Selector implements ElementList.Selector
+	public static abstract class WebSelector implements ElementList.Selector
 	{
 		@Override public abstract boolean check(ElementList wel);
 		@Override public boolean first(ElementList wel_)
@@ -60,8 +61,22 @@ public class WebElementList implements ElementList
 			}
 			return true;
 		}
+		@Override public boolean to(ElementList wel,int pos)
+		{
+			if(wel.getPos()==pos)
+				return true;
+			else if(wel.getPos()<pos)
+			{ // need next
+				while(next(wel)) if(pos==wel.getPos()) return true;
+				return false;
+			} else
+			{ // need prev
+				while(prev(wel)) if(pos==wel.getPos()) return true;
+				return false;
+			}
+		}
 	}
-	public static class SelectorALL extends Selector implements ElementList.SelectorALL
+	public static class SelectorALL extends WebSelector implements ElementList.SelectorALL
 	{
 		boolean visible;
 		@Override public boolean isVisible(){	return visible;	}
@@ -202,7 +217,8 @@ public class WebElementList implements ElementList
 	public WebPage page;
 	// current index in dom structure
 	// FIXME: move to similar element when RescanDOM called
-	public int pos=0;
+	private int pos=0;
+	public int getPos(){return pos;}
 	// current element WebPage.NodeInfo
 	public WebPage.NodeInfo current;
 	
@@ -373,6 +389,98 @@ public class WebElementList implements ElementList
 		
 	}
 	
+	
+	// list of string arrays, each - splitetd lines of elements, it is a cache of element text
+	private SplitedLine[][] splitedLines=new SplitedLine[0][];
+	@Override public SplitedLine[][] getSplitedLines(){return splitedLines;}
+
+	// count of all splited lines in list
+	private int splitedCount=0;
+	@Override public int getSplitedCount(){return splitedCount;}
+
+	@Override public SplitedLine getSplitedLineByIndex(int index)
+	{
+		int i=0;
+		for(SplitedLine[] split:splitedLines)
+		{
+			if(i+split.length>index)
+				return split[i-index]; 
+			i+=split.length;
+		}
+		return null;
+	}
+	
+	/* scan all elements via selector and call getText for each of them and split into lines, store in cache, accessed via getCachedText
+	 * it change current position to end
+	 */
+	@Override public void splitAllElementsTextToLines(int width,ElementList.Selector selector)
+	{
+		Vector<SplitedLine[]> result=new Vector<SplitedLine[]>();
+		splitedCount=0;
+		if(selector.first(this))
+		{
+			do
+			{
+				String type=this.getType();
+				String text=this.getText();
+				String[] lines=splitTextForScreen(width,text);
+				Vector<SplitedLine> splited=new Vector<SplitedLine>();
+				for(String line:lines) splited.add(new SplitedLine(type,line));
+				result.add(splited.toArray(new SplitedLine[splited.size()]));
+				splitedCount+=splited.size();
+			} while(selector.next(this));
+		}
+		splitedLines=result.toArray(new SplitedLine[result.size()][]);
+	}
+	/* update split for current element text, used to update info in split text cache */
+	void updateSplitForElementText(int width)
+	{
+		String type=this.getType();
+		String text=this.getText();
+		String[] lines=splitTextForScreen(width,text);
+		if(splitedLines.length<pos) return; // FIXME: make better error handling, out of bound, cache size invalid
+		Vector<SplitedLine> splited=new Vector<SplitedLine>();
+		for(String line:lines) splited.add(new SplitedLine(type,line));
+		splitedCount-=splitedLines[pos].length;
+		splitedLines[pos]=splited.toArray(new SplitedLine[splited.size()]);
+		splitedCount+=splited.size();
+	}
+    static String[] splitTextForScreen(int width,String string)
+    {
+    	Vector<String> text=new Vector<String>();
+    	if(string==null||string.isEmpty()) 
+    		return text.toArray(new String[(text.size())]);
+    	int i=0;
+    	while(i<string.length())
+    	{
+		    String line;
+		    if(i+width>=string.length())
+		    { // last part of string fit to the screen
+		    	line=string.substring(i);
+		    } else
+		    { // too long part
+				line=string.substring(i,i+width-1);
+				// check for new line char
+				int nl=line.indexOf('\n');
+				if(nl!=-1)
+				{ // have new line char, cut line to it
+				    line=line.substring(0,nl);
+				    i++; // skip new line
+				} else
+				{ // walk to first stopword char at end of line
+				    int sw=line.lastIndexOf(' ');
+				    if(sw!=-1)
+				    { // have stop char, cut line to it (but include)
+					line=line.substring(0,sw);
+				    }
+				}
+		    }
+		    text.add(line);
+		    i+=line.length();
+    	}
+    	return text.toArray(new String[(text.size())]);
+    }
+    
 	public WebElementList(WebPage page)
 	{
 		this.page=page;
