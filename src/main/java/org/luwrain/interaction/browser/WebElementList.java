@@ -13,6 +13,7 @@ import com.sun.webkit.dom.*;
 
 import org.luwrain.browser.ElementList;
 import org.luwrain.browser.ElementList.SelectorALL;
+import org.luwrain.core.Log;
 
 public class WebElementList implements ElementList
 {
@@ -404,8 +405,17 @@ public class WebElementList implements ElementList
 		for(SplitedLine[] split:splitedLines)
 		{
 			if(i+split.length>index)
-				return split[i-index]; 
+				return split[index-i]; 
 			i+=split.length;
+		}
+		return null;
+	}
+	// return splited lines for element pos
+	@Override public SplitedLine[] getSplitedLineByPos(int pos)
+	{
+		for(SplitedLine[] split:splitedLines)
+		{
+			if(split[0].pos==pos) return split; 
 		}
 		return null;
 	}
@@ -417,6 +427,7 @@ public class WebElementList implements ElementList
 	{
 		Vector<SplitedLine[]> result=new Vector<SplitedLine[]>();
 		splitedCount=0;
+		int index=0;
 		if(selector.first(this))
 		{
 			do
@@ -425,7 +436,7 @@ public class WebElementList implements ElementList
 				String text=this.getText();
 				String[] lines=splitTextForScreen(width,text);
 				Vector<SplitedLine> splited=new Vector<SplitedLine>();
-				for(String line:lines) splited.add(new SplitedLine(type,line));
+				for(String line:lines) splited.add(new SplitedLine(type,line,pos,index++));
 				result.add(splited.toArray(new SplitedLine[splited.size()]));
 				splitedCount+=splited.size();
 			} while(selector.next(this));
@@ -440,12 +451,17 @@ public class WebElementList implements ElementList
 		String[] lines=splitTextForScreen(width,text);
 		if(splitedLines.length<pos) return; // FIXME: make better error handling, out of bound, cache size invalid
 		Vector<SplitedLine> splited=new Vector<SplitedLine>();
-		for(String line:lines) splited.add(new SplitedLine(type,line));
+		int index=0;
+		for(String line:lines)
+		{
+			splited.add(new SplitedLine(type,line,pos,index));
+			index++;
+		}
 		splitedCount-=splitedLines[pos].length;
 		splitedLines[pos]=splited.toArray(new SplitedLine[splited.size()]);
 		splitedCount+=splited.size();
 	}
-    static String[] splitTextForScreen(int width,String string)
+    public static String[] splitTextForScreen(int width,String string)
     {
     	Vector<String> text=new Vector<String>();
     	if(string==null||string.isEmpty()) 
@@ -460,21 +476,20 @@ public class WebElementList implements ElementList
 		    } else
 		    { // too long part
 				line=string.substring(i,i+width-1);
-				// check for new line char
-				int nl=line.indexOf('\n');
-				if(nl!=-1)
-				{ // have new line char, cut line to it
-				    line=line.substring(0,nl);
-				    i++; // skip new line
-				} else
-				{ // walk to first stopword char at end of line
-				    int sw=line.lastIndexOf(' ');
-				    if(sw!=-1)
-				    { // have stop char, cut line to it (but include)
-					line=line.substring(0,sw);
-				    }
+				// walk to first stopword char at end of line
+			    int sw=line.lastIndexOf(' ');
+			    if(sw!=-1)
+			    { // have stop char, cut line to it (but include)
+			    	line=line.substring(0,sw);
 				}
 		    }
+			// check for new line char
+			int nl=line.indexOf('\n');
+			if(nl!=-1)
+			{ // have new line char, cut line to it
+			    line=line.substring(0,nl);
+			    i++; // skip new line
+			}
 		    text.add(line);
 		    i+=line.length();
     	}
