@@ -27,7 +27,7 @@ import org.luwrain.browser.ElementList;
 import org.luwrain.core.Interaction;
 import org.luwrain.core.Log;
 import org.luwrain.interaction.javafx.JavaFxInteraction;
-import org.w3c.dom.html.HTMLDocument;
+import org.w3c.dom.html.*;
 import org.w3c.dom.views.DocumentView;
 
 import com.sun.webkit.dom.DOMWindowImpl;
@@ -377,13 +377,14 @@ public class WebPage implements Browser
 				// by default, only leap nodes good for TEXT 
 				info.forTEXT=!n.hasChildNodes();
 				// make decision about TEXT nodes by class
-				if(n.getClass()==com.sun.webkit.dom.HTMLAnchorElementImpl.class
-				 ||n.getClass()==com.sun.webkit.dom.HTMLButtonElementImpl.class
-				 ||n.getClass()==com.sun.webkit.dom.HTMLInputElementImpl.class
+				if(n instanceof HTMLAnchorElement
+				 ||n instanceof HTMLButtonElement
+				 ||n instanceof HTMLInputElement
 				 //||n.getClass()==com.sun.webkit.dom.HTMLPreElementImpl.class
-				 ||n.getClass()==com.sun.webkit.dom.HTMLSelectElementImpl.class
-				 ||n.getClass()==com.sun.webkit.dom.HTMLTextAreaElementImpl.class
+				 ||n instanceof HTMLSelectElement
+				 ||n instanceof HTMLTextAreaElement
 				) info.forTEXT=true;
+				//if(info.forTEXT&&info.isVisible()) System.out.println("DOM: node:"+n.getNodeName()+", "+(!(n instanceof HTMLElement)?n.getNodeValue():((HTMLElement)n).getTextContent())); // +" text:"+info.forTEXT+
 				domIdx.put(n, i);
 				dom.add(info);
 				//

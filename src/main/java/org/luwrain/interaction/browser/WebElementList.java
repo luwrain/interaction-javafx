@@ -194,11 +194,15 @@ public class WebElementList implements ElementList
 			// current selector's checks
 			if(!wel.current.forTEXT) return false;
 			String text=wel.getText(); // TODO: if filter is null, we can skip getText for each node in list to speed up walking but consume empty text nodes
+//System.out.println("CHECK: node:"+wel.current.node.getNodeName()+", "+(!(wel.current.node instanceof HTMLElement)?wel.current.node.getNodeValue():((HTMLElement)wel.current.node).getTextContent())); // +" text:"+info.forTEXT+);
 			if(text==null) text="";else text=text.trim();
-			if(!wel.current.node.getClass().equals(HTMLAnchorElementImpl.class)
-			 &&!wel.current.node.getClass().equals(HTMLInputElementImpl.class)
+			if(!(wel.current.node instanceof HTMLAnchorElement)
+			 &&!(wel.current.node instanceof HTMLInputElement)
+			 &&!(wel.current.node instanceof HTMLButtonElement)
+			 //&&!(wel.current.node.getAttributes().getNamedItem("onclick")==null)
 			 &&text.isEmpty()) return false;
 			if(filter!=null&&text.toLowerCase().indexOf(filter)==-1) return false;
+//System.out.println("CHECK: ok");
 			return true;
 		}
 	}
@@ -228,20 +232,20 @@ public class WebElementList implements ElementList
 		if(current.node.getClass()==com.sun.webkit.dom.TextImpl.class)
 		{
 			return "text";
-		} else if(current.node.getClass()==com.sun.webkit.dom.HTMLInputElementImpl.class)
+		} else if(current.node instanceof HTMLInputElement)
 		{
 			try {return "input "+current.node.getAttributes().getNamedItem("type").getNodeValue();}
 			catch(Exception e) {return "input";}
 		} else
-		if(current.node.getClass()==com.sun.webkit.dom.HTMLButtonElementImpl.class)
+		if(current.node instanceof HTMLButtonElement)
 		{
 			return "button";
 		} else
-		if(current.node.getClass()==com.sun.webkit.dom.HTMLAnchorElementImpl.class)
+		if(current.node instanceof HTMLAnchorElement)
 		{
 			return "link";
 		} else
-		if(current.node.getClass()==com.sun.webkit.dom.HTMLImageElementImpl.class)
+		if(current.node instanceof HTMLImageElement)
 		{
 			return "image";
 		} else
@@ -362,9 +366,11 @@ public class WebElementList implements ElementList
 	
 	public void clickEmulate()
 	{
-		if(current.node.getClass()==com.sun.webkit.dom.HTMLInputElementImpl.class)
+		// click can be done only for non text nodes
+		// FIXME: emulate click for text nodex via parent node
+		if(current.node instanceof HTMLInputElement)
 		{
-			if(((HTMLInputElementImpl)current.node).getType().equals("submit"))
+			if(((HTMLInputElement)current.node).getType().equals("submit"))
 			{ // submit button
 				Platform.runLater(new Runnable()
 				{
@@ -464,8 +470,11 @@ public class WebElementList implements ElementList
     public static String[] splitTextForScreen(int width,String string)
     {
     	Vector<String> text=new Vector<String>();
-    	if(string==null||string.isEmpty()) 
+    	if(string==null||string.isEmpty())
+    	{
+    		text.add("");
     		return text.toArray(new String[(text.size())]);
+    	}
     	int i=0;
     	while(i<string.length())
     	{
