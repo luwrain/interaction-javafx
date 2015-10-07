@@ -290,7 +290,7 @@ public class JavaFxInteraction implements Interaction
 	private Font createFont(int desirableFontSize)
 	{
 		//List<String> names=Font.getFontNames();
-		Font f=new Font(fontName,desirableFontSize);
+		Font f=Font.font(fontName,desirableFontSize);
 		// Font f = new Font("Dejavu Sans Mono", Font.PLAIN, desirableFontSize);
 		return f;
 	}
