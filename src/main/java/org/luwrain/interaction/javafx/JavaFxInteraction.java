@@ -316,8 +316,6 @@ onKeyReleased(event);
 
     @Override public void setHotPoint(final int x,final int y)
     {
-	//fxcall(new Callable<Boolean>(){@Override public Boolean call() throws Exception
-	//{
 			frame.setHotPoint(x,y);
 			Platform.runLater(new Runnable(){
 				@Override public void run()
@@ -325,7 +323,6 @@ onKeyReleased(event);
 				    if(!drawingInProgress) 
 					frame.paint();
 				}});
-			//}});
     }
 
     @Override public void drawVerticalLine(int top,int bottom,int x)
@@ -350,20 +347,18 @@ onKeyReleased(event);
 
     private Font createFont(int desirableFontSize)
     {
-	Font f=new Font("DejaVu Sans Mono",desirableFontSize);//FIXME:
 	// Font f = new Font("Dejavu Sans Mono", Font.PLAIN, desirableFontSize);
-	Log.debug("javafx", "using font \"" + f.getName() + "\"");
-	return f;
+	final Font res = new Font("DejaVu Sans Mono",desirableFontSize);//FIXME:experiments with monospaced
+	Log.debug("javafx", "using font \"" + res.getName() + "\"");
+	return res;
     }
 
-    void onKeyPressed(KeyEvent event)
+    private void onKeyPressed(KeyEvent event)
     {
 		controlPressed=event.isControlDown();
 		shiftPressed=event.isShiftDown();
 		leftAltPressed=event.isAltDown();
-		//Log.debug("web","KeyPressed: "+event.getCode().getName()+" "+(event.isControlDown()?"ctrl ":"")+(event.isAltDown()?"alt ":"")+(event.isShiftDown()?"shift ":"")+(event.isMetaDown()?"meta ":""));
 		//if(event.) rightAltPressed=true; // todo: make decision about left/right ALT modifiers
-
 		if(eventConsumer==null)
 		    return;
 		int code;
@@ -401,32 +396,35 @@ onKeyReleased(event);
 		case ALT:code=KeyboardEvent.LEFT_ALT;break;
 		case ALT_GRAPH:code=KeyboardEvent.RIGHT_ALT;break;
 		default:
-		    String ch=event.getText();
+		    /*
+		    final String ch=event.getText();
 		    if((shiftPressed||leftAltPressed||rightAltPressed)&&!ch.isEmpty())
 		    {
-			KeyboardEvent emulated=new KeyboardEvent(false,0,ch.toLowerCase().charAt(0),shiftPressed,controlPressed,leftAltPressed,rightAltPressed);
+			final KeyboardEvent emulated=new KeyboardEvent(false,0,ch.toLowerCase().charAt(0),shiftPressed,controlPressed,leftAltPressed,rightAltPressed);
 			eventConsumer.enqueueEvent(emulated);
 		    }
+		    */
 		    return;
 		}
 		eventConsumer.enqueueEvent(new KeyboardEvent(true,code,' ',shiftPressed,controlPressed,leftAltPressed,rightAltPressed));
     }
-    void onKeyReleased(KeyEvent event)
+
+    private void onKeyReleased(KeyEvent event)
     {
 	controlPressed=event.isControlDown();
 	shiftPressed=event.isShiftDown();
 	leftAltPressed=event.isAltDown();
-	//Log.debug("web","KeyReleased: "+event.getCode().getName()+" "+(event.isControlDown()?"ctrl ":"")+(event.isAltDown()?"alt ":"")+(event.isShiftDown()?"shift ":"")+(event.isMetaDown()?"meta ":""));
     }
-    void onKeyTyped(KeyEvent event)
+
+    private void onKeyTyped(KeyEvent event)
     {
 	controlPressed=event.isControlDown();
 	shiftPressed=event.isShiftDown();
 	leftAltPressed=event.isAltDown();
-	//Log.debug("web","KeyTyped: "+lastKeyPressed+" "+(event.isControlDown()?"ctrl ":"")+(event.isAltDown()?"alt ":"")+(event.isShiftDown()?"shift ":"")+(event.isMetaDown()?"meta ":"")+event.toString());
-	if(eventConsumer==null) return;
+	if(eventConsumer==null) 
+	    return;
 	int code;
-	String keychar=event.getCharacter();
+	final String keychar=event.getCharacter();
 	if(keychar.equals(KeyCode.BACK_SPACE.impl_getChar())) code=KeyboardEvent.BACKSPACE; else
 	    if(keychar.equals(KeyCode.ENTER.impl_getChar())||keychar.equals("\n")||keychar.equals("\r")) code=KeyboardEvent.ENTER; else 
 		if(keychar.equals(KeyCode.ESCAPE.impl_getChar())) code=KeyboardEvent.ESCAPE; else
@@ -434,8 +432,7 @@ onKeyReleased(event);
 			if(keychar.equals(KeyCode.TAB.impl_getChar())) code=KeyboardEvent.TAB; else
 			{
 			    // FIXME: javafx characters return as String type we need a char (now return first symbol)
-			    KeyboardEvent emulated=new KeyboardEvent(false,0,lastKeyPressed==null?event.getCharacter().charAt(0):lastKeyPressed.toLowerCase().charAt(0),shiftPressed,controlPressed,leftAltPressed,rightAltPressed);
-			    Log.debug("web","emulated: "+emulated.toString());
+			    final KeyboardEvent emulated=new KeyboardEvent(false,0,lastKeyPressed==null?event.getCharacter().charAt(0):lastKeyPressed.toLowerCase().charAt(0),shiftPressed,controlPressed,leftAltPressed,rightAltPressed);
 			    eventConsumer.enqueueEvent(emulated);
 			    return;
 			}
@@ -465,7 +462,6 @@ onKeyReleased(event);
     {
 	setCurPage(curPage,false);
     }
-    
 
     public void setCurPageVisibility(boolean enable)
     {
