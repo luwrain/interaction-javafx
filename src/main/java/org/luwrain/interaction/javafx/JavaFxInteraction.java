@@ -257,8 +257,19 @@ onKeyReleased(event);
 
     @Override public boolean setDesirableFontSize(int size)
     {
-	// TODO Auto-generated method stub
-	return false;
+	Log.debug("javafx", "trying to change font size to " + size);
+	final Font oldFont = frame.getInteractionFont();
+	final Font probeFont = createFont(size);
+	frame.setInteractionFont(probeFont);
+	if (!frame.initTable())
+	{
+	    Log.error("javafx", "table reinitialization with new font size failed, rolling back to previous settings");
+	    frame.setInteractionFont(oldFont);
+	    return false;
+	}
+	Log.debug("javafx", "the table said new size is OK, saving new settings");
+	currentFontSize = size;
+	return true;
     }
 
     @Override public int getFontSize()
@@ -339,13 +350,9 @@ onKeyReleased(event);
 
     private Font createFont(int desirableFontSize)
     {
-	//List<String> names=Font.getFontNames();
-	//	for (String s: Font.getFontNames())
-	//	    System.out.println(s);
-	//	Font f=new Font(fontName,desirableFontSize);
 	Font f=new Font("DejaVu Sans Mono",desirableFontSize);//FIXME:
 	// Font f = new Font("Dejavu Sans Mono", Font.PLAIN, desirableFontSize);
-	Log.debug("javafx", "using font " + f.getName());
+	Log.debug("javafx", "using font \"" + f.getName() + "\"");
 	return f;
     }
 

@@ -122,11 +122,17 @@ public class MainJavafxApp extends Application
         //primary.show();        
     }
 
-    @SuppressWarnings("deprecation") public void setInteractionFont(Font font)
+    @SuppressWarnings("deprecation") void setInteractionFont(Font font)
     {
 	this.font=font;
         bounds = TextBuilder.create().text("A").font(font).build().getLayoutBounds();
     }
+
+    Font getInteractionFont()
+    {
+	return 	font;
+    }
+
 
     public boolean initTable()
     {
