@@ -1,3 +1,4 @@
+
 package org.luwrain.interaction.javafx;
 
 import java.util.Vector;
@@ -26,35 +27,37 @@ import javafx.scene.web.WebView;
 
 public class JavaFxInteraction implements Interaction
 {
-	public static Color InteractionParamColorToFx(InteractionParamColor ipc)
+    static Color InteractionParamColorToFx(InteractionParamColor ipc)
+    {
+	if(ipc.getPredefined()==null)
+	    return new Color(ipc.getRed()/256,ipc.getGreen()/256,ipc.getBlue()/256,1);
+	switch(ipc.getPredefined())
 	{
-		if(ipc.getPredefined()==null)
-			return new Color(ipc.getRed()/256,ipc.getGreen()/256,ipc.getBlue()/256,1);
-		switch(ipc.getPredefined())
-		{
-			case BLACK:		return Color.BLACK;
-			case BLUE:		return Color.BLUE;
-			case CYAN:		return Color.CYAN;
-			case DARK_GRAY:	return Color.DARKGRAY;
-			case GRAY:		return Color.GRAY;
-			case GREEN:		return Color.GREEN;
-			case LIGHT_GRAY:return Color.LIGHTGRAY;
-			case MAGENTA:	return Color.MAGENTA;
-			case ORANGE:	return Color.ORANGE;
-			case PINK:		return Color.PINK;
-			case RED:		return Color.RED;
-			case WHITE:		return Color.WHITE;
-			case YELLOW:	return Color.YELLOW;	
-			// WARN: not predefined colors have opacity = 1
-			default: 		return new Color(ipc.getRed()/256,ipc.getGreen()/256,ipc.getBlue()/256,1);
-		}
+	case BLACK:		return Color.BLACK;
+	case BLUE:		return Color.BLUE;
+	case CYAN:		return Color.CYAN;
+	case DARK_GRAY:	return Color.DARKGRAY;
+	case GRAY:		return Color.GRAY;
+	case GREEN:		return Color.GREEN;
+	case LIGHT_GRAY:return Color.LIGHTGRAY;
+	case MAGENTA:	return Color.MAGENTA;
+	case ORANGE:	return Color.ORANGE;
+	case PINK:		return Color.PINK;
+	case RED:		return Color.RED;
+	case WHITE:		return Color.WHITE;
+	case YELLOW:	return Color.YELLOW;	
+	    // WARN: not predefined colors have opacity = 1
+	default: 		return new Color(ipc.getRed()/256,ipc.getGreen()/256,ipc.getBlue()/256,1);
 	}
+    }
 
-	private static final int MIN_FONT_SIZE = 4;
+    private static final int MIN_FONT_SIZE = 4;
     private static final String FRAME_TITLE = "Luwrain";
     private boolean drawingInProgress=false;
     private int currentFontSize = 14;
     private String fontName = "Consolas";
+    public final Vector<WebPage> webPages=new Vector<WebPage>();
+    private WebPage currentWebPage=null;
 
     private EventConsumer eventConsumer;
 
@@ -62,383 +65,443 @@ public class JavaFxInteraction implements Interaction
     public boolean rightAltPressed = false;
     public boolean controlPressed = false;
     public boolean shiftPressed = false;
-    
+
     private MainJavafxApp frame;
-    
+
     // in javafx keyTyped have no information about pressed alphabetic key
-    String lastKeyPressed=null;
-    
+    //    String lastKeyPressed=null;
+
     static <A> A fxcall(Callable<A> task, A onfail)
     {
-		FutureTask<A> query=new FutureTask<A>(task){};
-		if(Platform.isFxApplicationThread()) {try {task.call();} catch(Exception e) {e.printStackTrace();} return onfail;}
-		// call from awt thread 
-		Platform.runLater(query);
-		// waiting for rescan end
-		try {return query.get();} catch(InterruptedException|ExecutionException e) {e.printStackTrace();return onfail;}
+	FutureTask<A> query=new FutureTask<A>(task){};
+	if(Platform.isFxApplicationThread()) 
+	{
+	    try {
+		task.call();
+	    } 
+	    catch(Exception e) 
+	    {
+		e.printStackTrace();} return onfail;
+	}
+	// call from awt thread 
+	Platform.runLater(query);
+	// waiting for rescan end
+	try {return query.get();} catch(InterruptedException|ExecutionException e) {e.printStackTrace();return onfail;}
     }
+
     static void fxcall(Callable<Boolean> task)
     {
-		FutureTask<Boolean> query=new FutureTask<Boolean>(task){};
-		if(Platform.isFxApplicationThread()) {try {task.call();} catch(Exception e) {e.printStackTrace();} return;}
-		// call from awt thread 
-		Platform.runLater(query);
-		// waiting for rescan end
-		try {query.get();} catch(InterruptedException|ExecutionException e) {e.printStackTrace();}
-    }
-    
-	static class MainJavafxThread implements Runnable
+	FutureTask<Boolean> query=new FutureTask<Boolean>(task){};
+	if(Platform.isFxApplicationThread()) 
 	{
-		static Object sync=new Object();
-		static boolean ready=false;
-		public static void waitJavaFx()
-		{
-			synchronized(sync)
-			{
-				try
-				{
-					while(!ready) sync.wait();
-				} catch(InterruptedException e)
-				{
-					// TODO: make better error handling
-					e.printStackTrace();
-				}
-			}
-		}
-		public static void notifyJavaFx()
-		{
-			synchronized(sync){ready=true;sync.notify();}
-		}
-		
-		@Override public void run()
-		{
-			System.out.println("thread");
-			MainJavafxApp.launch(MainJavafxApp.class);
-			// closed via Alt+F4 or any other window based task killer
-			System.exit(2);
-		}
+	    try {
+		task.call();
+	    } 
+	    catch(Exception e) 
+	    {
+		e.printStackTrace();
+	    } 
+	    return;
 	}
-	Thread threadfx=new Thread(new MainJavafxThread());
-	
-	@Override public boolean init(final InteractionParams params)
+	// call from awt thread 
+	Platform.runLater(query);
+	// waiting for rescan end
+	try {
+	    query.get();
+	} 
+	catch(InterruptedException|ExecutionException e) 
 	{
-		if (params == null)
-		    return false;
-		if (params.fontName != null && !params.fontName.trim().isEmpty())
-		    fontName = params.fontName;
-		threadfx.start();
-		// wait for thread starts and finished javafx init
-		MainJavafxThread.waitJavaFx();
-		frame=MainJavafxApp.getClassObject();
-		
+	    e.printStackTrace();
+	}
+    }
+
+    static class MainJavafxThread implements Runnable
+    {
+	static Object sync=new Object();
+	static boolean ready=false;
+
+	public static void waitJavaFx()
+	{
+	    synchronized(sync)
+	    {
+		try {
+		    while(!ready) 
+			sync.wait();
+		} 
+		catch(InterruptedException e)
+		{
+		    // TODO: make better error handling
+		    e.printStackTrace();
+		}
+	    }
+	}
+
+	public static void notifyJavaFx()
+	{
+	    synchronized(sync)
+	    {
+		ready=true;sync.notify();
+	    }
+	}
+
+	@Override public void run()
+	{
+	    System.out.println("thread");
+	    MainJavafxApp.launch(MainJavafxApp.class);
+	    // closed via Alt+F4 or any other window based task killer
+	    System.exit(2);
+	}
+    } //MainJavafxThread
+
+    final Thread threadfx=new Thread(new MainJavafxThread());
+
+    @Override public boolean init(final InteractionParams params)
+    {
+	if (params == null)
+	    throw new NullPointerException("params may not be null");
+	if (params.fontName != null && !params.fontName.trim().isEmpty())
+	    fontName = params.fontName;
+	threadfx.start();
+	// wait for thread starts and finished javafx init
+	MainJavafxThread.waitJavaFx();
+	frame=MainJavafxApp.getClassObject();
+
 		//synchronized(frame.awaiting){try{frame.awaiting.wait();}catch(Exception e) {e.printStackTrace();}}
 
-		Callable<Boolean> task=new Callable<Boolean>()
-		{
-			@Override public Boolean call() throws Exception
-			{
-				currentFontSize = params.initialFontSize;
-				int wndWidth = params.wndWidth;
-				int wndHeight = params.wndHeight;
+	Callable<Boolean> task=new Callable<Boolean>()
+	{
+	    @Override public Boolean call() throws Exception
+	    {
+		currentFontSize = params.initialFontSize;
+		int wndWidth = params.wndWidth;
+		int wndHeight = params.wndHeight;
 
-				frame.setInteractionFont(createFont(currentFontSize));
-				frame.setColors(
-						InteractionParamColorToFx(params.fontColor),
-						InteractionParamColorToFx(params.bkgColor),
-						InteractionParamColorToFx(params.splitterColor));
-				frame.setMargin(params.marginLeft,params.marginTop,params.marginRight,params.marginBottom);
-				//frame.primary.requestFocus();
-				
-				frame.primary.addEventHandler(KeyEvent.KEY_PRESSED,new EventHandler<KeyEvent>()
-				{
-					@Override public void handle(KeyEvent event) {onKeyPressed(event);}
-				});
-				frame.primary.addEventHandler(KeyEvent.KEY_RELEASED,new EventHandler<KeyEvent>(){
-					@Override public void handle(KeyEvent event) {onKeyReleased(event);}
+		frame.setInteractionFont(createFont(currentFontSize));
+		frame.setColors(
+				InteractionParamColorToFx(params.fontColor),
+				InteractionParamColorToFx(params.bkgColor),
+				InteractionParamColorToFx(params.splitterColor));
+		frame.setMargin(params.marginLeft,params.marginTop,params.marginRight,params.marginBottom);
+		//frame.primary.requestFocus();
+
+		frame.primary.addEventHandler(KeyEvent.KEY_PRESSED,new EventHandler<KeyEvent>() {
+			@Override public void handle(KeyEvent event) 
+			{
+			    onKeyPressed(event);
+			}
+		    });
+		frame.primary.addEventHandler(KeyEvent.KEY_RELEASED,new EventHandler<KeyEvent>(){
+			@Override public void handle(KeyEvent event) 
+{
+onKeyReleased(event);
+}
 				});
 				frame.primary.addEventHandler(KeyEvent.KEY_TYPED,new EventHandler<KeyEvent>(){
-					@Override public void handle(KeyEvent event) {onKeyTyped(event);}
-				});
-					
-				if(wndWidth<0||wndHeight<0)
-				{
-					// undecorated full visible screen size
-					Rectangle2D screenSize=Screen.getPrimary().getVisualBounds();
-					Log.debug("javafx", "Undecorated mode, visible screen size: "+screenSize.getWidth()+"x"+screenSize.getHeight());
-					frame.setUndecoratedSizeAndShow(screenSize.getWidth(),screenSize.getHeight());
-				} else
-				{
-					Log.debug("javafx", "Typical window mode, size:"+wndWidth+"x"+wndHeight);
-					frame.setSizeAndShow(wndWidth,wndHeight);
-				}
+					@Override public void handle(KeyEvent event) 
+					{
+					    onKeyTyped(event);
+					}
+				    });
 
-				return true;
-			}
-		};
-		boolean res=fxcall(task,false);
-		if(!res) return false;
-		
-		// FIXME: uggly javafx window resize was not size childs in the moment
-		//try{Thread.sleep(500);}catch(Exception e){}
-		
-		if(!frame.initTable())
+		if(wndWidth<0||wndHeight<0)
 		{
-			Log.fatal("javafx","error occurred on table initialization");
-			return false;
+		    // undecorated full visible screen size
+		    Rectangle2D screenSize=Screen.getPrimary().getVisualBounds();
+		    Log.debug("javafx", "Undecorated mode, visible screen size: "+screenSize.getWidth()+"x"+screenSize.getHeight());
+		    frame.setUndecoratedSizeAndShow(screenSize.getWidth(),screenSize.getHeight());
+		} else
+		{
+		    Log.debug("javafx", "Typical window mode, size:"+wndWidth+"x"+wndHeight);
+		    frame.setSizeAndShow(wndWidth,wndHeight);
 		}
-		return true;
-	}
 
-	private void syncronized()
+		return true;
+	    }
+	};
+	boolean res=fxcall(task,false);
+	if(!res) 
+	    return false;
+	// FIXME: uggly javafx window resize was not size childs in the moment
+	//try{Thread.sleep(500);}catch(Exception e){}
+
+	if(!frame.initTable())
 	{
-		// TODO Auto-generated method stub
-		
+	    Log.fatal("javafx","error occurred on table initialization");
+	    return false;
 	}
+	return true;
+    }
+
+    /*
+    private void syncronized()
+    {
+	// TODO Auto-generated method stub
+		
+    }
+    */
+
 	@Override public void close()
 	{
 		// FIXME:
 	}
 
-	@Override public void startInputEventsAccepting(EventConsumer eventConsumer)
-	{
-		this.eventConsumer=eventConsumer;
-	}
+    @Override public void startInputEventsAccepting(EventConsumer eventConsumer)
+    {
+	this.eventConsumer=eventConsumer;
+    }
 
-	@Override public void stopInputEventsAccepting()
-	{
-		this.eventConsumer=null;
-	}
+    @Override public void stopInputEventsAccepting()
+    {
+	this.eventConsumer=null;
+    }
 
-	@Override public boolean setDesirableFontSize(int size)
+    @Override public boolean setDesirableFontSize(int size)
+    {
+	Log.debug("javafx", "trying to change font size to " + size);
+	final Font oldFont = frame.getInteractionFont();
+	final Font probeFont = createFont(size);
+	frame.setInteractionFont(probeFont);
+	if (!frame.initTable())
 	{
-		// TODO Auto-generated method stub
-		return false;
+	    Log.error("javafx", "table reinitialization with new font size failed, rolling back to previous settings");
+	    frame.setInteractionFont(oldFont);
+	    return false;
 	}
+	Log.debug("javafx", "the table said new size is OK, saving new settings");
+	currentFontSize = size;
+	return true;
+    }
 
-	@Override public int getFontSize()
-	{
-		return currentFontSize;
-	}
+    @Override public int getFontSize()
+    {
+	return currentFontSize;
+    }
 
-	@Override public int getWidthInCharacters()
-	{
-		return frame.getTableWidth();
-	}
+    @Override public int getWidthInCharacters()
+    {
+	return frame.getTableWidth();
+    }
 
-	@Override public int getHeightInCharacters()
-	{
-		return frame.getTableHeight();
-	}
+    @Override public int getHeightInCharacters()
+    {
+	return frame.getTableHeight();
+    }
 
-	@Override public void startDrawSession()
-	{
-		drawingInProgress=true;
-	}
+    @Override public void startDrawSession()
+    {
+	drawingInProgress=true;
+    }
 
-	@Override public void clearRect(int left,int top,int right,int bottom)
-	{
-		frame.clearRect(left,top,right,bottom);
-	}
+    @Override public void clearRect(int left,int top,int right,int bottom)
+    {
+	frame.clearRect(left,top,right,bottom);
+    }
 
-	@Override public void drawText(int x,int y,String text)
-	{
-		if(text==null) return;
+    @Override public void drawText(int x,int y,String text)
+    {
+		if(text==null) 
+		    return;
 		frame.putString(x,y,text);
-	}
+    }
 
-	@Override public void endDrawSession()
-	{
-		drawingInProgress=false;
-		Platform.runLater(new Runnable(){@Override public void run()
-		{
-			frame.paint();
-		}});
-	}
-
-	@Override public void setHotPoint(final int x,final int y)
-	{
-		//fxcall(new Callable<Boolean>(){@Override public Boolean call() throws Exception
-		//{
-			frame.setHotPoint(x,y);
-			Platform.runLater(new Runnable(){@Override public void run()
+    @Override public void endDrawSession()
+    {
+	drawingInProgress=false;
+		Platform.runLater(new Runnable(){
+			@Override public void run()
 			{
-				if(!drawingInProgress) frame.paint();
+			    frame.paint();
 			}});
-		//}});
-	}
+    }
 
-	@Override public void drawVerticalLine(int top,int bottom,int x)
-	{
-		if(top>bottom)
-		{
-			Log.warning("javafx","very odd vertical line: the top is greater than the bottom, "+top+">"+bottom);
-			frame.drawVerticalLine(bottom,top,x);
-		} else
-			frame.drawVerticalLine(top,bottom,x);
-	}
-
-	@Override public void drawHorizontalLine(int left,int right,int y)
-	{
-		if(left>right)
-		{
-			Log.warning("javafx","very odd horizontal line: the left is greater than the right, "+left+">"+right);
-			frame.drawHorizontalLine(right,left,y);
-		} else
-			frame.drawHorizontalLine(left,right,y);
-	}
-
-	private Font createFont(int desirableFontSize)
-	{
-		//List<String> names=Font.getFontNames();
-		Font f=Font.font(fontName,desirableFontSize);
-		// Font f = new Font("Dejavu Sans Mono", Font.PLAIN, desirableFontSize);
-		return f;
-	}
-	
-	void onKeyPressed(KeyEvent event)
-	{
-		controlPressed=event.isControlDown();
-		shiftPressed=event.isShiftDown();
-		leftAltPressed=event.isAltDown();
-		//Log.debug("web","KeyPressed: "+event.getCode().getName()+" "+(event.isControlDown()?"ctrl ":"")+(event.isAltDown()?"alt ":"")+(event.isShiftDown()?"shift ":"")+(event.isMetaDown()?"meta ":""));
-		//if(event.) rightAltPressed=true; // todo: make decision about left/right ALT modifiers
-		
-		if(eventConsumer==null) return;
-		int code;
-		switch(event.getCode())
-		{
-		// Functions keys;
-			case F1:code=KeyboardEvent.F1;break;
-			case F2:code=KeyboardEvent.F2;break;
-			case F3:code=KeyboardEvent.F3;break;
-			case F4:code=KeyboardEvent.F4;break;
-			case F5:code=KeyboardEvent.F5;break;
-			case F6:code=KeyboardEvent.F6;break;
-			case F7:code=KeyboardEvent.F7;break;
-			case F8:code=KeyboardEvent.F8;break;
-			case F9:code=KeyboardEvent.F9;break;
-			case F10:code=KeyboardEvent.F10;break;
-			case F11:code=KeyboardEvent.F11;break;
-			case F12:code=KeyboardEvent.F12;break;
-			// Arrows;
-			case LEFT:code=KeyboardEvent.ARROW_LEFT;break;
-			case RIGHT:code=KeyboardEvent.ARROW_RIGHT;break;
-			case UP:code=KeyboardEvent.ARROW_UP;break;
-			case DOWN:code=KeyboardEvent.ARROW_DOWN;break;
-			// Jump keys;
-			case HOME:code=KeyboardEvent.HOME;break;
-			case END:code=KeyboardEvent.END;break;
-			case INSERT:code=KeyboardEvent.INSERT;break;
-			case PAGE_DOWN:code=KeyboardEvent.PAGE_DOWN;break;
-			case PAGE_UP:code=KeyboardEvent.PAGE_UP;break;
-			case WINDOWS:code=KeyboardEvent.WINDOWS;break;
-			case CONTEXT_MENU:code=KeyboardEvent.CONTEXT_MENU;break;
-			// modificators
-			case CONTROL:code=KeyboardEvent.CONTROL;break;
-			case SHIFT:code=KeyboardEvent.SHIFT;break;
-			case ALT:code=KeyboardEvent.LEFT_ALT;break;
-			case ALT_GRAPH:code=KeyboardEvent.RIGHT_ALT;break;
-			default:
-				String ch=event.getText();
-				if((shiftPressed||leftAltPressed||rightAltPressed)&&!ch.isEmpty())
+    @Override public void setHotPoint(final int x,final int y)
+    {
+			frame.setHotPoint(x,y);
+			Platform.runLater(new Runnable(){
+				@Override public void run()
 				{
-					KeyboardEvent emulated=new KeyboardEvent(false,0,ch.toLowerCase().charAt(0),shiftPressed,controlPressed,leftAltPressed,rightAltPressed);
-					eventConsumer.enqueueEvent(emulated);
-				}
-			return;
-		}
-		eventConsumer.enqueueEvent(new KeyboardEvent(true,code,' ',shiftPressed,controlPressed,leftAltPressed,rightAltPressed));
-	}
-	void onKeyReleased(KeyEvent event)
-	{
-		controlPressed=event.isControlDown();
-		shiftPressed=event.isShiftDown();
-		leftAltPressed=event.isAltDown();
-		//Log.debug("web","KeyReleased: "+event.getCode().getName()+" "+(event.isControlDown()?"ctrl ":"")+(event.isAltDown()?"alt ":"")+(event.isShiftDown()?"shift ":"")+(event.isMetaDown()?"meta ":""));
-	}
-	void onKeyTyped(KeyEvent event)
-	{
-		controlPressed=event.isControlDown();
-		shiftPressed=event.isShiftDown();
-		leftAltPressed=event.isAltDown();
-		//Log.debug("web","KeyTyped: "+lastKeyPressed+" "+(event.isControlDown()?"ctrl ":"")+(event.isAltDown()?"alt ":"")+(event.isShiftDown()?"shift ":"")+(event.isMetaDown()?"meta ":"")+event.toString());
-		if(eventConsumer==null) return;
-		int code;
-		String keychar=event.getCharacter();
-//System.out.println("tab:"+KeyCode.TAB+", "+event.getCode()+", "+(event.getCode()==KeyCode.TAB?"true":"false"));
-			 if(keychar.equals(KeyCode.BACK_SPACE.impl_getChar())) code=KeyboardEvent.BACKSPACE;
-		else if(keychar.equals(KeyCode.ENTER.impl_getChar())||keychar.equals("\n")||keychar.equals("\r")) code=KeyboardEvent.ENTER;
-		else if(keychar.equals(KeyCode.ESCAPE.impl_getChar())) code=KeyboardEvent.ESCAPE;
-		else if(keychar.equals(KeyCode.DELETE.impl_getChar())) code=KeyboardEvent.DELETE;
-		else if(keychar.equals(KeyCode.TAB.impl_getChar())) code=KeyboardEvent.TAB;
-		else
-		{
-			// FIXME: javafx characters return as String type we need a char (now return first symbol)
-			KeyboardEvent emulated=new KeyboardEvent(false,0,lastKeyPressed==null?event.getCharacter().charAt(0):lastKeyPressed.toLowerCase().charAt(0),shiftPressed,controlPressed,leftAltPressed,rightAltPressed);
-			Log.debug("web","emulated: "+emulated.toString());
-			eventConsumer.enqueueEvent(emulated);
-			return;
-		}
-		final int _code=code;
-		eventConsumer.enqueueEvent(new KeyboardEvent(true,code,' ',shiftPressed,controlPressed,leftAltPressed,rightAltPressed));
-	}
+				    if(!drawingInProgress) 
+					frame.paint();
+				}});
+    }
 
-	// //////////////////////////////////////////////////////////////////////////////////////////////
-	// list of current open web pages, each one make own WebEngine and WebView
-	public Vector<WebPage> webPages=new Vector<WebPage>();
-	// current visible (or not) WebPage, can be null any time
-	private WebPage currentWebPage=null;
-	public WebPage getCurPage(){return currentWebPage;}
+    @Override public void drawVerticalLine(int top,int bottom,int x)
+    {
+	if(top>bottom)
+	{
+	    Log.warning("javafx","very odd vertical line: the top is greater than the bottom, "+top+">"+bottom);
+	    frame.drawVerticalLine(bottom,top,x);
+	} else
+	    frame.drawVerticalLine(top,bottom,x);
+    }
 
-	// change current page to curPage, if it null, change previous current page to not visible 
-	public void setCurPage(WebPage curPage,boolean visibility)
+    @Override public void drawHorizontalLine(int left,int right,int y)
+    {
+	if(left>right)
 	{
-		if(currentWebPage!=null)
-		{ // change visibility current page to off
-			currentWebPage.setVisibility(false);
-		}
-		currentWebPage = curPage;
-		if(curPage==null)
-		{
-			
-		} else
-		{
-			currentWebPage.setVisibility(visibility);
-		}
-	}
-	public void setCurPage(WebPage curPage)
-	{
-		setCurPage(curPage,false);
-	}
-	
-	public void setCurPageVisibility(boolean enable)
-	{
-		if(currentWebPage!=null)
-		{
-			currentWebPage.setVisibility(enable);
-		} else
-		{
-			// todo: make warning to log about no current web page
-		}
-	}
+	    Log.warning("javafx","very odd horizontal line: the left is greater than the right, "+left+">"+right);
+	    frame.drawHorizontalLine(right,left,y);
+	} else
+	    frame.drawHorizontalLine(left,right,y);
+    }
 
-	@Override public Browser createBrowser()
-	{
-		return (Browser)new WebPage(this);
-	}
-	
-	public void addWebViewControl(WebView webView)
-	{
-		frame.root.getChildren().add(webView);
-	}
-	public void disablePaint()
-	{
-		frame.doPaint=false;
-	}
-	public void enablePaint()
-	{
-		frame.primary.requestFocus();
-		frame.doPaint=true;
-	}
+    private Font createFont(int desirableFontSize)
+    {
+	// Font f = new Font("Dejavu Sans Mono", Font.PLAIN, desirableFontSize);
+	//final Font res = new Font("DejaVu Sans Mono",desirableFontSize);//FIXME:experiments with monospaced
+	final Font f=Font.font(fontName,desirableFontSize);
+	Log.debug("javafx", "using font \"" + res.getName() + "\"");
+	return res;
+    }
 
+    private void onKeyPressed(KeyEvent event)
+    {
+	controlPressed=event.isControlDown();
+	shiftPressed=event.isShiftDown();
+	leftAltPressed=event.isAltDown();
+	if(eventConsumer==null)
+	    return;
+	int code;
+	switch(event.getCode())
+	{
+	    // Functions keys
+	case F1:code=KeyboardEvent.F1;break;
+	case F2:code=KeyboardEvent.F2;break;
+	case F3:code=KeyboardEvent.F3;break;
+	case F4:code=KeyboardEvent.F4;break;
+	case F5:code=KeyboardEvent.F5;break;
+	case F6:code=KeyboardEvent.F6;break;
+	case F7:code=KeyboardEvent.F7;break;
+	case F8:code=KeyboardEvent.F8;break;
+	case F9:code=KeyboardEvent.F9;break;
+	case F10:code=KeyboardEvent.F10;break;
+	case F11:code=KeyboardEvent.F11;break;
+	case F12:code=KeyboardEvent.F12;break;
+	    // Arrows;
+	case LEFT:code=KeyboardEvent.ARROW_LEFT;break;
+	case RIGHT:code=KeyboardEvent.ARROW_RIGHT;break;
+	case UP:code=KeyboardEvent.ARROW_UP;break;
+	case DOWN:code=KeyboardEvent.ARROW_DOWN;break;
+	    // Jump keys;
+	case HOME:code=KeyboardEvent.HOME;break;
+	case END:code=KeyboardEvent.END;break;
+	case INSERT:code=KeyboardEvent.INSERT;break;
+	case PAGE_DOWN:code=KeyboardEvent.PAGE_DOWN;break;
+	case PAGE_UP:code=KeyboardEvent.PAGE_UP;break;
+	case WINDOWS:code=KeyboardEvent.WINDOWS;break;
+	case CONTEXT_MENU:code=KeyboardEvent.CONTEXT_MENU;break;
+	    // modificators
+	case CONTROL:code=KeyboardEvent.CONTROL;break;
+	case SHIFT:code=KeyboardEvent.SHIFT;break;
+	case ALT:code=KeyboardEvent.LEFT_ALT;break;
+	case ALT_GRAPH:
+	    code=KeyboardEvent.RIGHT_ALT;
+	    break;
+	default:
+	    /*
+	      final String ch=event.getText();
+	      if((shiftPressed||leftAltPressed||rightAltPressed)&&!ch.isEmpty())
+	      {
+	      final KeyboardEvent emulated=new KeyboardEvent(false,0,ch.toLowerCase().charAt(0),shiftPressed,controlPressed,leftAltPressed,rightAltPressed);
+	      eventConsumer.enqueueEvent(emulated);
+	      }
+	    */
+	    return;
+	}
+	eventConsumer.enqueueEvent(new KeyboardEvent(true,code,' ',shiftPressed,controlPressed,leftAltPressed,rightAltPressed));
+    }
+
+    private void onKeyReleased(KeyEvent event)
+    {
+	controlPressed=event.isControlDown();
+	shiftPressed=event.isShiftDown();
+	leftAltPressed=event.isAltDown();
+    }
+
+    private void onKeyTyped(KeyEvent event)
+    {
+	controlPressed=event.isControlDown();
+	shiftPressed=event.isShiftDown();
+	leftAltPressed=event.isAltDown();
+	if(eventConsumer==null) 
+	    return;
+	final String keychar=event.getCharacter();
+	int code;
+	if(keychar.equals(KeyCode.BACK_SPACE.impl_getChar()))
+	    code=KeyboardEvent.BACKSPACE; else
+	    if(keychar.equals(KeyCode.ENTER.impl_getChar())||keychar.equals("\n")||keychar.equals("\r")) 
+		code=KeyboardEvent.ENTER; else 
+		if(keychar.equals(KeyCode.ESCAPE.impl_getChar())) 
+		    code=KeyboardEvent.ESCAPE; else
+		    if(keychar.equals(KeyCode.DELETE.impl_getChar())) 
+			code=KeyboardEvent.DELETE; else 
+			if(keychar.equals(KeyCode.TAB.impl_getChar())) 
+			    code=KeyboardEvent.TAB; else
+			{
+			    // FIXME: javafx characters return as String type we need a char (now return first symbol)
+			    final KeyboardEvent emulated=new KeyboardEvent(false, 0,
+									   event.getCharacter().charAt(0),
+									   shiftPressed,controlPressed,leftAltPressed,rightAltPressed);
+			    eventConsumer.enqueueEvent(emulated);
+			    return;
+			}
+	//	final int _code=code;
+	eventConsumer.enqueueEvent(new KeyboardEvent(true, code, ' ',
+						     shiftPressed,controlPressed,leftAltPressed,rightAltPressed));
+    }
+
+    public WebPage getCurPage(){return currentWebPage;}
+
+    // change current page to curPage, if it null, change previous current page to not visible 
+    public void setCurPage(WebPage curPage,boolean visibility)
+    {
+	if(currentWebPage!=null)
+	{ // change visibility current page to off
+	    currentWebPage.setVisibility(false);
+	}
+	currentWebPage = curPage;
+	if(curPage==null)
+	{
+	} else
+	{
+	    currentWebPage.setVisibility(visibility);
+	}
+    }
+
+    public void setCurPage(WebPage curPage)
+    {
+	setCurPage(curPage,false);
+    }
+
+    public void setCurPageVisibility(boolean enable)
+    {
+	if(currentWebPage!=null)
+	{
+	    currentWebPage.setVisibility(enable);
+	} else
+	{
+	    // todo: make warning to log about no current web page
+	}
+    }
+
+    @Override public Browser createBrowser()
+    {
+	return (Browser)new WebPage(this);
+    }
+
+    public void addWebViewControl(WebView webView)
+    {
+	frame.root.getChildren().add(webView);
+    }
+
+    public void disablePaint()
+    {
+	frame.doPaint=false;
+    }
+
+    public void enablePaint()
+    {
+	frame.primary.requestFocus();
+	frame.doPaint=true;
+    }
 }
