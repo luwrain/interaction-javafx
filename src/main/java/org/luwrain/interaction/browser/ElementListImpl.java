@@ -29,8 +29,10 @@ class ElementListImpl implements ElementList
     // current element WebPage.NodeInfo
 WebPage.NodeInfo current;
 
+    /*
 	// list of string arrays, each - splitetd lines of elements, it is a cache of element text
-	private SplitedLine[][] splitedLines=new SplitedLine[0][];
+	private SplittedLine[][] splittedLines=new SplittedLine[0][];
+    */
 
     ElementListImpl(WebPage page)
 	{
@@ -268,25 +270,25 @@ page.webEngine.executeScript("(function(){var x=window."+GET_NODE_TEXT+";x.click
 } // can't click - no reaction
 			}
 		});
-			}
-
-	@Override public SplitedLine[][] getSplitedLines()
+	}
+    /*
+	@Override public SplittedLine[][] getSplittedLines()
 {
-return splitedLines;
+return splittedLines;
 }
 
 	// count of all splited lines in list
-	private int splitedCount=0;
+	private int splittedCount=0;
 
-	@Override public int getSplitedCount()
+	@Override public int getSplittedCount()
 {
-return splitedCount;
+return splittedCount;
 }
 
-	@Override public SplitedLine getSplitedLineByIndex(int index)
+	@Override public SplittedLine getSplittedLineByIndex(int index)
 	{
 		int i=0;
-		for(SplitedLine[] split:splitedLines)
+		for(SplittedLine[] split:splittedLines)
 		{
 			if(i+split.length>index)
 				return split[index-i]; 
@@ -296,92 +298,57 @@ return splitedCount;
 	}
 
 	// return splited lines for element pos
-	@Override public SplitedLine[] getSplitedLineByPos(int pos)
+	@Override public SplittedLine[] getSplittedLineByPos(int pos)
 	{
-		for(SplitedLine[] split:splitedLines)
+		for(SplittedLine[] split: splittedLines)
 		{
 			if(split[0].pos==pos) return split; 
 		}
 		return null;
 	}
-	
-	/* scan all elements via selector and call getText for each of them and split into lines, store in cache, accessed via getCachedText
-	 * it change current position to end
-	 */
-	@Override public void splitAllElementsTextToLines(int width,ElementList.Selector selector)
+    */
+    /* scan all elements via selector and call getText for each of them and split into lines, store in cache, accessed via getCachedText
+     * it change current position to end
+     */
+	/*
+    @Override public void splitAllElementsTextToLines(int width,ElementList.Selector selector)
+    {
+	final Vector<SplittedLine[]> result=new Vector<SplittedLine[]>();
+	splittedCount=0;
+	int index=0;
+	if(selector.first(this))
 	{
-		Vector<SplitedLine[]> result=new Vector<SplitedLine[]>();
-		splitedCount=0;
-		int index=0;
-		if(selector.first(this))
-		{
-			do {
-				String type=this.getType();
-				String text=this.getText();
-				String[] lines=splitTextForScreen(width,text);
-				Vector<SplitedLine> splited=new Vector<SplitedLine>();
-				for(String line:lines) splited.add(new SplitedLine(type,line,pos,index++));
-				result.add(splited.toArray(new SplitedLine[splited.size()]));
-				splitedCount+=splited.size();
-			} while(selector.next(this));
-		}
-		splitedLines=result.toArray(new SplitedLine[result.size()][]);
-	}
-	/* update split for current element text, used to update info in split text cache */
-	void updateSplitForElementText(int width)
-	{
+	    do {
 		String type=this.getType();
 		String text=this.getText();
-		String[] lines=splitTextForScreen(width,text);
-		if(splitedLines.length<pos) return; // FIXME: make better error handling, out of bound, cache size invalid
-		Vector<SplitedLine> splited=new Vector<SplitedLine>();
+		String[] lines = SplittedLineProc.splitTextForScreen(width,text);
+		final Vector<SplittedLine> splitted=new Vector<SplittedLine>();
+				for(String line:lines) 
+				    splitted.add(new SplittedLine(type,line,pos,index++));
+				result.add(splitted.toArray(new SplittedLine[splitted.size()]));
+				splittedCount+=splitted.size();
+	    } while(selector.next(this));
+	}
+	splittedLines=result.toArray(new SplittedLine[result.size()][]);
+    }
+    
+    // update split for current element text, used to update info in split text cache 
+    void updateSplitForElementText(int width)
+    {
+	String type=this.getType();
+		String text=this.getText();
+		String[] lines = SplittedLineProc.splitTextForScreen(width,text);
+		if(splittedLines.length<pos) return; // FIXME: make better error handling, out of bound, cache size invalid
+		Vector<SplittedLine> splited=new Vector<SplittedLine>();
 		int index=0;
 		for(String line:lines)
 		{
-			splited.add(new SplitedLine(type,line,pos,index));
+			splited.add(new SplittedLine(type,line,pos,index));
 			index++;
 		}
-		splitedCount-=splitedLines[pos].length;
-		splitedLines[pos]=splited.toArray(new SplitedLine[splited.size()]);
-		splitedCount+=splited.size();
+		splittedCount-=splittedLines[pos].length;
+		splittedLines[pos]=splited.toArray(new SplittedLine[splited.size()]);
+		splittedCount+=splited.size();
 	}
-
-    public static String[] splitTextForScreen(int width,String string)
-    {
-    	Vector<String> text=new Vector<String>();
-    	if(string==null||string.isEmpty())
-    	{
-    		text.add("");
-    		return text.toArray(new String[(text.size())]);
-    	}
-    	int i=0;
-    	while(i<string.length())
-    	{
-		    String line;
-		    if(i+width>=string.length())
-		    { // last part of string fit to the screen
-		    	line=string.substring(i);
-		    } else
-		    { // too long part
-				line=string.substring(i,i+width-1);
-				// walk to first stopword char at end of line
-			    int sw=line.lastIndexOf(' ');
-			    if(sw!=-1)
-			    { // have stop char, cut line to it (but include)
-			    	line=line.substring(0,sw);
-				}
-		    }
-			// check for new line char
-			int nl=line.indexOf('\n');
-			if(nl!=-1)
-			{ // have new line char, cut line to it
-			    line=line.substring(0,nl);
-			    i++; // skip new line
-			}
-		    text.add(line);
-		    i+=line.length();
-    	}
-    	return text.toArray(new String[(text.size())]);
+*/
     }
-    
-}
