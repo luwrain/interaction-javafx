@@ -1,6 +1,7 @@
+
 package org.luwrain.interaction.browser;
 
-import java.awt.Rectangle;
+//import java.awt.Rectangle;
 import java.util.LinkedHashMap;
 import java.util.Vector;
 import java.util.concurrent.Callable;
@@ -21,12 +22,11 @@ import javafx.scene.input.KeyEvent;
 import javafx.util.Callback;
 import netscape.javascript.JSObject;
 
-import org.luwrain.browser.Browser;
-import org.luwrain.browser.BrowserEvents;
-import org.luwrain.browser.ElementList;
+import org.luwrain.browser.*;
 import org.luwrain.core.Interaction;
 import org.luwrain.core.Log;
 import org.luwrain.interaction.javafx.JavaFxInteraction;
+
 import org.w3c.dom.html.*;
 import org.w3c.dom.views.DocumentView;
 
@@ -34,202 +34,86 @@ import com.sun.webkit.dom.DOMWindowImpl;
 
 public class WebPage implements Browser
 {
-	private JavaFxInteraction wi;
-	
-	public WebView webView;
-	public WebEngine webEngine;
-	
+    private JavaFxInteraction wi;
+
+    WebView webView;
+    WebEngine webEngine;
+
 	//public JFXPanel jfx=new JFXPanel();
-	
+
 	// used to save DOM structure with RescanDOM
-	public static class NodeInfo
-	{
-		public org.w3c.dom.Node node;
-		public Rectangle rect;
-		public boolean forTEXT;
-		public boolean isVisible(){return rect.width>0&&rect.height>0;}
-	}
-	// list of all nodes in web page
-	Vector<NodeInfo> dom=new Vector<NodeInfo>();
-	// index map for fast get node position
-	LinkedHashMap<org.w3c.dom.Node,Integer> domIdx=new LinkedHashMap<org.w3c.dom.Node, Integer>();
+    static private class NodeInfo
+    {
+	org.w3c.dom.Node node;
+	Rectangle rect;
+	boolean forTEXT;
+	boolean isVisible(){return rect.width>0&&rect.height>0;}
+    }
 
-	public HTMLDocument htmlDoc=null;
-	public DOMWindowImpl htmlWnd=null;
-	
-	public JSObject window=null;
-	
-	private boolean userStops=false;
-	
-	@Override public String getBrowserTitle()
-	{
-		return "ВебБраузер";
-	}
-	@Override public Browser setInteraction(Interaction interactiion)
-	{
-		wi=(JavaFxInteraction)interactiion;
-		return null;
-	}
-	
-	public WebPage(JavaFxInteraction interactiion)
-	{
-		wi=interactiion;
-	}
+    // list of all nodes in web page
+    final Vector<NodeInfo> dom=new Vector<NodeInfo>();
+    // index map for fast get node position
+    final LinkedHashMap<org.w3c.dom.Node,Integer> domIdx=new LinkedHashMap<org.w3c.dom.Node, Integer>();
+
+    HTMLDocument htmlDoc=null;
+    DOMWindowImpl htmlWnd=null;
+
+    JSObject window=null;
+    private boolean userStops=false;
+
+    @Override public String getBrowserTitle()
+    {
+	return "ВебБраузер";//FIXME:
+    }
+
+    @Override public Browser setInteraction(Interaction interaction)
+    {
+	wi=(JavaFxInteraction)interaction;
+	return null;
+    }
+
+    WebPage(JavaFxInteraction interaction)
+    {
+	wi = interaction;
+    }
+
 	// make new empty WebPage (like about:blank) and add it to WebEngineInteraction's webPages
-	public void init(final BrowserEvents events)
-	{
-		final WebPage that=this;
-		final boolean emptyList=wi.webPages.isEmpty();
-		wi.webPages.add(this);
+    public void init(final BrowserEvents events)
+    {
+	final WebPage that=this;
+	final boolean emptyList=wi.webPages.isEmpty();
+	wi.webPages.add(this);
 
-		Platform.runLater(new Runnable()
+	Platform.runLater(new Runnable() {
+		@Override public void run()
 		{
-			@Override public void run()
-			{
-				webView=new WebView();
-				webEngine=webView.getEngine();
-
-				webView.setOnKeyReleased(new EventHandler<KeyEvent>()
-				{
-					@Override public void handle(KeyEvent event)
-					{
-						Log.debug("web","KeyReleased: "+event.toString());
-						switch(event.getCode())
-						{
-							case ESCAPE:wi.setCurPageVisibility(false);break;
-							default:break;
-						}
-						
-					}
-				});
-				/*
-				webView.setOnKeyReleased(new EventHandler<KeyEvent>()
-				{
-					@Override public void handle(KeyEvent event)
-					{
-						Log.debug("web","KeyReleased: "+event.toString());
-						switch(event.getCode())
-						{
-							case ALT:wi.leftAltPressed=false;break;
-							case ALT_GRAPH:wi.rightAltPressed=false;break;
-							case CONTROL:wi.controlPressed=false;break;
-							case SHIFT:wi.shiftPressed=false;break;
-							default: break;
-						}
-					}
-				});
-				webView.setOnKeyTyped(new EventHandler<KeyEvent>()
-				{
-					@Override public void handle(final KeyEvent event)
-					{
-						Log.debug("web","KeyTyped: "+event.toString());
-						if(wi.eventConsumer==null) return;
-						int code;
-						switch(event.getCode())
-						{
-							case BACK_SPACE:code=KeyboardEvent.BACKSPACE;break;
-							case ENTER:code=KeyboardEvent.ENTER;break;
-							case ESCAPE:code=KeyboardEvent.ESCAPE;break;
-							case DELETE:code=KeyboardEvent.DELETE;break;
-							case TAB:code=KeyboardEvent.TAB;break;
-							default:
-								// FIXME: javafx characters return as String type we need a char (now return first symbol)
-								SwingUtilities.invokeLater(new Runnable() { @Override public void run()
-								{
-									wi.eventConsumer.enqueueEvent(
-											new KeyboardEvent(false,0,event.getCharacter().charAt(0),wi.shiftPressed,wi.controlPressed,wi.leftAltPressed,wi.rightAltPressed));
-								}});
-							return;
-						}
-						final int _code=code;
-						SwingUtilities.invokeLater(new Runnable() { @Override public void run()
-						{
-							wi.eventConsumer.enqueueEvent(
-									new KeyboardEvent(true,_code,' ',wi.shiftPressed,wi.controlPressed,wi.leftAltPressed,wi.rightAltPressed));
-						}});
-					}
-				});
-				webView.setOnKeyPressed(new EventHandler<KeyEvent>()
-				{
-					@Override public void handle(final KeyEvent event)
-					{
-						Log.debug("web","KeyPressed: "+event.toString());
-						if(wi.eventConsumer==null) return;
-						int code;
-						switch(event.getCode())
-						{
-						// Functions keys;
-							case F1:code=KeyboardEvent.F1;break;
-							case F2:code=KeyboardEvent.F2;break;
-							case F3:code=KeyboardEvent.F3;break;
-							case F4:code=KeyboardEvent.F4;break;
-							case F5:code=KeyboardEvent.F5;break;
-							case F6:code=KeyboardEvent.F6;break;
-							case F7:code=KeyboardEvent.F7;break;
-							case F8:code=KeyboardEvent.F8;break;
-							case F9:code=KeyboardEvent.F9;break;
-							case F10:code=KeyboardEvent.F10;break;
-							case F11:code=KeyboardEvent.F11;break;
-							case F12:code=KeyboardEvent.F12;break;
-							// Arrows;
-							case LEFT:code=KeyboardEvent.ARROW_LEFT;break;
-							case RIGHT:code=KeyboardEvent.ARROW_RIGHT;break;
-							case UP:code=KeyboardEvent.ARROW_UP;break;
-							case DOWN:code=KeyboardEvent.ARROW_DOWN;break;
-							// Jump keys;
-							case HOME:code=KeyboardEvent.HOME;break;
-							case END:code=KeyboardEvent.END;break;
-							case INSERT:code=KeyboardEvent.INSERT;break;
-							case PAGE_DOWN:code=KeyboardEvent.PAGE_DOWN;break;
-							case PAGE_UP:code=KeyboardEvent.PAGE_UP;break;
-							case WINDOWS:code=KeyboardEvent.WINDOWS;break;
-							case CONTEXT_MENU:code=KeyboardEvent.CONTEXT_MENU;break;
-							// Modifiers;
-							case ALT:
-								wi.leftAltPressed=true;
-								code=KeyboardEvent.LEFT_ALT;
-							break;
-							case ALT_GRAPH:
-								wi.rightAltPressed=true;
-								code=KeyboardEvent.RIGHT_ALT;
-							break;
-							case CONTROL:
-								wi.controlPressed=true;
-								code=KeyboardEvent.CONTROL;
-							break;
-							case SHIFT:
-								wi.shiftPressed=true;
-								code=KeyboardEvent.SHIFT;
-							break;
-							default:
-								return;
-						}
-						// todo: make tests for alt/ctrl/shift modifiers work, while web page changed its visibility
-						final int _code=code;
-						SwingUtilities.invokeLater(new Runnable() { @Override public void run()
-						{
-							wi.eventConsumer.enqueueEvent(
-									new KeyboardEvent(true,_code,' ',wi.shiftPressed,wi.controlPressed,wi.leftAltPressed,wi.rightAltPressed));
-						}});
-					}
-				});
-				*/
-				webEngine.getLoadWorker().stateProperty().addListener(new ChangeListener<State>()
-				{
-					@Override public void changed(ObservableValue<? extends State> ov,State oldState,final State newState)
-					{
-						Log.debug("web","State changed to: "+newState.name()+", "+webEngine.getLoadWorker().getState().toString()+", url:"+webEngine.getLocation());
-						//SwingUtilities.invokeLater(new Runnable() { @Override public void run()
-						//{
+		    webView=new WebView();
+		    webEngine=webView.getEngine();
+		    webView.setOnKeyReleased(new EventHandler<KeyEvent>()
+					     {
+						 @Override public void handle(KeyEvent event)
+						 {
+						     Log.debug("web","KeyReleased: "+event.toString());
+						     switch(event.getCode())
+						     {
+						     case ESCAPE:wi.setCurPageVisibility(false);break;
+						     default:break;
+						     }
+						 }
+					     });
+		    webEngine.getLoadWorker().stateProperty().addListener(new ChangeListener<State>()
+									  {
+									      @Override public void changed(ObservableValue<? extends State> ov,State oldState,final State newState)
+									      {
+										  Log.debug("web","State changed to: "+newState.name()+", "+webEngine.getLoadWorker().getState().toString()+", url:"+webEngine.getLocation());
 							if(newState==State.CANCELLED)
 							{ // if canceled not by user, so that is a file downloads
-								if(!userStops)
-								{ // if it not by user
-									if(events.onDownloadStart(webEngine.getLocation())) return;
-								}
+							    if(!userStops)
+							    { // if it not by user
+								if(events.onDownloadStart(webEngine.getLocation())) return;
+							    }
 							}
 							events.onChangeState(newState);
-						//}});
 					}
 				});
 				webEngine.getLoadWorker().progressProperty().addListener(new ChangeListener<Number>()
