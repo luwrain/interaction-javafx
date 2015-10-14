@@ -332,26 +332,26 @@ wi.setCurPage(wi.webPages.lastElement());
 
     @Override public ElementList.SelectorALL selectorALL(boolean visible)
     {
-	return new WebElementList.SelectorALL(visible);
+	return new SelectorAllImpl(visible);
     }
 
     @Override public ElementList.SelectorTEXT selectorTEXT(boolean visible,String filter)
     {
-	return new WebElementList.SelectorTEXT(visible,filter);
+	return new SelectorTextImpl(visible,filter);
     }
 
     @Override public ElementList.SelectorTAG selectorTAG(boolean visible,String tagName,String attrName,String attrValue)
     {
-	return new WebElementList.SelectorTAG(visible,tagName,attrName,attrValue);
+	return new SelectorTagImpl(visible,tagName,attrName,attrValue);
     }
 
     @Override public ElementList.SelectorCSS selectorCSS(boolean visible,String tagName,String styleName,String styleValue)
     {
-	return new WebElementList.SelectorCSS(visible,tagName,styleName,styleValue);
+	return new SelectorCSSImpl(visible,tagName,styleName,styleValue);
     }
 
     @Override public ElementList elementList()
     {
-	return new WebElementList(this);
+	return new ElementListImpl(this);
     }
 }
