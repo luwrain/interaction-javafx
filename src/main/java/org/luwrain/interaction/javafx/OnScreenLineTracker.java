@@ -1,5 +1,5 @@
 
-package org.luwrain.interaction.browser;
+package org.luwrain.interaction.javafx;
 
 import java.util.Vector;
 import org.luwrain.core.Log;

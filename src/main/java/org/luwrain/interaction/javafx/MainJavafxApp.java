@@ -2,8 +2,6 @@
 package org.luwrain.interaction.javafx;
 
 import org.luwrain.core.Log;
-import org.luwrain.interaction.browser.OnScreenLine;
-import org.luwrain.interaction.browser.OnScreenLineTracker;
 import org.luwrain.interaction.javafx.JavaFxInteraction.MainJavafxThread;
 
 import javafx.application.Application;
