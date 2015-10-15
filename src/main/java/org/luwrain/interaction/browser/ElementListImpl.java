@@ -1,20 +1,30 @@
 package org.luwrain.interaction.browser;
 
-import java.util.Vector;
+import java.io.StringWriter;
+import java.util.Date;
 import java.util.concurrent.Callable;
 import java.util.concurrent.FutureTask;
+
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 
 import javafx.application.Platform;
 
 import org.w3c.dom.Node;
 import org.w3c.dom.css.CSSStyleDeclaration;
 import org.w3c.dom.html.*;
+import org.w3c.dom.ls.DOMImplementationLS;
+import org.w3c.dom.ls.LSSerializer;
 
 import com.sun.webkit.dom.*;
+import org.w3c.dom.*;
 
 import org.luwrain.browser.ElementList;
-import org.luwrain.browser.ElementList.SelectorALL;
 import org.luwrain.core.Log;
+import org.luwrain.interaction.browser.WebPage.NodeInfo;
 
 class ElementListImpl implements ElementList
 {
@@ -37,7 +47,7 @@ class ElementListImpl implements ElementList
 
     @Override public String getType()
     {
-	if(current.node.getClass()==com.sun.webkit.dom.TextImpl.class)
+	if(current.node instanceof org.w3c.dom.Text)
 	    return "text"; else 
 	    if(current.node instanceof HTMLInputElement)
 	    {
@@ -68,46 +78,52 @@ class ElementListImpl implements ElementList
 
     @Override public String getText()
     {
-	if(current.node.getClass()==com.sun.webkit.dom.TextImpl.class)
-	    return current.node.getNodeValue().trim(); else 
-	    if(current.node.getClass()==com.sun.webkit.dom.HTMLInputElementImpl.class)
-		return ((HTMLInputElementImpl)current.node).getValue(); else
-    return getComputedText();
+    	if(current.node instanceof Text)
+    		return current.node.getNodeValue().trim(); else 
+	    if(current.node instanceof HTMLInputElement)
+	    { // input element
+	    	return ((HTMLInputElement)current.node).getValue();
+	    } else
+	    { // any other element
+	    	return getComputedText();
+	    }
     }
 
     @Override public boolean isEditable()
     {
-	if(current.node.getClass()==com.sun.webkit.dom.HTMLInputElementImpl.class)
+	if(current.node instanceof HTMLInputElement)
 	{
-	    if(((HTMLInputElementImpl)current.node).getType().equals("text")) 
+	    if(((HTMLInputElement)current.node).getType().equals("text")) 
 		return true;
 	} else 
-	    if(current.node.getClass()==com.sun.webkit.dom.HTMLTextAreaElementImpl.class)
+	    if(current.node instanceof HTMLTextAreaElement)
 		return true; 
 	return false;
     }
 
     @Override public void setText(String text)
     {
-	if(current.node.getClass()==com.sun.webkit.dom.HTMLInputElementImpl.class)
+    	Log.debug("web","setText: "+current.node.getClass().getSimpleName()+", rect:"+page.dom.get(page.domIdx.get(current.node)).rect);
+	if(current.node instanceof HTMLInputElement)
 	{
-	    if(((HTMLInputElementImpl)current.node).getType().equals("text"))
+	    if(((HTMLInputElement)current.node).getType().equals("text"))
 	    {
-		((HTMLInputElementImpl)current.node).setValue(text);
+	    	((HTMLInputElement)current.node).setValue(text);
 	    }
 	} else 
-	    if(current.node.getClass()==com.sun.webkit.dom.HTMLTextAreaElementImpl.class)
+	    if(current.node instanceof HTMLTextAreaElement)
 	    {
-		// fixme:!!!
+	    	((HTMLTextAreaElement)current.node).setTextContent(text);
 	    }
     }
 
     @Override public String getLink()
     {
-	if(current.node.getClass()==com.sun.webkit.dom.HTMLAnchorElementImpl.class)
+	if(current.node instanceof HTMLAnchorElement)
 	    return getAttributeProperty("href"); else
-	    if(current.node.getClass()==com.sun.webkit.dom.HTMLImageElementImpl.class)
-		return getAttributeProperty("src"); 		return "";
+	    if(current.node instanceof HTMLImageElement)
+		return getAttributeProperty("src");
+	return "";
     }
 
     @Override public String getAttributeProperty(String name)
@@ -243,4 +259,62 @@ class ElementListImpl implements ElementList
 		}
 	    });
     }
+
+    private String getHtml()
+    {
+    	if(current.node instanceof Text)
+    		return current.node.getNodeValue();
+
+    	String xml="";
+    	/*
+    	try
+    	{
+    		Transformer transformer = TransformerFactory.newInstance().newTransformer();
+			StreamResult result = new StreamResult(new StringWriter());
+			DOMSource source = new DOMSource(current.node);
+			transformer.transform(source, result);
+			xml=result.getWriter().toString();
+    	} catch(TransformerException ex)
+    	{
+    		// FIXME:
+    		ex.printStackTrace();
+    	}
+    	*/    	
+    	xml=getText()+getComputedStyleAll();
+    	//Log.debug("web","Node xml:"+xml);
+    	return xml;
+    }
+    
+    public boolean isChanged()
+	{
+		NodeInfo info=page.dom.get(pos);
+		if(info.hashTime==0)
+		{ // need to get hash
+			info.calcHash(getHtml());
+			// first time changes are undefined
+			return false;
+		}
+		// last changes already scanned
+		int oldHash=info.hash;
+		info.calcHash(getHtml());
+		//System.out.println("["+pos+":"+current.node.getClass().getSimpleName()+":"+info.hash+"]");
+		//if(oldHash!=info.hash) System.out.println("changes detected");
+		return oldHash!=info.hash;
+	}
+
+	@Override public boolean isChangedAround(Selector selector,int pos,int count)
+	{
+    	int cnt;
+    	selector.to(this,pos);
+    	// step cnt elements before
+    	cnt=count;
+    	while(selector.prev(this)&&cnt-->0)
+	    	if(this.isChanged())
+	    		return true;
+    	cnt=count;
+    	while(selector.next(this)&&cnt-->0)
+	    	if(this.isChanged())
+	    		return true;
+		return false;
+	}
 }

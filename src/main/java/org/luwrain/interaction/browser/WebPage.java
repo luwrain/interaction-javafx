@@ -2,6 +2,7 @@
 package org.luwrain.interaction.browser;
 
 import java.awt.Rectangle;
+import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.Vector;
 import java.util.concurrent.Callable;
@@ -26,8 +27,9 @@ import org.luwrain.browser.*;
 import org.luwrain.core.Interaction;
 import org.luwrain.core.Log;
 import org.luwrain.interaction.javafx.JavaFxInteraction;
-
+import org.w3c.dom.Node;
 import org.w3c.dom.html.*;
+import org.w3c.dom.ls.LSSerializer;
 import org.w3c.dom.views.DocumentView;
 
 import com.sun.webkit.dom.DOMWindowImpl;
@@ -44,10 +46,17 @@ public class WebPage implements Browser
 	// used to save DOM structure with RescanDOM
     static class NodeInfo
     {
-	org.w3c.dom.Node node;
-	Rectangle rect;
-	boolean forTEXT;
-	boolean isVisible(){return rect.width>0&&rect.height>0;}
+		org.w3c.dom.Node node;
+		Rectangle rect;
+		boolean forTEXT;
+		public boolean isVisible(){return rect.width>0&&rect.height>0;}
+		int hash;
+		long hashTime=0;
+		public void calcHash(String text)
+		{
+			hash=text.hashCode();
+			hashTime=new Date().getTime();
+		}
     }
 
     // list of all nodes in web page
@@ -215,14 +224,25 @@ wi.setCurPage(wi.webPages.lastElement());
 	return webView.isVisible();
     }
 
+    // check node in scanned dom structure to have in parent one of ignore children situation, for example anchor tag, return true if children must be ignored 
+    private boolean checkNodeForIgnoreChildren(Node node)
+    {
+    	if(node==null) return false;
+    	Node parrent=node.getParentNode();
+    	if(parrent==null) return false;
+    	if(parrent instanceof HTMLAnchorElement) return true;
+    	return checkNodeForIgnoreChildren(parrent);
+    }
+    
     // rescan current page DOM model and refill list of nodes with it bounded rectangles
     @Override public void RescanDOM()
     {
 	Callable<Integer> task=new Callable<Integer>(){
 	    @Override public Integer call() throws Exception
 	    {
-		htmlDoc = (HTMLDocument)webEngine.getDocument();
-		htmlWnd =(DOMWindowImpl)((DocumentView)htmlDoc).getDefaultView();
+		htmlDoc=(HTMLDocument)webEngine.getDocument();
+		htmlWnd=(DOMWindowImpl)((DocumentView)htmlDoc).getDefaultView();
+		
 		dom=new Vector<WebPage.NodeInfo>();
 		domIdx=new LinkedHashMap<org.w3c.dom.Node, Integer>();
 		JSObject js=(JSObject)webEngine.executeScript("(function(){function nodewalk(node){var res=[];if(node){node=node.firstChild;while(node!= null){if(node.nodeType!=3||node.nodeValue.trim()!=='') res[res.length]=node;res=res.concat(nodewalk(node));node=node.nextSibling;}}return res;};var lst=nodewalk(document);var res=[];for(var i=0;i<lst.length;i++){res.push({n:lst[i],r:(lst[i].getBoundingClientRect?lst[i].getBoundingClientRect():(lst[i].parentNode.getBoundingClientRect?lst[i].parentNode.getBoundingClientRect():null))});};return res;})()");;
@@ -248,12 +268,17 @@ wi.setCurPage(wi.webPages.lastElement());
 		    info.forTEXT=!n.hasChildNodes();
 		    // make decision about TEXT nodes by class
 		    if(n instanceof HTMLAnchorElement
-		       ||n instanceof HTMLButtonElement
-		       ||n instanceof HTMLInputElement
-		       //||n.getClass()==com.sun.webkit.dom.HTMLPreElementImpl.class
-		       ||n instanceof HTMLSelectElement
-		       ||n instanceof HTMLTextAreaElement) 
-			info.forTEXT=true;
+		      ||n instanceof HTMLButtonElement
+		      ||n instanceof HTMLInputElement
+		    //||n.getClass()==com.sun.webkit.dom.HTMLPreElementImpl.class
+		      ||n instanceof HTMLSelectElement
+		      ||n instanceof HTMLTextAreaElement)
+		    {
+		    	info.forTEXT=true;
+		    }
+		    boolean ignore=checkNodeForIgnoreChildren(n);
+		    //Log.debug("web","DOM: "+info.node.getClass().getSimpleName()+", r:"+info.rect.x+"x"+info.rect.y+"-"+info.rect.width+"x"+info.rect.height+" ignore:"+ignore+", text:"+info.forTEXT);
+		    if(ignore) info.forTEXT=false;
 		    //if(info.forTEXT&&info.isVisible()) System.out.println("DOM: node:"+n.getNodeName()+", "+(!(n instanceof HTMLElement)?n.getNodeValue():((HTMLElement)n).getTextContent())); // +" text:"+info.forTEXT+
 		    domIdx.put(n, i);
 		    dom.add(info);
