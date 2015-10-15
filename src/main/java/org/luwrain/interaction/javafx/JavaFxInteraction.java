@@ -347,10 +347,9 @@ onKeyReleased(event);
 
     private Font createFont(int desirableFontSize)
     {
-	// Font f = new Font("Dejavu Sans Mono", Font.PLAIN, desirableFontSize);
-	final Font res = new Font("DejaVu Sans Mono",desirableFontSize);//FIXME:experiments with monospaced
-	Log.debug("javafx", "using font \"" + res.getName() + "\"");
-	return res;
+		final Font res=Font.font(fontName,desirableFontSize);
+		Log.debug("javafx", "try to select font: \""+fontName+"\" but using font: \"" + res.getName() + "\"");
+		return res;
     }
 
     private void onKeyPressed(KeyEvent event)

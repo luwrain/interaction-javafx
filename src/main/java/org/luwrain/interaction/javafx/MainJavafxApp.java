@@ -7,6 +7,7 @@ import org.luwrain.interaction.javafx.JavaFxInteraction.MainJavafxThread;
 import javafx.application.Application;
 import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
+import javafx.geometry.VPos;
 import javafx.scene.*;
 import javafx.stage.*;
 import javafx.scene.canvas.*;
@@ -293,13 +294,12 @@ public class MainJavafxApp extends Application
     {
 	final double fontWidth=bounds.getWidth();
 	final double fontHeight=bounds.getHeight();
-	final double baseLine = fontHeight;
-
 	if(table==null||!doPaint)
 	    return;
 	synchronized(tableSync)
 	{
-	    // canvas is transparent, so background color was filled rect before
+	    gc.setTextBaseline(VPos.TOP);
+		// canvas is transparent, so background color was filled rect before
 	    gc.setFill(bkgColor);
 	    gc.fillRect(0,0,primary.getWidth()-1,primary.getHeight()-1);
 	    gc.setFont(font);
@@ -311,7 +311,7 @@ public class MainJavafxApp extends Application
 		    chars[j]=table[j][i];
 		gc.fillText(new String(chars),
 			    marginLeft,
-			    (i*fontHeight)+baseLine+marginTop);
+			    (i*fontHeight)+marginTop);
 	    }
 	}
 	synchronized(vertSync)
@@ -361,7 +361,7 @@ public class MainJavafxApp extends Application
 		str+=table[hotPointX][hotPointY];
 		gc.fillText(str,
 			    (hotPointX*fontWidth)+marginLeft,
-			    (hotPointY*fontHeight)+baseLine+marginTop);
+			    (hotPointY*fontHeight)+marginTop);
 	    }
 	}
     }
