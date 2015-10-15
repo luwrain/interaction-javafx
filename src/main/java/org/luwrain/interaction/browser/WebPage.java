@@ -44,7 +44,7 @@ public class WebPage implements Browser
 	//public JFXPanel jfx=new JFXPanel();
 
 	// used to save DOM structure with RescanDOM
-    static class NodeInfo
+    public static class NodeInfo
     {
 		org.w3c.dom.Node node;
 		Rectangle rect;
@@ -211,12 +211,12 @@ wi.setCurPage(wi.webPages.lastElement());
 	} else
 	{ // set text page visibility to on and current webpage to off
 	    //wi.frame.setVisible(true);
-	    wi.enablePaint();
 	    Platform.runLater(new Runnable(){@Override public void run()
-		    {
+	    {
+		    wi.enablePaint();
 			webView.setVisible(false);
-		    }});
-		}
+	    }});
+	}
     }
 
     @Override public boolean getVisibility()
@@ -277,7 +277,7 @@ wi.setCurPage(wi.webPages.lastElement());
 		    	info.forTEXT=true;
 		    }
 		    boolean ignore=checkNodeForIgnoreChildren(n);
-		    //Log.debug("web","DOM: "+info.node.getClass().getSimpleName()+", r:"+info.rect.x+"x"+info.rect.y+"-"+info.rect.width+"x"+info.rect.height+" ignore:"+ignore+", text:"+info.forTEXT);
+		    //Log.debug("web","DOM: "+i+": "+info.node.getClass().getSimpleName()+", r:"+info.rect.x+"x"+info.rect.y+"-"+info.rect.width+"x"+info.rect.height+" ignore:"+ignore+", text:"+info.forTEXT);
 		    if(ignore) info.forTEXT=false;
 		    //if(info.forTEXT&&info.isVisible()) System.out.println("DOM: node:"+n.getNodeName()+", "+(!(n instanceof HTMLElement)?n.getNodeValue():((HTMLElement)n).getTextContent())); // +" text:"+info.forTEXT+
 		    domIdx.put(n, i);

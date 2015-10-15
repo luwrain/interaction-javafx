@@ -1,5 +1,6 @@
 package org.luwrain.interaction.browser;
 
+import java.awt.Rectangle;
 import java.io.StringWriter;
 import java.util.Date;
 import java.util.concurrent.Callable;
@@ -87,6 +88,13 @@ class ElementListImpl implements ElementList
 	    { // any other element
 	    	return getComputedText();
 	    }
+    }
+    @Override public Rectangle getRect()
+    {
+    	if(!page.domIdx.containsKey(current.node)) return null;
+    	int pos=page.domIdx.get(current.node);
+    	if(page.dom.size()<=pos) return null;
+    	return page.dom.get(pos).rect;
     }
 
     @Override public boolean isEditable()
