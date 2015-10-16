@@ -25,6 +25,8 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.web.WebView;
 
+import org.luwrain.util.Str;
+
 public class JavaFxInteraction implements Interaction
 {
     static Color InteractionParamColorToFx(InteractionParamColor ipc)
@@ -301,7 +303,7 @@ onKeyReleased(event);
     {
 		if(text==null) 
 		    return;
-		frame.putString(x,y,text);
+		frame.putString(x,y, Str.replaceIsoControlChars(text));
     }
 
     @Override public void endDrawSession()
