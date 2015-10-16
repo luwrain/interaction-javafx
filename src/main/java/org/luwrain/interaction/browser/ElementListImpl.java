@@ -25,6 +25,7 @@ import org.w3c.dom.*;
 
 import org.luwrain.browser.ElementList;
 import org.luwrain.core.Log;
+import org.luwrain.core.NullCheck;
 import org.luwrain.interaction.browser.WebPage.NodeInfo;
 
 class ElementListImpl implements ElementList
@@ -79,15 +80,18 @@ class ElementListImpl implements ElementList
 
     @Override public String getText()
     {
+    	String text="";
     	if(current.node instanceof Text)
-    		return current.node.getNodeValue().trim(); else 
-	    if(current.node instanceof HTMLInputElement)
+    	{
+    		text=current.node.getNodeValue().trim();
+    	} else if(current.node instanceof HTMLInputElement)
 	    { // input element
-	    	return ((HTMLInputElement)current.node).getValue();
+	    	text=((HTMLInputElement)current.node).getValue();
 	    } else
 	    { // any other element
-	    	return getComputedText();
+	    	text=getComputedText();
 	    }
+    	return text==null?"":text;
     }
     @Override public Rectangle getRect()
     {
@@ -148,6 +152,7 @@ class ElementListImpl implements ElementList
 	    @Override public String call()
 	    {
 		page.htmlWnd.setMember(GET_NODE_TEXT, current.node);
+		if(!page.domIdx.containsKey(current.node)) return "";
 		try{
 		    return page.webEngine.executeScript("(function(){var x=window."+GET_NODE_TEXT+";return x.innerText===undefined?x.nodeValue:x.innerText})()").toString();
 		}
@@ -312,17 +317,43 @@ class ElementListImpl implements ElementList
 
 	@Override public boolean isChangedAround(Selector selector,int pos,int count)
 	{
-    	int cnt;
-    	selector.to(this,pos);
-    	// step cnt elements before
-    	cnt=count;
-    	while(selector.prev(this)&&cnt-->0)
-	    	if(this.isChanged())
-	    		return true;
-    	cnt=count;
-    	while(selector.next(this)&&cnt-->0)
-	    	if(this.isChanged())
-	    		return true;
-		return false;
+		final ElementListImpl that=this;
+		Callable<Boolean> task=new Callable<Boolean>(){
+		    @Override public Boolean call()
+		    {
+		    	int cnt;
+		    	selector.to(that,pos);
+		    	// step cnt elements before
+		    	cnt=count;
+		    	while(selector.prev(that)&&cnt-->0)
+			    	if(that.isChanged())
+			    		return true;
+		    	cnt=count;
+		    	while(selector.next(that)&&cnt-->0)
+			    	if(that.isChanged())
+			    		return true;
+				return false;
+		    }};
+		if(Platform.isFxApplicationThread()) 
+		    try
+			{
+		    	return task.call();
+		    }
+		    catch(Exception e)
+		    {
+		    	return false;
+		    }
+		FutureTask<Boolean> query=new FutureTask<Boolean>(task);
+		Platform.runLater(query);
+		try
+		{
+			boolean res=query.get();
+		    return res;
+	    }
+		catch(Exception e)
+		{
+		    return false;
+		}
+		// FIXME: make better error handling
 	}
 }
