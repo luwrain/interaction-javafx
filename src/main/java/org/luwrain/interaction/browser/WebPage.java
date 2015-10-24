@@ -309,7 +309,8 @@ public class WebPage implements Browser
 		      ||n instanceof HTMLInputElement
 		    //||n.getClass()==com.sun.webkit.dom.HTMLPreElementImpl.class
 		      ||n instanceof HTMLSelectElement
-		      ||n instanceof HTMLTextAreaElement)
+		      ||n instanceof HTMLTextAreaElement
+		      ||n instanceof HTMLSelectElement)
 		    {
 		    	info.forTEXT=true;
 		    }

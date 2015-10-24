@@ -3,6 +3,7 @@ package org.luwrain.interaction.browser;
 import java.awt.Rectangle;
 import java.io.StringWriter;
 import java.util.Date;
+import java.util.Vector;
 import java.util.concurrent.Callable;
 import java.util.concurrent.FutureTask;
 
@@ -65,17 +66,21 @@ class ElementListImpl implements ElementList
 		{
 		    return "button";
 		} else
-		    if(current.node instanceof HTMLAnchorElement)
-		    {
-			return "link";
-		    } else
-			if(current.node instanceof HTMLImageElement)
-			{
-			    return "image";
-			} else
-			{
-			    return "other text";
-			}
+	    if(current.node instanceof HTMLAnchorElement)
+	    {
+		return "link";
+	    } else
+		if(current.node instanceof HTMLImageElement)
+		{
+		    return "image";
+		} else
+		if(current.node instanceof HTMLSelectElement)
+		{
+			return "select";
+		} else
+		{
+		    return "other text";
+		}
     }
 
     @Override public String getText()
@@ -86,13 +91,48 @@ class ElementListImpl implements ElementList
     		text=current.node.getNodeValue().trim();
     	} else if(current.node instanceof HTMLInputElement)
 	    { // input element
-	    	text=((HTMLInputElement)current.node).getValue();
+			final HTMLInputElement input=((HTMLInputElement)current.node);
+			if(input.getType().equals("checkbox")
+			 ||input.getType().equals("radio"))
+			{
+		    	text=input.getChecked()?"on":"off";
+			} else
+			{
+		    	text=input.getValue();
+			}
+	    } else
+	    if(current.node instanceof HTMLSelectElement)
+	    {
+	    	HTMLSelectElement select=(HTMLSelectElement)current.node;
+	    	int idx=select.getSelectedIndex();
+	    	text=select.getOptions().item(idx).getTextContent();
+	    	// TODO: make multiselect support
 	    } else
 	    { // any other element
 	    	text=getComputedText();
 	    }
     	return text==null?"":text;
     }
+    @Override public String[] getMultipleText()
+    {
+    	if(current.node instanceof HTMLSelectElement)
+    	{
+ 			HTMLSelectElement select=(HTMLSelectElement)current.node;
+    		Vector<String> res=new Vector<String>();
+    		for(int i=select.getLength();i>=0;i--)
+ 			{
+ 				Node option=select.getOptions().item(i);
+ 				if(option==null) continue; // so strange but happends
+ 				//Log.debug("web",option.getNodeValue()+"["+i+"]="+option.getTextContent());
+ 				res.add(option.getTextContent());
+ 			}
+    		return res.toArray(new String[res.size()]);
+    	} else
+    	{
+    		return new String[]{getText()};
+    	}
+    }
+    
     @Override public Rectangle getRect()
     {
     	if(!page.domIdx.containsKey(current.node)) return null;
@@ -105,10 +145,20 @@ class ElementListImpl implements ElementList
     {
 	if(current.node instanceof HTMLInputElement)
 	{
-	    if(((HTMLInputElement)current.node).getType().equals("text")) 
+		final String inputType=((HTMLInputElement)current.node).getType();
+	    if(inputType.equals("button")
+	     ||inputType.equals("inage")
+	     ||inputType.equals("button")
+	     ||inputType.equals("submit")) 
+	   		return false;
+	    // all other input types are editable
+	    return true;
+	} else
+	if(current.node instanceof HTMLSelectElement)
+	{
 		return true;
 	} else 
-	    if(current.node instanceof HTMLTextAreaElement)
+	if(current.node instanceof HTMLTextAreaElement)
 		return true; 
 	return false;
     }
@@ -116,13 +166,34 @@ class ElementListImpl implements ElementList
     @Override public void setText(String text)
     {
     	Log.debug("web","setText: "+current.node.getClass().getSimpleName()+", rect:"+page.dom.get(page.domIdx.get(current.node)).rect);
-	if(current.node instanceof HTMLInputElement)
-	{
-	    if(((HTMLInputElement)current.node).getType().equals("text"))
-	    {
-	    	((HTMLInputElement)current.node).setValue(text);
-	    }
-	} else 
+		if(current.node instanceof HTMLInputElement)
+		{
+			final HTMLInputElement input=((HTMLInputElement)current.node);
+			if(input.getType().equals("checkbox")
+			 ||input.getType().equals("radio"))
+			{
+				input.setChecked(text.isEmpty()||text.equals("0")||text.equals("off")?false:true);
+			} else
+			{
+				input.setValue(text);
+			}
+		} else
+		if(current.node instanceof HTMLSelectElement)
+		{
+			HTMLSelectElement select=(HTMLSelectElement)current.node;
+			for(int i=select.getLength();i>=0;i--)
+			{
+				Node option=select.getOptions().item(i);
+				if(option==null) continue; // so strange but happends
+				//Log.debug("web",option.getNodeValue()+"["+i+"]="+option.getTextContent());
+				// FIXME: make method to work with select option by index not by text value (not unique)
+				if(option.getTextContent().equals(text))
+				{
+					select.setSelectedIndex(i);
+					return;
+				}
+			}
+		}
 	    if(current.node instanceof HTMLTextAreaElement)
 	    {
 	    	((HTMLTextAreaElement)current.node).setTextContent(text);
@@ -143,7 +214,20 @@ class ElementListImpl implements ElementList
 	if(!current.node.hasAttributes()) 
 	    return null;
 	final Node attr=current.node.getAttributes().getNamedItem(name);
+	if(attr==null) return null;
 	return attr.getNodeValue();
+    }
+    private String getComputedAttributeAll()
+    {
+    	if(!current.node.hasAttributes()) 
+    	    return "";
+    	String res="";
+    	for(int i=current.node.getAttributes().getLength()-1;i>=0;i--)
+    	{
+    		Node node=current.node.getAttributes().item(i);
+    		res+=node.getNodeName()+"="+node.getNodeValue()+";";
+    	}
+    	return res;
     }
 
     @Override public String getComputedText()
@@ -293,7 +377,7 @@ class ElementListImpl implements ElementList
     		ex.printStackTrace();
     	}
     	*/    	
-    	xml=getText()+getComputedStyleAll();
+    	xml=getText()+getComputedStyleAll()+getComputedAttributeAll();
     	//Log.debug("web","Node xml:"+xml);
     	return xml;
     }
