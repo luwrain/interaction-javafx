@@ -24,12 +24,12 @@ import javafx.util.Callback;
 import netscape.javascript.JSObject;
 
 import org.luwrain.browser.*;
+import org.luwrain.browser.BrowserEvents.WebState;
 import org.luwrain.core.Interaction;
 import org.luwrain.core.Log;
 import org.luwrain.interaction.javafx.JavaFxInteraction;
 import org.w3c.dom.Node;
 import org.w3c.dom.html.*;
-import org.w3c.dom.ls.LSSerializer;
 import org.w3c.dom.views.DocumentView;
 
 import com.sun.webkit.dom.DOMWindowImpl;
@@ -44,7 +44,7 @@ public class WebPage implements Browser
 	//public JFXPanel jfx=new JFXPanel();
 
 	// used to save DOM structure with RescanDOM
-    static class NodeInfo
+    public static class NodeInfo
     {
 		org.w3c.dom.Node node;
 		Rectangle rect;
@@ -86,6 +86,25 @@ public class WebPage implements Browser
 	wi = interaction;
     }
 
+    static <A> A fxcall(Callable<A> task, A onfail)
+    {
+		FutureTask<A> query=new FutureTask<A>(task){};
+		if(Platform.isFxApplicationThread())
+		{ // direct call
+			try {return task.call();}
+			catch(Exception e) {e.printStackTrace();}
+		    return onfail;
+		} else
+		{
+			// call from awt thread 
+			Platform.runLater(query);
+			// waiting for rescan end
+			try {return query.get();}
+			catch(InterruptedException|ExecutionException e) {e.printStackTrace();}
+		    return onfail;
+		}
+    }
+    
 	// make new empty WebPage (like about:blank) and add it to WebEngineInteraction's webPages
     public void init(final BrowserEvents events)
     {
@@ -99,40 +118,50 @@ public class WebPage implements Browser
 		    webView=new WebView();
 		    webEngine=webView.getEngine();
 		    webView.setOnKeyReleased(new EventHandler<KeyEvent>()
-					     {
-						 @Override public void handle(KeyEvent event)
-						 {
-						     Log.debug("web","KeyReleased: "+event.toString());
-						     switch(event.getCode())
-						     {
-						     case ESCAPE:wi.setCurPageVisibility(false);break;
-						     default:break;
-						     }
-						 }
-					     });
+		    {
+				 @Override public void handle(KeyEvent event)
+				 {
+				     //Log.debug("web","KeyReleased: "+event.toString());
+				     switch(event.getCode())
+				     {
+				     case ESCAPE:wi.setCurPageVisibility(false);break;
+				     default:break;
+				     }
+				 }
+		    });
 		    webEngine.getLoadWorker().stateProperty().addListener(new ChangeListener<State>()
-									  {
-									      @Override public void changed(ObservableValue<? extends State> ov,State oldState,final State newState)
-									      {
-										  Log.debug("web","State changed to: "+newState.name()+", "+webEngine.getLoadWorker().getState().toString()+", url:"+webEngine.getLocation());
-							if(newState==State.CANCELLED)
-							{ // if canceled not by user, so that is a file downloads
-							    if(!userStops)
-							    { // if it not by user
-								if(events.onDownloadStart(webEngine.getLocation())) return;
-							    }
-							}
-							events.onChangeState(newState);
-									      }
-									  });
+		    {
+		    	@Override public void changed(ObservableValue<? extends State> ov,State oldState,final State newState)
+		    	{
+		    		Log.debug("web","State changed to: "+newState.name()+", "+webEngine.getLoadWorker().getState().toString()+", url:"+webEngine.getLocation());
+		    			if(newState==State.CANCELLED)
+						{ // if canceled not by user, so that is a file downloads
+						    if(!userStops)
+						    { // if it not by user
+							if(events.onDownloadStart(webEngine.getLocation())) return;
+						    }
+						}
+						WebState state=WebState.CANCELLED;
+						switch(newState)
+						{
+							case CANCELLED:	state=WebState.CANCELLED;break;
+							case FAILED:	state=WebState.FAILED;break;
+							case READY:		state=WebState.READY;break;
+							case RUNNING:	state=WebState.RUNNING;break;
+							case SCHEDULED:	state=WebState.SCHEDULED;break;
+							case SUCCEEDED:	state=WebState.SUCCEEDED;break;
+						}
+						events.onChangeState(state);
+		    	}
+		    });
 
 		    webEngine.getLoadWorker().progressProperty().addListener(new ChangeListener<Number>()
-									     {
-					@Override public void changed(ObservableValue<? extends Number> ov,Number o,final Number n)
-					{
-							events.onProgress(n);
-					}
-				});
+		    {
+		    	@Override public void changed(ObservableValue<? extends Number> ov,Number o,final Number n)
+		    	{
+		    		events.onProgress(n);
+		    	}
+		    });
 
 		    webEngine.setOnAlert(new EventHandler<WebEvent<String>>() {
 			    @Override public void handle(final WebEvent<String> event)
@@ -172,11 +201,17 @@ public class WebPage implements Browser
 				wi.addWebViewControl(webView);
 
 				if(emptyList) 
-wi.setCurPage(that);
+					wi.setCurPage(that);
 			}
 		});
     }
 
+	private boolean busy=false;
+    @Override public boolean isBusy()
+    {
+		return busy;
+    }
+    
     // remove WebPage from WebEngineInteraction's webPages list and stop WebEngine work, prepare for destroy
     @Override public void Remove()
     {
@@ -194,7 +229,7 @@ wi.setCurPage(that);
 	} else
 	{
 	    if(wi.webPages.isEmpty()) wi.setCurPage(null); else 
-wi.setCurPage(wi.webPages.lastElement());
+	    	wi.setCurPage(wi.webPages.lastElement());
 	}
     }
 
@@ -204,19 +239,19 @@ wi.setCurPage(wi.webPages.lastElement());
 	{ // set visibility for this webpage on and change focus to it later (text page visibility is off)
 	    wi.disablePaint();
 	    Platform.runLater(new Runnable(){@Override public void run() {
-		Log.debug("web","request focus "+webView);
+		//Log.debug("web","request focus "+webView);
 		webView.setVisible(true);
 		webView.requestFocus();
 	    }});
 	} else
 	{ // set text page visibility to on and current webpage to off
 	    //wi.frame.setVisible(true);
-	    wi.enablePaint();
 	    Platform.runLater(new Runnable(){@Override public void run()
-		    {
+	    {
+		    wi.enablePaint();
 			webView.setVisible(false);
-		    }});
-		}
+	    }});
+	}
     }
 
     @Override public boolean getVisibility()
@@ -237,10 +272,12 @@ wi.setCurPage(wi.webPages.lastElement());
     // rescan current page DOM model and refill list of nodes with it bounded rectangles
     @Override public void RescanDOM()
     {
-	Callable<Integer> task=new Callable<Integer>(){
+    	busy=true;
+    	Callable<Integer> task=new Callable<Integer>(){
 	    @Override public Integer call() throws Exception
 	    {
 		htmlDoc=(HTMLDocument)webEngine.getDocument();
+		if(htmlDoc==null) return null;
 		htmlWnd=(DOMWindowImpl)((DocumentView)htmlDoc).getDefaultView();
 		
 		dom=new Vector<WebPage.NodeInfo>();
@@ -272,12 +309,13 @@ wi.setCurPage(wi.webPages.lastElement());
 		      ||n instanceof HTMLInputElement
 		    //||n.getClass()==com.sun.webkit.dom.HTMLPreElementImpl.class
 		      ||n instanceof HTMLSelectElement
-		      ||n instanceof HTMLTextAreaElement)
+		      ||n instanceof HTMLTextAreaElement
+		      ||n instanceof HTMLSelectElement)
 		    {
 		    	info.forTEXT=true;
 		    }
 		    boolean ignore=checkNodeForIgnoreChildren(n);
-		    //Log.debug("web","DOM: "+info.node.getClass().getSimpleName()+", r:"+info.rect.x+"x"+info.rect.y+"-"+info.rect.width+"x"+info.rect.height+" ignore:"+ignore+", text:"+info.forTEXT);
+		    //Log.debug("web","DOM: "+i+": "+info.node.getClass().getSimpleName()+", r:"+info.rect.x+"x"+info.rect.y+"-"+info.rect.width+"x"+info.rect.height+" ignore:"+ignore+", text:"+info.forTEXT);
 		    if(ignore) info.forTEXT=false;
 		    //if(info.forTEXT&&info.isVisible()) System.out.println("DOM: node:"+n.getNodeName()+", "+(!(n instanceof HTMLElement)?n.getNodeValue():((HTMLElement)n).getTextContent())); // +" text:"+info.forTEXT+
 		    domIdx.put(n, i);
@@ -289,75 +327,77 @@ wi.setCurPage(wi.webPages.lastElement());
 		return null;
 	    }};
 
-	FutureTask<Integer> query=new FutureTask<Integer>(task){};
-	if(Platform.isFxApplicationThread()) {try {task.call();} catch(Exception e) {e.printStackTrace();} return;}
-	// call from awt thread 
-	Platform.runLater(query);
-	// waiting for rescan end
-	try {
-	    query.get();
-}
-	catch(InterruptedException|ExecutionException e) 
-{
-    e.printStackTrace();
-}
+		FutureTask<Integer> query=new FutureTask<Integer>(task){};
+		if(Platform.isFxApplicationThread())
+		{ // direct call
+			try {task.call();}
+			catch(Exception e) {e.printStackTrace();}
+		} else
+		{
+			// call from awt thread 
+			Platform.runLater(query);
+			// waiting for rescan end
+			try {query.get();}
+			catch(InterruptedException|ExecutionException e) {e.printStackTrace();}
+		}
+		busy=false;
     }
 
 	// start loading page via link
     @Override public void load(String link)
     {
-	final String l = link;
-	Platform.runLater(new Runnable() {
-		@Override public void run()
-		{
+    	final String l = link;
+    	Platform.runLater(new Runnable() {
+    		@Override public void run()
+    		{
 				webEngine.load(l);
-		}});
+    		}});
     }
 
     // start loading page by it's content
     @Override public void loadContent(String text)
     {
-	final String t = text;
-	Platform.runLater(new Runnable() {
-		@Override public void run()
-		{
-		    webEngine.loadContent(t);
-		}});
+		final String t = text;
+		Platform.runLater(new Runnable() {
+			@Override public void run()
+			{
+			    webEngine.loadContent(t);
+			}});
     }
 
     @Override public void stop()
     {
-	Platform.runLater(new Runnable() {
-		@Override public void run()
-		{
-		    webEngine.getLoadWorker().cancel();
-		}});
+		Platform.runLater(new Runnable() {
+			@Override public void run()
+			{
+			    webEngine.getLoadWorker().cancel();
+			}});
     }
 
     @Override public String getTitle()
     {
-	if(webEngine==null)// return null; // FIXME: throw exception when webEngine not ready to use
-	    throw new NullPointerException("webEngine not initialized");
-	return webEngine.titleProperty().get();
+		if(webEngine==null)// return null; // FIXME: throw exception when webEngine not ready to use
+		    throw new NullPointerException("webEngine not initialized");
+		return webEngine.titleProperty().get();
     }
 
     @Override public String getUrl()
     {
-	if(webEngine==null) //return null; // FIXME: throw exception when webEngine not ready to use
-	    throw new NullPointerException("webEngine not initialized");
-	return webEngine.getLocation();
+		if(webEngine==null) //return null; // FIXME: throw exception when webEngine not ready to use
+		    throw new NullPointerException("webEngine not initialized");
+		return webEngine.getLocation();
     }
 
     @Override public Object executeScript(String script)
     {
-	if(webEngine==null) //return null; // FIXME: throw exception when webEngine not ready to use
-	    throw new NullPointerException("webEngine initialized");
-	return webEngine.executeScript(script);
+		if(webEngine==null) //return null; // FIXME: throw exception when webEngine not ready to use
+		    throw new NullPointerException("webEngine initialized");
+		return webEngine.executeScript(script);
     }
 
     @Override public ElementList.SelectorALL selectorALL(boolean visible)
     {
-	return new SelectorAllImpl(visible);
+    	return new SelectorAllImpl(visible);
     }
 
     @Override public ElementList.SelectorTEXT selectorTEXT(boolean visible,String filter)

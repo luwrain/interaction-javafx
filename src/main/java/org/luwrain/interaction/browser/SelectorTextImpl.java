@@ -34,6 +34,7 @@ class SelectorTextImpl extends SelectorAllImpl implements ElementList.SelectorTE
     @Override public boolean check(ElementList wel_)
     {
 	final ElementListImpl wel = (ElementListImpl)wel_;
+	if(wel.page.dom.size()<=wel.pos||wel.pos<0) return false;
 	wel.current = wel.page.dom.get(wel.pos);
 	if(visible&&!checkVisible(wel)) 
 	    return false;
