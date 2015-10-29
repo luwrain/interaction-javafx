@@ -301,7 +301,7 @@ onKeyReleased(event);
     {
 		if(text==null) 
 		    return;
-		frame.putString(x,y,text);
+		frame.putString(x,y, Str.replaceIsoControlChars(text));
     }
 
     @Override public void endDrawSession()
