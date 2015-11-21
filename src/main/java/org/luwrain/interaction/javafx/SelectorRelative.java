@@ -1,5 +1,5 @@
 
-package org.luwrain.interaction.browser;
+package org.luwrain.interaction.javafx;
 
 // select filter for any visible elements on page and navigate them relative (i.e. left,right,above,below,inside,outside)
 // next and prev methods mapped to right and left

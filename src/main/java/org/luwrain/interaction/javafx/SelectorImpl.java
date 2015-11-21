@@ -15,7 +15,7 @@
    General Public License for more details.
 */
 
-package org.luwrain.interaction.browser;
+package org.luwrain.interaction.javafx;
 
 import org.luwrain.browser.*;
 

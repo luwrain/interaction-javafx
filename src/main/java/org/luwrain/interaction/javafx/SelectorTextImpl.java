@@ -1,5 +1,5 @@
 
-package org.luwrain.interaction.browser;
+package org.luwrain.interaction.javafx;
 
 import org.w3c.dom.Node;
 import org.w3c.dom.css.CSSStyleDeclaration;

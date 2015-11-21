@@ -1,4 +1,5 @@
-package org.luwrain.interaction.browser;
+
+package org.luwrain.interaction.javafx;
 
 import java.awt.Rectangle;
 import java.io.StringWriter;
@@ -26,7 +27,6 @@ import org.w3c.dom.*;
 
 import org.luwrain.browser.*;
 import org.luwrain.core.*;
-import org.luwrain.interaction.browser.WebPage.NodeInfo;
 
 class ElementIteratorImpl implements ElementList
 {
@@ -443,7 +443,7 @@ return "";
 		// FIXME: make better error handling
 	}
 
-    WebPage.NodeInfo current()
+    NodeInfo current()
     {
 	return page.dom.get(pos);
     }

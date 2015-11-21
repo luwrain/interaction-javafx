@@ -1,5 +1,5 @@
 
-package org.luwrain.interaction.browser;
+package org.luwrain.interaction.javafx;
 
 import java.awt.Rectangle;
 import java.util.Date;
@@ -24,7 +24,7 @@ import javafx.util.Callback;
 import netscape.javascript.JSObject;
 
 import org.luwrain.browser.*;
-import org.luwrain.browser.BrowserEvents.WebState;
+import org.luwrain.browser.Events.WebState;
 import org.luwrain.core.Interaction;
 import org.luwrain.core.Log;
 import org.luwrain.interaction.javafx.JavaFxInteraction;
@@ -34,30 +34,12 @@ import org.w3c.dom.views.DocumentView;
 
 import com.sun.webkit.dom.DOMWindowImpl;
 
-public class WebPage implements Browser
+class WebPage implements Browser
 {
     private JavaFxInteraction wi;
 
     WebView webView;
     WebEngine webEngine;
-
-	//public JFXPanel jfx=new JFXPanel();
-
-	// used to save DOM structure with RescanDOM
-    public static class NodeInfo
-    {
-		org.w3c.dom.Node node;
-		Rectangle rect;
-		boolean forTEXT;
-		public boolean isVisible(){return rect.width>0&&rect.height>0;}
-		int hash;
-		long hashTime=0;
-		public void calcHash(String text)
-		{
-			hash=text.hashCode();
-			hashTime=new Date().getTime();
-		}
-    }
 
     // list of all nodes in web page
     Vector<NodeInfo> dom=new Vector<NodeInfo>();
@@ -106,7 +88,7 @@ public class WebPage implements Browser
     }
     
 	// make new empty WebPage (like about:blank) and add it to WebEngineInteraction's webPages
-    public void init(final BrowserEvents events)
+    public void init(final org.luwrain.browser.Events events)
     {
 	final WebPage that=this;
 	final boolean emptyList=wi.webPages.isEmpty();
@@ -280,7 +262,7 @@ public class WebPage implements Browser
 		if(htmlDoc==null) return null;
 		htmlWnd=(DOMWindowImpl)((DocumentView)htmlDoc).getDefaultView();
 		
-		dom=new Vector<WebPage.NodeInfo>();
+		dom=new Vector<NodeInfo>();
 		domIdx=new LinkedHashMap<org.w3c.dom.Node, Integer>();
 		JSObject js=(JSObject)webEngine.executeScript("(function(){function nodewalk(node){var res=[];if(node){node=node.firstChild;while(node!= null){if(node.nodeType!=3||node.nodeValue.trim()!=='') res[res.length]=node;res=res.concat(nodewalk(node));node=node.nextSibling;}}return res;};var lst=nodewalk(document);var res=[];for(var i=0;i<lst.length;i++){res.push({n:lst[i],r:(lst[i].getBoundingClientRect?lst[i].getBoundingClientRect():(lst[i].parentNode.getBoundingClientRect?lst[i].parentNode.getBoundingClientRect():null))});};return res;})()");;
 		Object o;
