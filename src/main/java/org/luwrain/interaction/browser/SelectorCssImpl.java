@@ -27,11 +27,11 @@ SelectorCssImpl(boolean visible, String tagName,
 		@Override public boolean suits(ElementList wel_)
 		{
 			ElementListImpl wel=(ElementListImpl)wel_;
-			wel.current=wel.page.dom.get(wel.pos);
+			//			wel.current=wel.page.dom.get(wel.pos);
 			if(visible&&!checkVisible(wel)) 
 return false;
 			// current selector's checks
-			if(this.tagName!=null&&!wel.current.node.getNodeName().toLowerCase().equals(this.tagName)) return false;
+			if(this.tagName!=null&&!wel.current().node.getNodeName().toLowerCase().equals(this.tagName)) return false;
 			// make access to computed style
 			String value=wel.getComputedStyleProperty(this.styleName);
 			if(this.styleValue!=null&&value!=null)

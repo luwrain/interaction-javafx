@@ -19,10 +19,10 @@ package org.luwrain.interaction.browser;
 
 import org.luwrain.browser.*;
 
-/** General navigation operations based on the behaviour of {code: suits()} method*/
+/** General navigation operations based on the behaviour of {@code: suits()} method*/
 abstract class SelectorImpl implements Selector
 {
-    /** Moves the iterator to the first element, approved by the {@code: suits()} 
+    /** Moves the iterator to the first element, approved by the {@code suits()} 
      * method. If there is no such element, the method restored 
      * the original state of the iterator.
      *
@@ -45,7 +45,7 @@ abstract class SelectorImpl implements Selector
 	return true;
     }
 
-    /** Moves the iterator to the next element, approved by the {@code: suits()} 
+    /** Moves the iterator to the next element, approved by the {@code suits()} 
      * method. If there is no such element, the method restored 
      * the original state of the iterator.
      *
@@ -68,7 +68,7 @@ abstract class SelectorImpl implements Selector
 	return true;
     }
 
-    /** Moves the iterator to the previous element, approved by the {@code: suits()} 
+    /** Moves the iterator to the previous element, approved by the {@code suits()} 
      * method. If there is no such element, the method restored 
      * the original state of the iterator.
      *

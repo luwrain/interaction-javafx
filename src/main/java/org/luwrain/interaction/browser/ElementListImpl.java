@@ -35,7 +35,7 @@ class ElementListImpl implements ElementList
 
     WebPage page;
     int pos=0;
-    WebPage.NodeInfo current;
+    //    WebPage.NodeInfo current;
 
     ElementListImpl(WebPage page)
     {
@@ -49,31 +49,31 @@ class ElementListImpl implements ElementList
 
     @Override public String getType()
     {
-	if(current.node instanceof org.w3c.dom.Text)
+	if(current().node instanceof org.w3c.dom.Text)
 	    return "text"; else 
-	    if(current.node instanceof HTMLInputElement)
+	    if(current().node instanceof HTMLInputElement)
 	    {
 		try {
-		    return "input "+current.node.getAttributes().getNamedItem("type").getNodeValue();
+		    return "input "+current().node.getAttributes().getNamedItem("type").getNodeValue();
 		}
 		catch(Exception e) 
 		{
 		    return "input";
 		}
 	    } else
-		if(current.node instanceof HTMLButtonElement)
+		if(current().node instanceof HTMLButtonElement)
 		{
 		    return "button";
 		} else
-	    if(current.node instanceof HTMLAnchorElement)
+		    if(current().node instanceof HTMLAnchorElement)
 	    {
 		return "link";
 	    } else
-		if(current.node instanceof HTMLImageElement)
+			if(current().node instanceof HTMLImageElement)
 		{
 		    return "image";
 		} else
-		if(current.node instanceof HTMLSelectElement)
+			    if(current().node instanceof HTMLSelectElement)
 		{
 			return "select";
 		} else
@@ -85,12 +85,13 @@ class ElementListImpl implements ElementList
     @Override public String getText()
     {
     	String text="";
-    	if(current.node instanceof Text)
+    	if(current().node instanceof Text)
     	{
-    		text=current.node.getNodeValue().trim();
-    	} else if(current.node instanceof HTMLInputElement)
+	    text = current().node.getNodeValue().trim();
+    	} else 
+	    if(current().node instanceof HTMLInputElement)
 	    { // input element
-			final HTMLInputElement input=((HTMLInputElement)current.node);
+		final HTMLInputElement input=((HTMLInputElement)current().node);
 			if(input.getType().equals("checkbox")
 			 ||input.getType().equals("radio"))
 			{
@@ -100,9 +101,9 @@ class ElementListImpl implements ElementList
 		    	text=input.getValue();
 			}
 	    } else
-	    if(current.node instanceof HTMLSelectElement)
+		if(current().node instanceof HTMLSelectElement)
 	    {
-	    	HTMLSelectElement select=(HTMLSelectElement)current.node;
+	    	HTMLSelectElement select=(HTMLSelectElement)current().node;
 	    	int idx=select.getSelectedIndex();
 	    	text=select.getOptions().item(idx).getTextContent();
 	    	// TODO: make multiselect support
@@ -114,9 +115,9 @@ class ElementListImpl implements ElementList
     }
     @Override public String[] getMultipleText()
     {
-    	if(current.node instanceof HTMLSelectElement)
+    	if(current().node instanceof HTMLSelectElement)
     	{
- 			HTMLSelectElement select=(HTMLSelectElement)current.node;
+	    HTMLSelectElement select=(HTMLSelectElement)current().node;
     		Vector<String> res=new Vector<String>();
     		for(int i=select.getLength();i>=0;i--)
  			{
@@ -134,17 +135,18 @@ class ElementListImpl implements ElementList
     
     @Override public Rectangle getRect()
     {
-    	if(!page.domIdx.containsKey(current.node)) return null;
-    	int pos=page.domIdx.get(current.node);
+    	if(!page.domIdx.containsKey(current().node)) 
+	    return null;
+    	int pos=page.domIdx.get(current().node);
     	if(page.dom.size()<=pos) return null;
     	return page.dom.get(pos).rect;
     }
 
     @Override public boolean isEditable()
     {
-	if(current.node instanceof HTMLInputElement)
+	if(current().node instanceof HTMLInputElement)
 	{
-		final String inputType=((HTMLInputElement)current.node).getType();
+	    final String inputType = ((HTMLInputElement)current().node).getType();
 	    if(inputType.equals("button")
 	     ||inputType.equals("inage")
 	     ||inputType.equals("button")
@@ -153,21 +155,21 @@ class ElementListImpl implements ElementList
 	    // all other input types are editable
 	    return true;
 	} else
-	if(current.node instanceof HTMLSelectElement)
+	    if(current().node instanceof HTMLSelectElement)
 	{
 		return true;
 	} else 
-	if(current.node instanceof HTMLTextAreaElement)
+		if(current().node instanceof HTMLTextAreaElement)
 		return true; 
 	return false;
     }
 
     @Override public void setText(String text)
     {
-    	Log.debug("web","setText: "+current.node.getClass().getSimpleName()+", rect:"+page.dom.get(page.domIdx.get(current.node)).rect);
-		if(current.node instanceof HTMLInputElement)
+    	Log.debug("web","setText: "+current().node.getClass().getSimpleName()+", rect:"+page.dom.get(page.domIdx.get(current().node)).rect);
+	if(current().node instanceof HTMLInputElement)
 		{
-			final HTMLInputElement input=((HTMLInputElement)current.node);
+		    final HTMLInputElement input=((HTMLInputElement)current().node);
 			if(input.getType().equals("checkbox")
 			 ||input.getType().equals("radio"))
 			{
@@ -177,9 +179,9 @@ class ElementListImpl implements ElementList
 				input.setValue(text);
 			}
 		} else
-		if(current.node instanceof HTMLSelectElement)
+	    if(current().node instanceof HTMLSelectElement)
 		{
-			HTMLSelectElement select=(HTMLSelectElement)current.node;
+		    HTMLSelectElement select=(HTMLSelectElement)current().node;
 			for(int i=select.getLength();i>=0;i--)
 			{
 				Node option=select.getOptions().item(i);
@@ -193,37 +195,37 @@ class ElementListImpl implements ElementList
 				}
 			}
 		}
-	    if(current.node instanceof HTMLTextAreaElement)
+	if(current().node instanceof HTMLTextAreaElement)
 	    {
-	    	((HTMLTextAreaElement)current.node).setTextContent(text);
+	    	((HTMLTextAreaElement)current().node).setTextContent(text);
 	    }
     }
 
     @Override public String getLink()
     {
-	if(current.node instanceof HTMLAnchorElement)
+	if(current().node instanceof HTMLAnchorElement)
 	    return getAttributeProperty("href"); else
-	    if(current.node instanceof HTMLImageElement)
+	    if(current().node instanceof HTMLImageElement)
 		return getAttributeProperty("src");
 	return "";
     }
 
     @Override public String getAttributeProperty(String name)
     {
-	if(!current.node.hasAttributes()) 
+	if(!current().node.hasAttributes()) 
 	    return null;
-	final Node attr=current.node.getAttributes().getNamedItem(name);
+	final Node attr=current().node.getAttributes().getNamedItem(name);
 	if(attr==null) return null;
 	return attr.getNodeValue();
     }
     private String getComputedAttributeAll()
     {
-    	if(!current.node.hasAttributes()) 
+    	if(!current().node.hasAttributes()) 
     	    return "";
     	String res="";
-    	for(int i=current.node.getAttributes().getLength()-1;i>=0;i--)
+    	for(int i=current().node.getAttributes().getLength()-1;i>=0;i--)
     	{
-    		Node node=current.node.getAttributes().item(i);
+	    Node node = current().node.getAttributes().item(i);
     		res+=node.getNodeName()+"="+node.getNodeValue()+";";
     	}
     	return res;
@@ -234,8 +236,9 @@ class ElementListImpl implements ElementList
 	Callable<String> task=new Callable<String>(){
 	    @Override public String call()
 	    {
-		page.htmlWnd.setMember(GET_NODE_TEXT, current.node);
-		if(!page.domIdx.containsKey(current.node)) return "";
+		page.htmlWnd.setMember(GET_NODE_TEXT, current().node);
+		if(!page.domIdx.containsKey(current().node)) 
+return "";
 		try{
 		    return page.webEngine.executeScript("(function(){var x=window."+GET_NODE_TEXT+";return x.innerText===undefined?x.nodeValue:x.innerText})()").toString();
 		}
@@ -270,7 +273,7 @@ class ElementListImpl implements ElementList
 	Callable<String> task=new Callable<String>(){
 	    @Override public String call()
 	    {
-		CSSStyleDeclaration style = page.htmlWnd.getComputedStyle((HTMLElement)current.node, "");
+		CSSStyleDeclaration style = page.htmlWnd.getComputedStyle((HTMLElement)current().node, "");
 		return style.getPropertyValue(name);
 	    }};
 	if(Platform.isFxApplicationThread()) 
@@ -296,7 +299,7 @@ class ElementListImpl implements ElementList
 	Callable<String> task=new Callable<String>(){
 	    @Override public String call()
 	    {
-		CSSStyleDeclaration style = page.htmlWnd.getComputedStyle((HTMLElement)current.node, "");
+		CSSStyleDeclaration style = page.htmlWnd.getComputedStyle((HTMLElement)current().node, "");
 		return style.getCssText();
 	    }};
 	if(Platform.isFxApplicationThread()) try
@@ -323,14 +326,14 @@ class ElementListImpl implements ElementList
     {
 	// click can be done only for non text nodes
 	// FIXME: emulate click for text nodex via parent node
-	if(current.node instanceof HTMLInputElement)
+	if(current().node instanceof HTMLInputElement)
 	{
-	    if(((HTMLInputElement)current.node).getType().equals("submit"))
+	    if(((HTMLInputElement)current().node).getType().equals("submit"))
 	    { // submit button
 		Platform.runLater(new Runnable() {
 			@Override public void run()
 			{
-			    page.htmlWnd.setMember(GET_NODE_TEXT, current.node);
+			    page.htmlWnd.setMember(GET_NODE_TEXT, current().node);
 			    try{
 				page.webEngine.executeScript("(function(){var x=window."+GET_NODE_TEXT+";x.form.submit();})()");
 			    }
@@ -345,7 +348,7 @@ class ElementListImpl implements ElementList
 	Platform.runLater(new Runnable() {
 		@Override public void run()
 		{
-		    page.htmlWnd.setMember(GET_NODE_TEXT, current.node);
+		    page.htmlWnd.setMember(GET_NODE_TEXT, current().node);
 		    try{
 			page.webEngine.executeScript("(function(){var x=window."+GET_NODE_TEXT+";x.click();})()");
 		    }
@@ -358,8 +361,8 @@ class ElementListImpl implements ElementList
 
     private String getHtml()
     {
-    	if(current.node instanceof Text)
-    		return current.node.getNodeValue();
+    	if(current().node instanceof Text)
+    		return current().node.getNodeValue();
 
     	String xml="";
     	/*
@@ -367,7 +370,7 @@ class ElementListImpl implements ElementList
     	{
     		Transformer transformer = TransformerFactory.newInstance().newTransformer();
 			StreamResult result = new StreamResult(new StringWriter());
-			DOMSource source = new DOMSource(current.node);
+			DOMSource source = new DOMSource(current().node);
 			transformer.transform(source, result);
 			xml=result.getWriter().toString();
     	} catch(TransformerException ex)
@@ -393,7 +396,7 @@ class ElementListImpl implements ElementList
 		// last changes already scanned
 		int oldHash=info.hash;
 		info.calcHash(getHtml());
-		//System.out.println("["+pos+":"+current.node.getClass().getSimpleName()+":"+info.hash+"]");
+		//System.out.println("["+pos+":"+current().node.getClass().getSimpleName()+":"+info.hash+"]");
 		//if(oldHash!=info.hash) System.out.println("changes detected");
 		return oldHash!=info.hash;
 	}
