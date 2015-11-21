@@ -11,7 +11,7 @@ import org.luwrain.browser.*;	// select filter for any text container element's,
 
 // null string threat as any values
 // TODO: make RegEx support in filter
-class SelectorTextImpl extends SelectorAllImpl implements ElementList.SelectorTEXT
+class SelectorTextImpl extends SelectorAllImpl implements SelectorText
 {
     String filter;
 
@@ -31,7 +31,7 @@ class SelectorTextImpl extends SelectorAllImpl implements ElementList.SelectorTE
 	this.filter=filter;
     }
 
-    @Override public boolean check(ElementList wel_)
+    @Override public boolean suits(ElementList wel_)
     {
 	final ElementListImpl wel = (ElementListImpl)wel_;
 	if(wel.page.dom.size()<=wel.pos||wel.pos<0) return false;

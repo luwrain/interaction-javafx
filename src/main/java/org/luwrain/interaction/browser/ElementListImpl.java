@@ -24,9 +24,8 @@ import org.w3c.dom.ls.LSSerializer;
 import com.sun.webkit.dom.*;
 import org.w3c.dom.*;
 
-import org.luwrain.browser.ElementList;
-import org.luwrain.core.Log;
-import org.luwrain.core.NullCheck;
+import org.luwrain.browser.*;
+import org.luwrain.core.*;
 import org.luwrain.interaction.browser.WebPage.NodeInfo;
 
 class ElementListImpl implements ElementList
@@ -406,14 +405,14 @@ class ElementListImpl implements ElementList
 		    @Override public Boolean call()
 		    {
 		    	int cnt;
-		    	selector.to(that,pos);
+		    	selector.moveToPos(that, pos);
 		    	// step cnt elements before
 		    	cnt=count;
-		    	while(selector.prev(that)&&cnt-->0)
+		    	while(selector.movePrev(that) && cnt-- > 0)
 			    	if(that.isChanged())
 			    		return true;
 		    	cnt=count;
-		    	while(selector.next(that)&&cnt-->0)
+		    	while(selector.moveNext(that) && cnt-- > 0)
 			    	if(that.isChanged())
 			    		return true;
 				return false;
@@ -440,4 +439,9 @@ class ElementListImpl implements ElementList
 		}
 		// FIXME: make better error handling
 	}
+
+    WebPage.NodeInfo current()
+    {
+	return page.dom.get(pos);
+    }
 }

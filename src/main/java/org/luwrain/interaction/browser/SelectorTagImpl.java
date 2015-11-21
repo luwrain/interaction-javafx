@@ -5,7 +5,7 @@ import org.luwrain.browser.*;
 
 // select filter for select element via tag and its attribute
 	// empty or null strings threat as any values
-class SelectorTagImpl extends SelectorAllImpl implements ElementList.SelectorTAG
+class SelectorTagImpl extends SelectorAllImpl implements SelectorTag
 	{
 		public String tagName,attrName,attrValue;
 		@Override public String getTagName(){return tagName;}
@@ -23,7 +23,7 @@ SelectorTagImpl(boolean visible,String tagName,String attrName,String attrValue)
 			this.attrValue=attrValue;
 		}
 		// return true if current element corresponds this selector
-		@Override public boolean check(ElementList wel_)
+		@Override public boolean suits(ElementList wel_)
 		{
 			ElementListImpl wel=(ElementListImpl)wel_;
 			wel.current=wel.page.dom.get(wel.pos);

@@ -3,11 +3,11 @@ package org.luwrain.interaction.browser;
 
 import org.luwrain.browser.*;
 
-// select filter all nodes on page
-
-class SelectorAllImpl extends SelectorImpl implements ElementList.SelectorALL
+/** The selector for iteration over all elements on the page*/
+class SelectorAllImpl extends SelectorImpl implements SelectorAll
 {
-    boolean visible;
+    /** Consider only visible elements of the page*/
+    protected boolean visible;
 
     SelectorAllImpl(boolean visible)
     {
@@ -25,18 +25,17 @@ class SelectorAllImpl extends SelectorImpl implements ElementList.SelectorALL
     }
 
     // return true if current element is visible
-    @Override public boolean checkVisible(ElementList wel_)
+    @Override public boolean checkVisible(ElementList it)
     {
-	ElementListImpl wel=(ElementListImpl)wel_;
-	return wel.current.isVisible();
+	final ElementListImpl itImpl = (ElementListImpl)it;
+	return itImpl.current().isVisible();
     }
 
-    // return true if current element corresponds this selector
-    @Override public boolean check(ElementList wel_)
+    /** return true if current element suits the condition of this selector.*/
+    @Override public boolean suits(ElementList it)
     {
-	ElementListImpl wel=(ElementListImpl)wel_;
-	wel.current=wel.page.dom.get(wel.pos);
-	if(visible&&!checkVisible(wel))
+	final ElementListImpl itImpl = (ElementListImpl)it;
+	if(visible&&!checkVisible(itImpl))
 	    return false;
 	return true;
     }

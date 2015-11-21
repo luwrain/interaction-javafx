@@ -62,7 +62,7 @@ public class WebPage implements Browser
     // list of all nodes in web page
     Vector<NodeInfo> dom=new Vector<NodeInfo>();
     // index map for fast get node position
-    LinkedHashMap<org.w3c.dom.Node,Integer> domIdx=new LinkedHashMap<org.w3c.dom.Node, Integer>();
+    LinkedHashMap<org.w3c.dom.Node,Integer> domIdx = new LinkedHashMap<org.w3c.dom.Node, Integer>();
 
     HTMLDocument htmlDoc=null;
     DOMWindowImpl htmlWnd=null;
@@ -395,28 +395,33 @@ public class WebPage implements Browser
 		return webEngine.executeScript(script);
     }
 
-    @Override public ElementList.SelectorALL selectorALL(boolean visible)
+    @Override public SelectorAll selectorAll(boolean visible)
     {
     	return new SelectorAllImpl(visible);
     }
 
-    @Override public ElementList.SelectorTEXT selectorTEXT(boolean visible,String filter)
+    @Override public SelectorText selectorText(boolean visible,String filter)
     {
 	return new SelectorTextImpl(visible,filter);
     }
 
-    @Override public ElementList.SelectorTAG selectorTAG(boolean visible,String tagName,String attrName,String attrValue)
+    @Override public SelectorTag selectorTag(boolean visible,String tagName,String attrName,String attrValue)
     {
 	return new SelectorTagImpl(visible,tagName,attrName,attrValue);
     }
 
-    @Override public ElementList.SelectorCSS selectorCSS(boolean visible,String tagName,String styleName,String styleValue)
+    @Override public SelectorCss selectorCss(boolean visible,String tagName,String styleName,String styleValue)
     {
-	return new SelectorCSSImpl(visible,tagName,styleName,styleValue);
+	return new SelectorCssImpl(visible,tagName,styleName,styleValue);
     }
 
     @Override public ElementList elementList()
     {
 	return new ElementListImpl(this);
+    }
+
+    @Override public int numElements()
+    {
+	return domIdx.size();
     }
 }
