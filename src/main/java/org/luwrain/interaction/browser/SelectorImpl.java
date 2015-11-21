@@ -31,7 +31,7 @@ abstract class SelectorImpl implements Selector
      */
     @Override public boolean moveFirst(ElementList it)
     {
-	final ElementListImpl itImpl = (ElementListImpl)it;
+	final ElementIteratorImpl itImpl = (ElementIteratorImpl)it;
 	final int origState = itImpl.pos;
 	final int count = itImpl.page.numElements();
 	itImpl.pos = 0;
@@ -54,7 +54,7 @@ abstract class SelectorImpl implements Selector
      */
     @Override public boolean moveNext(ElementList it)
     {
-	final ElementListImpl itImpl = (ElementListImpl)it;
+	final ElementIteratorImpl itImpl = (ElementIteratorImpl)it;
 	final int origState = itImpl.pos;
 	final int count = itImpl.page.numElements();
 	++itImpl.pos;
@@ -77,7 +77,7 @@ abstract class SelectorImpl implements Selector
      */
     @Override public boolean movePrev(ElementList it)
     {
-	final ElementListImpl itImpl = (ElementListImpl)it;
+	final ElementIteratorImpl itImpl = (ElementIteratorImpl)it;
 	final int origState = itImpl.pos;
 	itImpl.pos--;
 	while(itImpl.pos >= 0 && !suits(itImpl)) 

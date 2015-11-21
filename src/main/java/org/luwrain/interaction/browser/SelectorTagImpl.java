@@ -25,7 +25,7 @@ SelectorTagImpl(boolean visible,String tagName,String attrName,String attrValue)
 		// return true if current element corresponds this selector
 		@Override public boolean suits(ElementList wel_)
 		{
-			ElementListImpl wel=(ElementListImpl)wel_;
+			ElementIteratorImpl wel=(ElementIteratorImpl)wel_;
 			//			wel.current=wel.page.dom.get(wel.pos);
 			if(visible&&!checkVisible(wel)) return false;
 			// current selector's checks

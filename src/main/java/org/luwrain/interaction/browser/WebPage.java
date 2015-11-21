@@ -417,7 +417,7 @@ public class WebPage implements Browser
 
     @Override public ElementList elementList()
     {
-	return new ElementListImpl(this);
+	return new ElementIteratorImpl(this);
     }
 
     @Override public int numElements()
