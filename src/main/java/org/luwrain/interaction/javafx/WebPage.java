@@ -34,109 +34,95 @@ import org.w3c.dom.views.DocumentView;
 
 import com.sun.webkit.dom.DOMWindowImpl;
 
-class WebPage implements Browser
+class WebPage implements org.luwrain.browser.Browser
 {
     private JavaFxInteraction wi;
 
-    WebView webView;
+    private WebView webView;
     WebEngine webEngine;
 
     // list of all nodes in web page
     Vector<NodeInfo> dom=new Vector<NodeInfo>();
     // index map for fast get node position
     LinkedHashMap<org.w3c.dom.Node,Integer> domIdx = new LinkedHashMap<org.w3c.dom.Node, Integer>();
-
-    HTMLDocument htmlDoc=null;
+    private HTMLDocument htmlDoc=null;
     DOMWindowImpl htmlWnd=null;
-
-    JSObject window=null;
+    private JSObject window=null;
     private boolean userStops=false;
 
-    @Override public String getBrowserTitle()
-    {
-	return "ВебБраузер";//FIXME:
-    }
-
-    @Override public Browser setInteraction(Interaction interaction)
-    {
-	wi=(JavaFxInteraction)interaction;
-	return null;
-    }
-
-    public WebPage(JavaFxInteraction interaction)
+    WebPage(JavaFxInteraction interaction)
     {
 	wi = interaction;
     }
 
     static <A> A fxcall(Callable<A> task, A onfail)
     {
-		FutureTask<A> query=new FutureTask<A>(task){};
-		if(Platform.isFxApplicationThread())
-		{ // direct call
+	FutureTask<A> query=new FutureTask<A>(task){};
+	if(Platform.isFxApplicationThread())
+	{ // direct call
 			try {return task.call();}
 			catch(Exception e) {e.printStackTrace();}
-		    return onfail;
-		} else
-		{
-			// call from awt thread 
-			Platform.runLater(query);
-			// waiting for rescan end
-			try {return query.get();}
-			catch(InterruptedException|ExecutionException e) {e.printStackTrace();}
-		    return onfail;
-		}
+			return onfail;
+	} else
+	{
+	    // call from awt thread 
+	    Platform.runLater(query);
+	    // waiting for rescan end
+	    try {return query.get();}
+	    catch(InterruptedException|ExecutionException e) {e.printStackTrace();}
+	    return onfail;
+	}
     }
-    
-	// make new empty WebPage (like about:blank) and add it to WebEngineInteraction's webPages
-    public void init(final org.luwrain.browser.Events events)
+
+    // make new empty WebPage (like about:blank) and add it to WebEngineInteraction's webPages
+    @Override public void init(final org.luwrain.browser.Events events)
     {
 	final WebPage that=this;
 	final boolean emptyList=wi.webPages.isEmpty();
 	wi.webPages.add(this);
-
 	Platform.runLater(new Runnable() {
 		@Override public void run()
 		{
 		    webView=new WebView();
 		    webEngine=webView.getEngine();
 		    webView.setOnKeyReleased(new EventHandler<KeyEvent>()
-		    {
-				 @Override public void handle(KeyEvent event)
-				 {
-				     //Log.debug("web","KeyReleased: "+event.toString());
-				     switch(event.getCode())
-				     {
-				     case ESCAPE:wi.setCurPageVisibility(false);break;
-				     default:break;
-				     }
-				 }
-		    });
+					     {
+						 @Override public void handle(KeyEvent event)
+						 {
+						     //Log.debug("web","KeyReleased: "+event.toString());
+						     switch(event.getCode())
+						     {
+						     case ESCAPE:wi.setCurPageVisibility(false);break;
+						     default:break;
+						     }
+						 }
+					     });
 		    webEngine.getLoadWorker().stateProperty().addListener(new ChangeListener<State>()
-		    {
-		    	@Override public void changed(ObservableValue<? extends State> ov,State oldState,final State newState)
-		    	{
-		    		Log.debug("web","State changed to: "+newState.name()+", "+webEngine.getLoadWorker().getState().toString()+", url:"+webEngine.getLocation());
-		    			if(newState==State.CANCELLED)
-						{ // if canceled not by user, so that is a file downloads
-						    if(!userStops)
-						    { // if it not by user
-							if(events.onDownloadStart(webEngine.getLocation())) return;
-						    }
-						}
-						WebState state=WebState.CANCELLED;
-						switch(newState)
-						{
-							case CANCELLED:	state=WebState.CANCELLED;break;
-							case FAILED:	state=WebState.FAILED;break;
-							case READY:		state=WebState.READY;break;
-							case RUNNING:	state=WebState.RUNNING;break;
-							case SCHEDULED:	state=WebState.SCHEDULED;break;
-							case SUCCEEDED:	state=WebState.SUCCEEDED;break;
-						}
-						events.onChangeState(state);
-		    	}
-		    });
-
+									  {
+									      @Override public void changed(ObservableValue<? extends State> ov,State oldState,final State newState)
+									      {
+										  Log.debug("web","State changed to: "+newState.name()+", "+webEngine.getLoadWorker().getState().toString()+", url:"+webEngine.getLocation());
+										  if(newState==State.CANCELLED)
+										  { // if canceled not by user, so that is a file downloads
+										      if(!userStops)
+										      { // if it not by user
+											  if(events.onDownloadStart(webEngine.getLocation())) return;
+										      }
+										  }
+										  WebState state=WebState.CANCELLED;
+										  switch(newState)
+										  {
+										  case CANCELLED:	state=WebState.CANCELLED;break;
+										  case FAILED:	state=WebState.FAILED;break;
+										  case READY:		state=WebState.READY;break;
+										  case RUNNING:	state=WebState.RUNNING;break;
+										  case SCHEDULED:	state=WebState.SCHEDULED;break;
+										  case SUCCEEDED:	state=WebState.SUCCEEDED;break;
+										  }
+										  events.onChangeState(state);
+									      }
+									  });
+		    
 		    webEngine.getLoadWorker().progressProperty().addListener(new ChangeListener<Number>()
 		    {
 		    	@Override public void changed(ObservableValue<? extends Number> ov,Number o,final Number n)
@@ -397,7 +383,7 @@ class WebPage implements Browser
 	return new SelectorCssImpl(visible,tagName,styleName,styleValue);
     }
 
-    @Override public ElementList elementList()
+    @Override public ElementList iterator()
     {
 	return new ElementIteratorImpl(this);
     }
