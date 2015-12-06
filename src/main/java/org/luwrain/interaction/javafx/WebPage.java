@@ -34,7 +34,7 @@ import org.w3c.dom.views.DocumentView;
 
 import com.sun.webkit.dom.DOMWindowImpl;
 
-class WebPage implements org.luwrain.browser.Browser
+public class WebPage implements org.luwrain.browser.Browser
 {
     private JavaFxInteraction wi;
 
