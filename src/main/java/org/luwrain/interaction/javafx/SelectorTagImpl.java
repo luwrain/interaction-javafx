@@ -1,11 +1,11 @@
 
-package org.luwrain.interaction.browser;
+package org.luwrain.interaction.javafx;
 
 import org.luwrain.browser.*;
 
 // select filter for select element via tag and its attribute
 	// empty or null strings threat as any values
-class SelectorTagImpl extends SelectorAllImpl implements ElementList.SelectorTAG
+class SelectorTagImpl extends SelectorAllImpl implements SelectorTag
 	{
 		public String tagName,attrName,attrValue;
 		@Override public String getTagName(){return tagName;}
@@ -23,16 +23,18 @@ SelectorTagImpl(boolean visible,String tagName,String attrName,String attrValue)
 			this.attrValue=attrValue;
 		}
 		// return true if current element corresponds this selector
-		@Override public boolean check(ElementList wel_)
+		@Override public boolean suits(ElementList wel_)
 		{
-			ElementListImpl wel=(ElementListImpl)wel_;
-			wel.current=wel.page.dom.get(wel.pos);
+			ElementIteratorImpl wel=(ElementIteratorImpl)wel_;
+			//			wel.current=wel.page.dom.get(wel.pos);
 			if(visible&&!checkVisible(wel)) return false;
 			// current selector's checks
-			if(this.tagName!=null&&!wel.current.node.getNodeName().toLowerCase().equals(this.tagName)) return false;
-			if(this.attrName!=null&&wel.current.node.hasAttributes())
+			if(this.tagName!=null&&!wel.current().node.getNodeName().toLowerCase().equals(this.tagName)) 
+return false;
+			if(this.attrName!=null&&wel.current().node.hasAttributes())
 			{ // attrValue can be null with attrName
-				if(this.attrValue!=null&&wel.current.node.getAttributes().getNamedItem(this.attrName).getNodeValue().toLowerCase().indexOf(this.attrValue)==-1) return false;
+			    if(this.attrValue!=null&&wel.current().node.getAttributes().getNamedItem(this.attrName).getNodeValue().toLowerCase().indexOf(this.attrValue)==-1) 
+return false;
 			}
 			return true;
 		}

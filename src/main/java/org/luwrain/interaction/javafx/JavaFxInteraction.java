@@ -13,7 +13,6 @@ import org.luwrain.core.InteractionParamColor;
 import org.luwrain.core.InteractionParams;
 import org.luwrain.core.Log;
 import org.luwrain.core.events.KeyboardEvent;
-import org.luwrain.interaction.browser.WebPage;
 
 import javafx.stage.Screen;
 import javafx.application.Platform;
