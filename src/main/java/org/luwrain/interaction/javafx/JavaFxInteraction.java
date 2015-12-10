@@ -12,19 +12,21 @@ import org.luwrain.core.Interaction;
 import org.luwrain.core.InteractionParamColor;
 import org.luwrain.core.InteractionParams;
 import org.luwrain.core.Log;
-import org.luwrain.core.events.KeyboardEvent;
+import org.luwrain.os.Keyboard;
+import org.luwrain.os.OperatingSystem;
 
 import javafx.stage.Screen;
 import javafx.application.Platform;
 import javafx.event.EventHandler;
 import javafx.geometry.Rectangle2D;
-import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.web.WebView;
 
 import org.luwrain.util.Str;
+
+import org.luwrain.windows.Windows;
 
 public class JavaFxInteraction implements Interaction
 {
@@ -60,12 +62,7 @@ public class JavaFxInteraction implements Interaction
     public final Vector<WebPage> webPages=new Vector<WebPage>();
     private WebPage currentWebPage=null;
 
-    private EventConsumer eventConsumer;
-
-    public boolean leftAltPressed = false;
-    public boolean rightAltPressed = false;
-    public boolean controlPressed = false;
-    public boolean shiftPressed = false;
+    private Keyboard keyboard;
 
     private MainJavafxApp frame;
 
@@ -156,7 +153,7 @@ public class JavaFxInteraction implements Interaction
 
     final Thread threadfx=new Thread(new MainJavafxThread());
 
-    @Override public boolean init(final InteractionParams params)
+    @Override public boolean init(final InteractionParams params,final OperatingSystem os)
     {
 	if (params == null)
 	    throw new NullPointerException("params may not be null");
@@ -185,24 +182,27 @@ public class JavaFxInteraction implements Interaction
 		frame.setMargin(params.marginLeft,params.marginTop,params.marginRight,params.marginBottom);
 		//frame.primary.requestFocus();
 
+		// FIXME: make better OS abstraction, but now we have only two OS types, windows like and other, like *nix
+		keyboard=(os instanceof Windows?new KeyboardWindows():new KeyboardLinux());
+		
 		frame.primary.addEventHandler(KeyEvent.KEY_PRESSED,new EventHandler<KeyEvent>() {
 			@Override public void handle(KeyEvent event) 
 			{
-			    onKeyPressed(event);
+			    keyboard.onKeyPressed(event);
 			}
 		    });
 		frame.primary.addEventHandler(KeyEvent.KEY_RELEASED,new EventHandler<KeyEvent>(){
 			@Override public void handle(KeyEvent event) 
-{
-onKeyReleased(event);
-}
-				});
-				frame.primary.addEventHandler(KeyEvent.KEY_TYPED,new EventHandler<KeyEvent>(){
-					@Override public void handle(KeyEvent event) 
-					{
-					    onKeyTyped(event);
-					}
-				    });
+			{
+				keyboard.onKeyReleased(event);
+			}
+		});
+		frame.primary.addEventHandler(KeyEvent.KEY_TYPED,new EventHandler<KeyEvent>(){
+			@Override public void handle(KeyEvent event) 
+			{
+				keyboard.onKeyTyped(event);
+			}
+		});
 
 		if(wndWidth<0||wndHeight<0)
 		{
@@ -233,14 +233,6 @@ onKeyReleased(event);
 	return true;
     }
 
-    /*
-    private void syncronized()
-    {
-	// TODO Auto-generated method stub
-		
-    }
-    */
-
 	@Override public void close()
 	{
 		// FIXME:
@@ -248,12 +240,12 @@ onKeyReleased(event);
 
     @Override public void startInputEventsAccepting(EventConsumer eventConsumer)
     {
-	this.eventConsumer=eventConsumer;
+	keyboard.setEventConsumer(eventConsumer);
     }
 
     @Override public void stopInputEventsAccepting()
     {
-	this.eventConsumer=null;
+    keyboard.setEventConsumer(null);
     }
 
     @Override public boolean setDesirableFontSize(int size)
@@ -351,102 +343,6 @@ onKeyReleased(event);
 		final Font res=Font.font(fontName,desirableFontSize);
 		Log.debug("javafx", "try to select font: \""+fontName+"\" but using font: \"" + res.getName() + "\"");
 		return res;
-    }
-
-    private void onKeyPressed(KeyEvent event)
-    {
-	controlPressed=event.isControlDown();
-	shiftPressed=event.isShiftDown();
-	leftAltPressed=event.isAltDown();
-	if(eventConsumer==null)
-	    return;
-	int code;
-	switch(event.getCode())
-	{
-	    // Functions keys
-	case F1:code=KeyboardEvent.F1;break;
-	case F2:code=KeyboardEvent.F2;break;
-	case F3:code=KeyboardEvent.F3;break;
-	case F4:code=KeyboardEvent.F4;break;
-	case F5:code=KeyboardEvent.F5;break;
-	case F6:code=KeyboardEvent.F6;break;
-	case F7:code=KeyboardEvent.F7;break;
-	case F8:code=KeyboardEvent.F8;break;
-	case F9:code=KeyboardEvent.F9;break;
-	case F10:code=KeyboardEvent.F10;break;
-	case F11:code=KeyboardEvent.F11;break;
-	case F12:code=KeyboardEvent.F12;break;
-	    // Arrows;
-	case LEFT:code=KeyboardEvent.ARROW_LEFT;break;
-	case RIGHT:code=KeyboardEvent.ARROW_RIGHT;break;
-	case UP:code=KeyboardEvent.ARROW_UP;break;
-	case DOWN:code=KeyboardEvent.ARROW_DOWN;break;
-	    // Jump keys;
-	case HOME:code=KeyboardEvent.HOME;break;
-	case END:code=KeyboardEvent.END;break;
-	case INSERT:code=KeyboardEvent.INSERT;break;
-	case PAGE_DOWN:code=KeyboardEvent.PAGE_DOWN;break;
-	case PAGE_UP:code=KeyboardEvent.PAGE_UP;break;
-	case WINDOWS:code=KeyboardEvent.WINDOWS;break;
-	case CONTEXT_MENU:code=KeyboardEvent.CONTEXT_MENU;break;
-	    // modificators
-	case CONTROL:code=KeyboardEvent.CONTROL;break;
-	case SHIFT:code=KeyboardEvent.SHIFT;break;
-	case ALT:code=KeyboardEvent.LEFT_ALT;break;
-	case ALT_GRAPH:
-	    code=KeyboardEvent.RIGHT_ALT;
-	    break;
-	default:
-	    /*
-	      final String ch=event.getText();
-	      if((shiftPressed||leftAltPressed||rightAltPressed)&&!ch.isEmpty())
-	      {
-	      final KeyboardEvent emulated=new KeyboardEvent(false,0,ch.toLowerCase().charAt(0),shiftPressed,controlPressed,leftAltPressed,rightAltPressed);
-	      eventConsumer.enqueueEvent(emulated);
-	      }
-	    */
-	    return;
-	}
-	eventConsumer.enqueueEvent(new KeyboardEvent(true,code,' ',shiftPressed,controlPressed,leftAltPressed,rightAltPressed));
-    }
-
-    private void onKeyReleased(KeyEvent event)
-    {
-	controlPressed=event.isControlDown();
-	shiftPressed=event.isShiftDown();
-	leftAltPressed=event.isAltDown();
-    }
-
-    private void onKeyTyped(KeyEvent event)
-    {
-	controlPressed=event.isControlDown();
-	shiftPressed=event.isShiftDown();
-	leftAltPressed=event.isAltDown();
-	if(eventConsumer==null) 
-	    return;
-	final String keychar=event.getCharacter();
-	int code;
-	if(keychar.equals(KeyCode.BACK_SPACE.impl_getChar()))
-	    code=KeyboardEvent.BACKSPACE; else
-	    if(keychar.equals(KeyCode.ENTER.impl_getChar())||keychar.equals("\n")||keychar.equals("\r")) 
-		code=KeyboardEvent.ENTER; else 
-		if(keychar.equals(KeyCode.ESCAPE.impl_getChar())) 
-		    code=KeyboardEvent.ESCAPE; else
-		    if(keychar.equals(KeyCode.DELETE.impl_getChar())) 
-			code=KeyboardEvent.DELETE; else 
-			if(keychar.equals(KeyCode.TAB.impl_getChar())) 
-			    code=KeyboardEvent.TAB; else
-			{
-			    // FIXME: javafx characters return as String type we need a char (now return first symbol)
-			    final KeyboardEvent emulated=new KeyboardEvent(false, 0,
-									   event.getCharacter().charAt(0),
-									   shiftPressed,controlPressed,leftAltPressed,rightAltPressed);
-			    eventConsumer.enqueueEvent(emulated);
-			    return;
-			}
-	//	final int _code=code;
-	eventConsumer.enqueueEvent(new KeyboardEvent(true, code, ' ',
-						     shiftPressed,controlPressed,leftAltPressed,rightAltPressed));
     }
 
     public WebPage getCurPage(){return currentWebPage;}

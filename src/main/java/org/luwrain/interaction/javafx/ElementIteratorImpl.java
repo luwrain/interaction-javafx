@@ -410,6 +410,8 @@ return "";
 		    	int cnt;
 		    	selector.moveToPos(that, pos);
 		    	// step cnt elements before
+		    	if(that.isChanged())
+		    		return true;
 		    	cnt=count;
 		    	while(selector.movePrev(that) && cnt-- > 0)
 			    	if(that.isChanged())

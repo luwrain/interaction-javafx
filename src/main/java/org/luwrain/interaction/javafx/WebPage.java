@@ -34,7 +34,7 @@ import org.w3c.dom.views.DocumentView;
 
 import com.sun.webkit.dom.DOMWindowImpl;
 
-class WebPage implements org.luwrain.browser.Browser
+class WebPage implements Browser
 {
     private JavaFxInteraction wi;
 
@@ -80,49 +80,50 @@ class WebPage implements org.luwrain.browser.Browser
 	final WebPage that=this;
 	final boolean emptyList=wi.webPages.isEmpty();
 	wi.webPages.add(this);
-	Platform.runLater(new Runnable() {
+	Platform.runLater(new Runnable()
+	{
 		@Override public void run()
 		{
 		    webView=new WebView();
 		    webEngine=webView.getEngine();
 		    webView.setOnKeyReleased(new EventHandler<KeyEvent>()
-					     {
-						 @Override public void handle(KeyEvent event)
-						 {
-						     //Log.debug("web","KeyReleased: "+event.toString());
-						     switch(event.getCode())
-						     {
-						     case ESCAPE:wi.setCurPageVisibility(false);break;
-						     default:break;
-						     }
-						 }
-					     });
+		    {
+				@Override public void handle(KeyEvent event)
+				{
+					//Log.debug("web","KeyReleased: "+event.toString());
+					switch(event.getCode())
+					{
+						case ESCAPE:wi.setCurPageVisibility(false);break;
+						default:break;
+					}
+				}
+		    });
 		    webEngine.getLoadWorker().stateProperty().addListener(new ChangeListener<State>()
-									  {
-									      @Override public void changed(ObservableValue<? extends State> ov,State oldState,final State newState)
-									      {
-										  Log.debug("web","State changed to: "+newState.name()+", "+webEngine.getLoadWorker().getState().toString()+", url:"+webEngine.getLocation());
-										  if(newState==State.CANCELLED)
-										  { // if canceled not by user, so that is a file downloads
-										      if(!userStops)
-										      { // if it not by user
-											  if(events.onDownloadStart(webEngine.getLocation())) return;
-										      }
-										  }
-										  WebState state=WebState.CANCELLED;
-										  switch(newState)
-										  {
-										  case CANCELLED:	state=WebState.CANCELLED;break;
-										  case FAILED:	state=WebState.FAILED;break;
-										  case READY:		state=WebState.READY;break;
-										  case RUNNING:	state=WebState.RUNNING;break;
-										  case SCHEDULED:	state=WebState.SCHEDULED;break;
-										  case SUCCEEDED:	state=WebState.SUCCEEDED;break;
-										  }
-										  events.onChangeState(state);
-									      }
-									  });
-		    
+		    {
+		    	@Override public void changed(ObservableValue<? extends State> ov,State oldState,final State newState)
+		    	{
+					Log.debug("web","State changed to: "+newState.name()+", "+webEngine.getLoadWorker().getState().toString()+", url:"+webEngine.getLocation());
+					if(newState==State.CANCELLED)
+					{ // if canceled not by user, so that is a file downloads
+						if(!userStops)
+						{ // if it not by user
+						if(events.onDownloadStart(webEngine.getLocation())) return;
+						}
+					}
+					WebState state=WebState.CANCELLED;
+					switch(newState)
+					{
+						case CANCELLED:	state=WebState.CANCELLED;break;
+						case FAILED:	state=WebState.FAILED;break;
+						case READY:		state=WebState.READY;break;
+						case RUNNING:	state=WebState.RUNNING;break;
+						case SCHEDULED:	state=WebState.SCHEDULED;break;
+						case SUCCEEDED:	state=WebState.SUCCEEDED;break;
+					}
+					events.onChangeState(state);
+				}
+		    });
+
 		    webEngine.getLoadWorker().progressProperty().addListener(new ChangeListener<Number>()
 		    {
 		    	@Override public void changed(ObservableValue<? extends Number> ov,Number o,final Number n)
@@ -131,47 +132,49 @@ class WebPage implements org.luwrain.browser.Browser
 		    	}
 		    });
 
-		    webEngine.setOnAlert(new EventHandler<WebEvent<String>>() {
+		    webEngine.setOnAlert(new EventHandler<WebEvent<String>>()
+		    {
 			    @Override public void handle(final WebEvent<String> event)
 			    {
 						Log.debug("web","t:"+Thread.currentThread().getId()+" ALERT:"+event.getData());
 							events.onAlert(event.getData());
 					}
-				});
+			});
 
-				webEngine.setPromptHandler(new Callback<PromptData,String>() {
-					@Override public String call(final PromptData event)
-					{
-					    Log.debug("web","t:"+Thread.currentThread().getId()+" PROMPT:"+event.getMessage()+"', default '"+event.getDefaultValue()+"'");
-								return events.onPrompt(event.getMessage(),event.getDefaultValue());
-					}
-				});
-
-				webEngine.setConfirmHandler(new Callback<String,Boolean>()
+		    webEngine.setPromptHandler(new Callback<PromptData,String>()
+		    {
+		    	@Override public String call(final PromptData event)
 				{
-					@Override public Boolean call(String param)
-					{
-						Log.debug("web","t:"+Thread.currentThread().getId()+" CONFIRM: "+param);
-						return events.onConfirm(param);
-					}
-				});
+				    Log.debug("web","t:"+Thread.currentThread().getId()+" PROMPT:"+event.getMessage()+"', default '"+event.getDefaultValue()+"'");
+				    return events.onPrompt(event.getMessage(),event.getDefaultValue());
+				}
+		    });
 
-				webEngine.setOnError(new EventHandler<WebErrorEvent>()
+			webEngine.setConfirmHandler(new Callback<String,Boolean>()
+			{
+				@Override public Boolean call(String param)
 				{
-					@Override public void handle(final WebErrorEvent event)
-					{
-						Log.debug("web","thread:"+(Platform.isFxApplicationThread()?"javafx":"main")+"ERROR:"+event.getMessage());
-							events.onError(event.getMessage());
-					}
-				});
+					Log.debug("web","t:"+Thread.currentThread().getId()+" CONFIRM: "+param);
+					return events.onConfirm(param);
+				}
+			});
 
-				webView.setVisible(false);
-				wi.addWebViewControl(webView);
+			webEngine.setOnError(new EventHandler<WebErrorEvent>()
+			{
+				@Override public void handle(final WebErrorEvent event)
+				{
+					Log.debug("web","thread:"+(Platform.isFxApplicationThread()?"javafx":"main")+"ERROR:"+event.getMessage());
+						events.onError(event.getMessage());
+				}
+			});
 
-				if(emptyList) 
-					wi.setCurPage(that);
-			}
-		});
+			webView.setVisible(false);
+			wi.addWebViewControl(webView);
+
+			if(emptyList) 
+				wi.setCurPage(that);
+		}
+	});
     }
 
 	private boolean busy=false;
@@ -344,8 +347,7 @@ class WebPage implements org.luwrain.browser.Browser
 
     @Override public String getTitle()
     {
-		if(webEngine==null)// return null; // FIXME: throw exception when webEngine not ready to use
-		    throw new NullPointerException("webEngine not initialized");
+		if(webEngine==null) return "";
 		return webEngine.titleProperty().get();
     }
 
