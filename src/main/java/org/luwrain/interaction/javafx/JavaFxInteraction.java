@@ -6,15 +6,6 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.FutureTask;
 
-import org.luwrain.browser.Browser;
-import org.luwrain.core.EventConsumer;
-import org.luwrain.core.Interaction;
-import org.luwrain.core.InteractionParamColor;
-import org.luwrain.core.InteractionParams;
-import org.luwrain.core.Log;
-import org.luwrain.os.Keyboard;
-import org.luwrain.os.OperatingSystem;
-
 import javafx.stage.Screen;
 import javafx.application.Platform;
 import javafx.event.EventHandler;
@@ -24,50 +15,24 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.web.WebView;
 
+import org.luwrain.browser.Browser;
+import org.luwrain.core.*;
+import org.luwrain.os.*;
 import org.luwrain.util.Str;
 
 import org.luwrain.windows.Windows;
 
 public class JavaFxInteraction implements Interaction
 {
-    static Color InteractionParamColorToFx(InteractionParamColor ipc)
-    {
-	if(ipc.getPredefined()==null)
-	    return new Color(ipc.getRed()/256,ipc.getGreen()/256,ipc.getBlue()/256,1);
-	switch(ipc.getPredefined())
-	{
-	case BLACK:		return Color.BLACK;
-	case BLUE:		return Color.BLUE;
-	case CYAN:		return Color.CYAN;
-	case DARK_GRAY:	return Color.DARKGRAY;
-	case GRAY:		return Color.GRAY;
-	case GREEN:		return Color.GREEN;
-	case LIGHT_GRAY:return Color.LIGHTGRAY;
-	case MAGENTA:	return Color.MAGENTA;
-	case ORANGE:	return Color.ORANGE;
-	case PINK:		return Color.PINK;
-	case RED:		return Color.RED;
-	case WHITE:		return Color.WHITE;
-	case YELLOW:	return Color.YELLOW;	
-	    // WARN: not predefined colors have opacity = 1
-	default: 		return new Color(ipc.getRed()/256,ipc.getGreen()/256,ipc.getBlue()/256,1);
-	}
-    }
-
     private static final int MIN_FONT_SIZE = 4;
-    private static final String FRAME_TITLE = "Luwrain";
+    private static final String FRAME_TITLE = "LUWRAIN";
     private boolean drawingInProgress=false;
     private int currentFontSize = 14;
     private String fontName = "Consolas";
-    public final Vector<WebPage> webPages=new Vector<WebPage>();
+    final Vector<WebPage> webPages=new Vector<WebPage>();
     private WebPage currentWebPage=null;
-
-    private Keyboard keyboard;
-
+    private KeyboardHandler keyboard;
     private MainJavafxApp frame;
-
-    // in javafx keyTyped have no information about pressed alphabetic key
-    //    String lastKeyPressed=null;
 
     static <A> A fxcall(Callable<A> task, A onfail)
     {
@@ -118,7 +83,7 @@ public class JavaFxInteraction implements Interaction
 	static Object sync=new Object();
 	static boolean ready=false;
 
-	public static void waitJavaFx()
+	static void waitJavaFx()
 	{
 	    synchronized(sync)
 	    {
@@ -144,7 +109,6 @@ public class JavaFxInteraction implements Interaction
 
 	@Override public void run()
 	{
-	    System.out.println("thread");
 	    MainJavafxApp.launch(MainJavafxApp.class);
 	    // closed via Alt+F4 or any other window based task killer
 	    System.exit(2);
@@ -155,16 +119,13 @@ public class JavaFxInteraction implements Interaction
 
     @Override public boolean init(final InteractionParams params,final OperatingSystem os)
     {
-	if (params == null)
-	    throw new NullPointerException("params may not be null");
+	NullCheck.notNull(params, "params");
 	if (params.fontName != null && !params.fontName.trim().isEmpty())
 	    fontName = params.fontName;
 	threadfx.start();
 	// wait for thread starts and finished javafx init
 	MainJavafxThread.waitJavaFx();
 	frame=MainJavafxApp.getClassObject();
-
-		//synchronized(frame.awaiting){try{frame.awaiting.wait();}catch(Exception e) {e.printStackTrace();}}
 
 	Callable<Boolean> task=new Callable<Boolean>()
 	{
@@ -173,37 +134,18 @@ public class JavaFxInteraction implements Interaction
 		currentFontSize = params.initialFontSize;
 		int wndWidth = params.wndWidth;
 		int wndHeight = params.wndHeight;
-
 		frame.setInteractionFont(createFont(currentFontSize));
 		frame.setColors(
-				InteractionParamColorToFx(params.fontColor),
-				InteractionParamColorToFx(params.bkgColor),
-				InteractionParamColorToFx(params.splitterColor));
+				Utils.InteractionParamColorToFx(params.fontColor),
+				Utils.InteractionParamColorToFx(params.bkgColor),
+				Utils.InteractionParamColorToFx(params.splitterColor));
 		frame.setMargin(params.marginLeft,params.marginTop,params.marginRight,params.marginBottom);
 		//frame.primary.requestFocus();
-
 		// FIXME: make better OS abstraction, but now we have only two OS types, windows like and other, like *nix
-		keyboard=(os instanceof Windows?new KeyboardWindows():new KeyboardLinux());
-		
-		frame.primary.addEventHandler(KeyEvent.KEY_PRESSED,new EventHandler<KeyEvent>() {
-			@Override public void handle(KeyEvent event) 
-			{
-			    keyboard.onKeyPressed(event);
-			}
-		    });
-		frame.primary.addEventHandler(KeyEvent.KEY_RELEASED,new EventHandler<KeyEvent>(){
-			@Override public void handle(KeyEvent event) 
-			{
-				keyboard.onKeyReleased(event);
-			}
-		});
-		frame.primary.addEventHandler(KeyEvent.KEY_TYPED,new EventHandler<KeyEvent>(){
-			@Override public void handle(KeyEvent event) 
-			{
-				keyboard.onKeyTyped(event);
-			}
-		});
-
+		keyboard = os.getCustomKeyboardHandler("javafx");
+		frame.primary.addEventHandler(KeyEvent.KEY_PRESSED, (event)->keyboard.onKeyPressed(event));
+		frame.primary.addEventHandler(KeyEvent.KEY_RELEASED, (event)->keyboard.onKeyReleased(event));
+		frame.primary.addEventHandler(KeyEvent.KEY_TYPED, (event)->keyboard.onKeyTyped(event));
 		if(wndWidth<0||wndHeight<0)
 		{
 		    // undecorated full visible screen size
@@ -215,16 +157,13 @@ public class JavaFxInteraction implements Interaction
 		    Log.debug("javafx", "Typical window mode, size:"+wndWidth+"x"+wndHeight);
 		    frame.setSizeAndShow(wndWidth,wndHeight);
 		}
-
 		return true;
 	    }
 	};
+
 	boolean res=fxcall(task,false);
 	if(!res) 
 	    return false;
-	// FIXME: uggly javafx window resize was not size childs in the moment
-	//try{Thread.sleep(500);}catch(Exception e){}
-
 	if(!frame.initTable())
 	{
 	    Log.fatal("javafx","error occurred on table initialization");
@@ -233,7 +172,7 @@ public class JavaFxInteraction implements Interaction
 	return true;
     }
 
-	@Override public void close()
+    @Override public void close()
 	{
 		// FIXME:
 	}
@@ -345,10 +284,17 @@ public class JavaFxInteraction implements Interaction
 		return res;
     }
 
-    public WebPage getCurPage(){return currentWebPage;}
+    @Override public Browser createBrowser()
+    {
+	return new WebPage(this);
+    }
+	WebPage getCurPage()
+	{
+	return currentWebPage;
+	}
 
     // change current page to curPage, if it null, change previous current page to not visible 
-    public void setCurPage(WebPage curPage,boolean visibility)
+void setCurPage(WebPage curPage,boolean visibility)
     {
 	if(currentWebPage!=null)
 	{ // change visibility current page to off
@@ -363,12 +309,12 @@ public class JavaFxInteraction implements Interaction
 	}
     }
 
-    public void setCurPage(WebPage curPage)
+    void setCurPage(WebPage curPage)
     {
 	setCurPage(curPage,false);
     }
 
-    public void setCurPageVisibility(boolean enable)
+    void setCurPageVisibility(boolean enable)
     {
 	if(currentWebPage!=null)
 	{
@@ -379,22 +325,18 @@ public class JavaFxInteraction implements Interaction
 	}
     }
 
-    @Override public Browser createBrowser()
-    {
-	return (Browser)new WebPage(this);
-    }
 
-    public void addWebViewControl(WebView webView)
+void addWebViewControl(WebView webView)
     {
 	frame.root.getChildren().add(webView);
     }
 
-    public void disablePaint()
+    void disablePaint()
     {
 	frame.doPaint=false;
     }
 
-    public void enablePaint()
+    void enablePaint()
     {
 	frame.primary.requestFocus();
 	frame.doPaint=true;
