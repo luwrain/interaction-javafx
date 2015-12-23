@@ -238,13 +238,13 @@ class ElementIteratorImpl implements ElementList
 	    {
 		page.htmlWnd.setMember(GET_NODE_TEXT, current().node);
 		if(!page.domIdx.containsKey(current().node)) 
-return "";
+			return "";
 		try{
 		    return page.webEngine.executeScript("(function(){var x=window."+GET_NODE_TEXT+";return x.innerText===undefined?x.nodeValue:x.innerText})()").toString();
 		}
 		catch(Exception e)
 		{
-		    e.printStackTrace();
+		    //e.printStackTrace();
 		    return "";
 		}
 	    }};
@@ -395,7 +395,8 @@ return "";
 		}
 		// last changes already scanned
 		int oldHash=info.hash;
-		info.calcHash(getHtml());
+		String html=getHtml();
+		info.calcHash(html);
 		//System.out.println("["+pos+":"+current().node.getClass().getSimpleName()+":"+info.hash+"]");
 		//if(oldHash!=info.hash) System.out.println("changes detected");
 		return oldHash!=info.hash;
@@ -409,13 +410,11 @@ return "";
 		    {
 		    	int cnt;
 		    	selector.moveToPos(that, pos);
-		    	// step cnt elements before
-		    	if(that.isChanged())
-		    		return true;
 		    	cnt=count;
 		    	while(selector.movePrev(that) && cnt-- > 0)
 			    	if(that.isChanged())
 			    		return true;
+		    	selector.moveToPos(that, pos);
 		    	cnt=count;
 		    	while(selector.moveNext(that) && cnt-- > 0)
 			    	if(that.isChanged())

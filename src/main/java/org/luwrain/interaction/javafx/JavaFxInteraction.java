@@ -20,8 +20,6 @@ import org.luwrain.core.*;
 import org.luwrain.os.*;
 import org.luwrain.util.Str;
 
-import org.luwrain.windows.Windows;
-
 public class JavaFxInteraction implements Interaction
 {
     private static final int MIN_FONT_SIZE = 4;
@@ -288,10 +286,12 @@ public class JavaFxInteraction implements Interaction
     {
 	return new WebPage(this);
     }
-	WebPage getCurPage()
-	{
-	return currentWebPage;
-	}
+
+
+WebPage getCurPage()
+{
+return currentWebPage;
+}
 
     // change current page to curPage, if it null, change previous current page to not visible 
 void setCurPage(WebPage curPage,boolean visibility)
