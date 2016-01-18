@@ -1,7 +1,13 @@
 
 package org.luwrain.interaction.javafx;
 
+import javafx.application.Platform;
 import javafx.scene.paint.Color;
+
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.FutureTask;
+
 import org.luwrain.core.InteractionParamColor;
 
 class Utils
@@ -29,5 +35,66 @@ class Utils
 	default: 		return new Color(ipc.getRed()/256,ipc.getGreen()/256,ipc.getBlue()/256,1);
 	}
     }
+    
+    public static <A> A fxcall(Callable<A> task, A onfail)
+    {
+	FutureTask<A> query=new FutureTask<A>(task){};
+	if(Platform.isFxApplicationThread()) 
+	{
+	    try {
+		task.call();
+	    } 
+	    catch(Exception e) 
+	    {
+		e.printStackTrace();} return onfail;
+	}
+	// call from awt thread 
+	Platform.runLater(query);
+	// waiting for rescan end
+	try {return query.get();} catch(InterruptedException|ExecutionException e) {e.printStackTrace();return onfail;}
+    }
+
+    public static void fxcall(Callable<Boolean> task)
+    {
+	FutureTask<Boolean> query=new FutureTask<Boolean>(task){};
+	if(Platform.isFxApplicationThread()) 
+	{
+	    try {
+		task.call();
+	    } 
+	    catch(Exception e) 
+	    {
+		e.printStackTrace();
+	    } 
+	    return;
+	}
+	// call from awt thread 
+	Platform.runLater(query);
+	// waiting for rescan end
+	try {
+	    query.get();
+	} 
+	catch(InterruptedException|ExecutionException e) 
+	{
+	    e.printStackTrace();
+	}
+    }
+    
+    public static void fxnowait(Runnable query)
+    {
+    	if(Platform.isFxApplicationThread())
+    	{
+    	    try {
+    	    	query.run();
+    	    }
+    	    catch(Exception e)
+    	    {
+   	    	e.printStackTrace();
+    	    }
+    	    return;
+    	}
+   		Platform.runLater(query);
+    }
+
 
 }

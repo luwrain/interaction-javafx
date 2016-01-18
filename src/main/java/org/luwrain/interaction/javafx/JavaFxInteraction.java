@@ -32,49 +32,6 @@ public class JavaFxInteraction implements Interaction
     private KeyboardHandler keyboard;
     private MainJavafxApp frame;
 
-    static <A> A fxcall(Callable<A> task, A onfail)
-    {
-	FutureTask<A> query=new FutureTask<A>(task){};
-	if(Platform.isFxApplicationThread()) 
-	{
-	    try {
-		task.call();
-	    } 
-	    catch(Exception e) 
-	    {
-		e.printStackTrace();} return onfail;
-	}
-	// call from awt thread 
-	Platform.runLater(query);
-	// waiting for rescan end
-	try {return query.get();} catch(InterruptedException|ExecutionException e) {e.printStackTrace();return onfail;}
-    }
-
-    static void fxcall(Callable<Boolean> task)
-    {
-	FutureTask<Boolean> query=new FutureTask<Boolean>(task){};
-	if(Platform.isFxApplicationThread()) 
-	{
-	    try {
-		task.call();
-	    } 
-	    catch(Exception e) 
-	    {
-		e.printStackTrace();
-	    } 
-	    return;
-	}
-	// call from awt thread 
-	Platform.runLater(query);
-	// waiting for rescan end
-	try {
-	    query.get();
-	} 
-	catch(InterruptedException|ExecutionException e) 
-	{
-	    e.printStackTrace();
-	}
-    }
 
     static class MainJavafxThread implements Runnable
     {
@@ -159,7 +116,7 @@ public class JavaFxInteraction implements Interaction
 	    }
 	};
 
-	boolean res=fxcall(task,false);
+	boolean res=Utils.fxcall(task,false);
 	if(!res) 
 	    return false;
 	if(!frame.initTable())
