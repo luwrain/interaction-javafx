@@ -25,14 +25,14 @@ class SelectorAllImpl extends SelectorImpl implements SelectorAll
     }
 
     // return true if current element is visible
-    @Override public boolean checkVisible(ElementList it)
+    @Override public boolean checkVisible(ElementIterator it)
     {
 	final ElementIteratorImpl itImpl = (ElementIteratorImpl)it;
 	return itImpl.current().isVisible();
     }
 
     /** return true if current element suits the condition of this selector.*/
-    @Override public boolean suits(ElementList it)
+    @Override public boolean suits(ElementIterator it)
     {
 	final ElementIteratorImpl itImpl = (ElementIteratorImpl)it;
 	if(visible&&!checkVisible(itImpl))

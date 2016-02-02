@@ -385,7 +385,7 @@ class WebPage implements Browser
 	return new SelectorCssImpl(visible,tagName,styleName,styleValue);
     }
 
-    @Override public ElementList iterator()
+    @Override public ElementIterator iterator()
     {
 	return new ElementIteratorImpl(this);
     }

@@ -28,7 +28,7 @@ import org.w3c.dom.*;
 import org.luwrain.browser.*;
 import org.luwrain.core.*;
 
-class ElementIteratorImpl implements ElementList
+class ElementIteratorImpl implements ElementIterator
 {
     // javascript window's property names for using in executeScrypt
     static final String GET_NODE_TEXT="get_node_text";

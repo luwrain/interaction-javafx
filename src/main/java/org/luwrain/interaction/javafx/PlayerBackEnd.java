@@ -2,7 +2,6 @@ package org.luwrain.interaction.javafx;
 
 import javafx.scene.media.Media;                                             
 import javafx.scene.media.MediaPlayer;
-import javafx.scene.media.MediaPlayer.Status;
 
 import java.util.concurrent.Callable;
 

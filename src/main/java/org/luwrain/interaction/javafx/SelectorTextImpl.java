@@ -31,7 +31,7 @@ class SelectorTextImpl extends SelectorAllImpl implements SelectorText
 	this.filter=filter;
     }
 
-    @Override public boolean suits(ElementList wel_)
+    @Override public boolean suits(ElementIterator wel_)
     {
 	final ElementIteratorImpl wel = (ElementIteratorImpl)wel_;
 	if(wel.page.dom.size()<=wel.pos||wel.pos<0) return false;

@@ -24,7 +24,7 @@ SelectorCssImpl(boolean visible, String tagName,
 			this.styleValue=styleValue;
 		}
 		// return true if current element corresponds this selector
-		@Override public boolean suits(ElementList wel_)
+		@Override public boolean suits(ElementIterator wel_)
 		{
 			ElementIteratorImpl wel=(ElementIteratorImpl)wel_;
 			//			wel.current=wel.page.dom.get(wel.pos);

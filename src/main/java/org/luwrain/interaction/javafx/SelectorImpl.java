@@ -29,7 +29,7 @@ abstract class SelectorImpl implements Selector
      * @param it The iterator to move
      * @return True if the iterator gets necessary position, false otherwise
      */
-    @Override public boolean moveFirst(ElementList it)
+    @Override public boolean moveFirst(ElementIterator it)
     {
 	final ElementIteratorImpl itImpl = (ElementIteratorImpl)it;
 	final int origState = itImpl.pos;
@@ -52,7 +52,7 @@ abstract class SelectorImpl implements Selector
      * @param it The iterator to move
      * @return True if the iterator gets necessary position, false otherwise
      */
-    @Override public boolean moveNext(ElementList it)
+    @Override public boolean moveNext(ElementIterator it)
     {
 	final ElementIteratorImpl itImpl = (ElementIteratorImpl)it;
 	final int origState = itImpl.pos;
@@ -75,7 +75,7 @@ abstract class SelectorImpl implements Selector
      * @param it The iterator to move
      * @return True if the iterator gets necessary position, false otherwise
      */
-    @Override public boolean movePrev(ElementList it)
+    @Override public boolean movePrev(ElementIterator it)
     {
 	final ElementIteratorImpl itImpl = (ElementIteratorImpl)it;
 	final int origState = itImpl.pos;
@@ -90,7 +90,7 @@ abstract class SelectorImpl implements Selector
 	return true;
     }
 
-    @Override public boolean moveToPos(ElementList it, int pos)
+    @Override public boolean moveToPos(ElementIterator it, int pos)
     {
 	if(it.getPos() == pos)
 	    return true; else 
