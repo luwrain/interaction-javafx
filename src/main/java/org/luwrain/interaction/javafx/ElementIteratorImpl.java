@@ -1,19 +1,3 @@
-/*
-   Copyright 2015-2016 Roman Volovodov <gr.rPman@gmail.com>
-   Copyright 2012-2016 Michael Pozhidaev <michael.pozhidaev@gmail.com>
-
-   This file is part of the LUWRAIN.
-
-   LUWRAIN is free software; you can redistribute it and/or
-   modify it under the terms of the GNU General Public
-   License as published by the Free Software Foundation; either
-   version 3 of the License, or (at your option) any later version.
-
-   LUWRAIN is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-   General Public License for more details.
-*/
 
 package org.luwrain.interaction.javafx;
 
@@ -52,7 +36,7 @@ class ElementIteratorImpl implements ElementIterator
     WebPage page;
     int pos=0;
     //    WebPage.NodeInfo current;
-    
+
     public ElementIterator clone()
     {
     	ElementIteratorImpl result=new ElementIteratorImpl(page);
@@ -60,15 +44,21 @@ class ElementIteratorImpl implements ElementIterator
     	return result;
     }
 
-    ElementIteratorImpl(WebPage page)
-    {
-	this.page=page;
-    }
-    
     @Override public boolean isVisible()
     {
     	NodeInfo info=page.dom.get(pos);
     	return info.isVisible();
+    }
+
+    @Override public boolean forTEXT()
+	{
+    	NodeInfo info=page.dom.get(pos);
+    	return info.forTEXT;
+	}
+
+    ElementIteratorImpl(WebPage page)
+    {
+	this.page=page;
     }
 
     @Override public int getPos()
@@ -83,7 +73,9 @@ class ElementIteratorImpl implements ElementIterator
 	    if(current().node instanceof HTMLInputElement)
 	    {
 		try {
-		    return "input "+current().node.getAttributes().getNamedItem("type").getNodeValue();
+			String type=current().node.getAttributes().getNamedItem("type").getNodeValue();
+			if(type.equals("button")) return "button";
+		    return "input "+type;
 		}
 		catch(Exception e) 
 		{
@@ -107,7 +99,7 @@ class ElementIteratorImpl implements ElementIterator
 			return "select";
 		} else
 		{
-		    return "other text";
+		    return current().node.getNodeName().toLowerCase();
 		}
     }
 
@@ -302,8 +294,16 @@ class ElementIteratorImpl implements ElementIterator
 	Callable<String> task=new Callable<String>(){
 	    @Override public String call()
 	    {
-		CSSStyleDeclaration style = page.htmlWnd.getComputedStyle((HTMLElement)current().node, "");
-		return style.getPropertyValue(name);
+	    	Node n=current().node;
+	    	if(n instanceof com.sun.webkit.dom.HTMLDocumentImpl)
+	    		return "";
+	    	if(n instanceof Text)
+	    	{ // we can't get style for simple text node, we need get it from parent tag
+	    		n=n.getParentNode();
+	    	}
+			CSSStyleDeclaration style = page.htmlWnd.getComputedStyle((HTMLElement)n,"");
+			String css=style.getPropertyValue(name);
+			return css;
 	    }};
 	if(Platform.isFxApplicationThread()) 
 	    try{
@@ -325,30 +325,32 @@ class ElementIteratorImpl implements ElementIterator
 
     @Override public String getComputedStyleAll()
     {
-	Callable<String> task=new Callable<String>(){
-	    @Override public String call()
-	    {
-		CSSStyleDeclaration style = page.htmlWnd.getComputedStyle((HTMLElement)current().node, "");
-		return style.getCssText();
-	    }};
-	if(Platform.isFxApplicationThread()) try
-					     {
-						 return task.call();
-					     }
-	    catch(Exception e)
-	    {
-		return null;
-	    }
-	FutureTask<String> query=new FutureTask<String>(task);
-	Platform.runLater(query);
-	try{
-	    return query.get();
-	}
-	catch(Exception e)
-	{
-	    return null;
-	}
-	// FIXME: make better error handling
+    	try
+    	{
+    		Callable<String> task=new Callable<String>(){ @Override public String call()
+		    {
+		    	Node n=current().node;
+		    	if(n instanceof com.sun.webkit.dom.HTMLDocumentImpl)
+		    		return "";
+		    	if(n instanceof Text)
+		    	{ // we can't get style for simple text node, we need get it from parent tag
+		    		n=n.getParentNode();
+		    	}
+				CSSStyleDeclaration style = page.htmlWnd.getComputedStyle((HTMLElement)n, "");
+				String css=style.getCssText();
+				return css;
+		    }};
+		    if(Platform.isFxApplicationThread())
+				 return task.call();
+			FutureTask<String> query=new FutureTask<String>(task);
+			Platform.runLater(query);
+			return query.get();
+    	} // FIXME: make better error handling
+    	catch(Exception e)
+    	{
+    		e.printStackTrace();
+    		return null;
+    	}
     }
 
     @Override public void clickEmulate()
@@ -473,11 +475,10 @@ class ElementIteratorImpl implements ElementIterator
 		// FIXME: make better error handling
 	}
 
-    NodeInfo current()
+	public NodeInfo current()
     {
 	return page.dom.get(pos);
     }
-
 	@Override public ElementIterator getParent()
 	{
 		if(page.dom.get(pos).parent==null)
@@ -488,13 +489,21 @@ class ElementIteratorImpl implements ElementIterator
 	}
 	@Override public SelectorChilds getChilds(boolean visible)
 	{
-		Vector<Integer> childs=new Vector<Integer>();
-		NodeInfo node=current();
-		for(NodeInfo info:page.dom)
+		return Utils.fxcall(new Callable<SelectorChilds>()
 		{
-			if(info.parent!=null&&info.parent.equals(node))
-				childs.add(page.domIdx.get(info.node)); // it is ugly way to get index, but for loop have inaccessible index
-		}
-		return new SelectorChildsImpl(visible,childs.toArray(new Integer[childs.size()]));
+			@Override public SelectorChilds call() throws Exception
+			{
+				//System.out.println("CHILDS");
+				Vector<Integer> childs=new Vector<Integer>();
+				NodeInfo node=current();
+				for(NodeInfo info:page.dom)
+				{
+					//System.out.println("CHILDS: test parents "+info.node+" for "+(info.parent==null?"null":page.dom.get(info.parent).node)+"=="+node.node+(info.parent!=null&&page.dom.get(info.parent).equals(node)));
+					if(info.parent!=null&&page.dom.get(info.parent).equals(node))
+						childs.add(page.domIdx.get(info.node)); // it is ugly way to get index, but for loop have inaccessible index
+				}
+				return new SelectorChildsImpl(visible,childs.toArray(new Integer[childs.size()]));
+			}
+		},null);
 	}
 }
