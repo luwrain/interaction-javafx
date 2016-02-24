@@ -20,6 +20,7 @@ package org.luwrain.interaction.javafx;
 class NodeInfo
 {
     org.w3c.dom.Node node;
+    Integer parent=null;
     java.awt.Rectangle rect;
     boolean forTEXT;
     int hash;

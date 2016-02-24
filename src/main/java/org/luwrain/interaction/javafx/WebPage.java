@@ -307,7 +307,20 @@ class WebPage implements Browser
 		    //if(info.forTEXT&&info.isVisible()) System.out.println("DOM: node:"+n.getNodeName()+", "+(!(n instanceof HTMLElement)?n.getNodeValue():((HTMLElement)n).getTextContent())); // +" text:"+info.forTEXT+
 		    domIdx.put(n, i);
 		    dom.add(info);
-		    //
+		}
+		// keep node parent's info
+		for(NodeInfo info:dom)
+		{
+			do
+			{
+				final org.w3c.dom.Node parent=info.node.getParentNode();
+				if(parent==null) break;
+				if(domIdx.containsKey(parent))
+				{
+					info.parent=domIdx.get(parent);
+					break;
+				}
+			} while(true);
 		}
 		// reselect window object (for example if page was reloaded)
 		window=(JSObject)webEngine.executeScript("window");
@@ -410,4 +423,20 @@ class WebPage implements Browser
     {
 	return domIdx.size();
     }
+
+	@Override public SelectorChilds rootChilds(boolean visible)
+	{
+		Vector<Integer> childs=new Vector<Integer>();
+		SelectorAllImpl all=new SelectorAllImpl(visible);
+		ElementIteratorImpl list=new ElementIteratorImpl(this);
+		all.moveFirst(list);
+		while(true)
+		{
+			NodeInfo info=list.current(); 
+			if(info.parent==null)
+				childs.add(domIdx.get(info.node));
+			if(!all.moveNext(list)) break;
+		}
+		return new SelectorChildsImpl(visible,childs.toArray(new Integer[childs.size()]));
+	}
 }

@@ -92,9 +92,9 @@ abstract class SelectorImpl implements Selector
 
     @Override public boolean moveToPos(ElementIterator it, int pos)
     {
-	if(it.getPos() == pos)
-	    return true; else 
-	    if(it.getPos() < pos)
+    	if(it.getPos() == pos)
+    		return true;
+    	else if(it.getPos() < pos)
 	    {
 		while(moveNext(it)) 
 		    if(pos == it.getPos()) 

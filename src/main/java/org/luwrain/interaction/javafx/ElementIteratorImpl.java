@@ -52,10 +52,23 @@ class ElementIteratorImpl implements ElementIterator
     WebPage page;
     int pos=0;
     //    WebPage.NodeInfo current;
+    
+    public ElementIterator clone()
+    {
+    	ElementIteratorImpl result=new ElementIteratorImpl(page);
+    	result.pos=pos;
+    	return result;
+    }
 
     ElementIteratorImpl(WebPage page)
     {
 	this.page=page;
+    }
+    
+    @Override public boolean isVisible()
+    {
+    	NodeInfo info=page.dom.get(pos);
+    	return info.isVisible();
     }
 
     @Override public int getPos()
@@ -464,4 +477,24 @@ class ElementIteratorImpl implements ElementIterator
     {
 	return page.dom.get(pos);
     }
+
+	@Override public ElementIterator getParent()
+	{
+		if(page.dom.get(pos).parent==null)
+			return null;
+		ElementIteratorImpl parent=new ElementIteratorImpl(page);
+		parent.pos=page.dom.get(pos).parent;
+		return parent;
+	}
+	@Override public SelectorChilds getChilds(boolean visible)
+	{
+		Vector<Integer> childs=new Vector<Integer>();
+		NodeInfo node=current();
+		for(NodeInfo info:page.dom)
+		{
+			if(info.parent!=null&&info.parent.equals(node))
+				childs.add(page.domIdx.get(info.node)); // it is ugly way to get index, but for loop have inaccessible index
+		}
+		return new SelectorChildsImpl(visible,childs.toArray(new Integer[childs.size()]));
+	}
 }
