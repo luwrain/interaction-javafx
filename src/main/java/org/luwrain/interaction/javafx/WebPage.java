@@ -1,19 +1,3 @@
-/*
-   Copyright 2015-2016 Roman Volovodov <gr.rPman@gmail.com>
-   Copyright 2012-2016 Michael Pozhidaev <michael.pozhidaev@gmail.com>
-
-   This file is part of the LUWRAIN.
-
-   LUWRAIN is free software; you can redistribute it and/or
-   modify it under the terms of the GNU General Public
-   License as published by the Free Software Foundation; either
-   version 3 of the License, or (at your option) any later version.
-
-   LUWRAIN is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-   General Public License for more details.
-*/
 
 package org.luwrain.interaction.javafx;
 
@@ -71,75 +55,55 @@ class WebPage implements Browser
 	wi = interaction;
     }
 
-    static <A> A fxcall(Callable<A> task, A onfail)
-    {
-	FutureTask<A> query=new FutureTask<A>(task){};
-	if(Platform.isFxApplicationThread())
-	{ // direct call
-			try {return task.call();}
-			catch(Exception e) {e.printStackTrace();}
-			return onfail;
-	} else
-	{
-	    // call from awt thread 
-	    Platform.runLater(query);
-	    // waiting for rescan end
-	    try {return query.get();}
-	    catch(InterruptedException|ExecutionException e) {e.printStackTrace();}
-	    return onfail;
-	}
-    }
-
     // make new empty WebPage (like about:blank) and add it to WebEngineInteraction's webPages
     @Override public void init(final org.luwrain.browser.Events events)
     {
 	final WebPage that=this;
 	final boolean emptyList=wi.webPages.isEmpty();
 	wi.webPages.add(this);
-	Platform.runLater(new Runnable()
-	{
+	Platform.runLater(new Runnable() {
 		@Override public void run()
 		{
 		    webView=new WebView();
 		    webEngine=webView.getEngine();
 		    webView.setOnKeyReleased(new EventHandler<KeyEvent>()
-		    {
-				@Override public void handle(KeyEvent event)
-				{
-					//Log.debug("web","KeyReleased: "+event.toString());
-					switch(event.getCode())
-					{
-						case ESCAPE:wi.setCurPageVisibility(false);break;
-						default:break;
-					}
-				}
-		    });
+					     {
+						 @Override public void handle(KeyEvent event)
+						 {
+						     //Log.debug("web","KeyReleased: "+event.toString());
+						     switch(event.getCode())
+						     {
+						     case ESCAPE:wi.setCurPageVisibility(false);break;
+						     default:break;
+						     }
+						 }
+					     });
 		    webEngine.getLoadWorker().stateProperty().addListener(new ChangeListener<State>()
-		    {
-		    	@Override public void changed(ObservableValue<? extends State> ov,State oldState,final State newState)
-		    	{
-					Log.debug("web","State changed to: "+newState.name()+", "+webEngine.getLoadWorker().getState().toString()+", url:"+webEngine.getLocation());
-					if(newState==State.CANCELLED)
-					{ // if canceled not by user, so that is a file downloads
-						if(!userStops)
-						{ // if it not by user
-						if(events.onDownloadStart(webEngine.getLocation())) return;
-						}
-					}
-					WebState state=WebState.CANCELLED;
-					switch(newState)
-					{
-						case CANCELLED:	state=WebState.CANCELLED;break;
-						case FAILED:	state=WebState.FAILED;break;
-						case READY:		state=WebState.READY;break;
-						case RUNNING:	state=WebState.RUNNING;break;
-						case SCHEDULED:	state=WebState.SCHEDULED;break;
-						case SUCCEEDED:	state=WebState.SUCCEEDED;break;
-					}
-					events.onChangeState(state);
-				}
-		    });
-
+									  {
+									      @Override public void changed(ObservableValue<? extends State> ov,State oldState,final State newState)
+									      {
+										  Log.debug("web","State changed to: "+newState.name()+", "+webEngine.getLoadWorker().getState().toString()+", url:"+webEngine.getLocation());
+										  if(newState==State.CANCELLED)
+										  { // if canceled not by user, so that is a file downloads
+										      if(!userStops)
+										      { // if it not by user
+											  if(events.onDownloadStart(webEngine.getLocation())) return;
+										      }
+										  }
+										  WebState state=WebState.CANCELLED;
+										  switch(newState)
+										  {
+										  case CANCELLED:	state=WebState.CANCELLED;break;
+										  case FAILED:	state=WebState.FAILED;break;
+										  case READY:		state=WebState.READY;break;
+										  case RUNNING:	state=WebState.RUNNING;break;
+										  case SCHEDULED:	state=WebState.SCHEDULED;break;
+										  case SUCCEEDED:	state=WebState.SUCCEEDED;break;
+										  }
+										  events.onChangeState(state);
+									      }
+									  });
+		    
 		    webEngine.getLoadWorker().progressProperty().addListener(new ChangeListener<Number>()
 		    {
 		    	@Override public void changed(ObservableValue<? extends Number> ov,Number o,final Number n)
@@ -148,49 +112,47 @@ class WebPage implements Browser
 		    	}
 		    });
 
-		    webEngine.setOnAlert(new EventHandler<WebEvent<String>>()
-		    {
+		    webEngine.setOnAlert(new EventHandler<WebEvent<String>>() {
 			    @Override public void handle(final WebEvent<String> event)
 			    {
 						Log.debug("web","t:"+Thread.currentThread().getId()+" ALERT:"+event.getData());
 							events.onAlert(event.getData());
 					}
-			});
+				});
 
-		    webEngine.setPromptHandler(new Callback<PromptData,String>()
-		    {
-		    	@Override public String call(final PromptData event)
+				webEngine.setPromptHandler(new Callback<PromptData,String>() {
+					@Override public String call(final PromptData event)
+					{
+					    Log.debug("web","t:"+Thread.currentThread().getId()+" PROMPT:"+event.getMessage()+"', default '"+event.getDefaultValue()+"'");
+								return events.onPrompt(event.getMessage(),event.getDefaultValue());
+					}
+				});
+
+				webEngine.setConfirmHandler(new Callback<String,Boolean>()
 				{
-				    Log.debug("web","t:"+Thread.currentThread().getId()+" PROMPT:"+event.getMessage()+"', default '"+event.getDefaultValue()+"'");
-				    return events.onPrompt(event.getMessage(),event.getDefaultValue());
-				}
-		    });
+					@Override public Boolean call(String param)
+					{
+						Log.debug("web","t:"+Thread.currentThread().getId()+" CONFIRM: "+param);
+						return events.onConfirm(param);
+					}
+				});
 
-			webEngine.setConfirmHandler(new Callback<String,Boolean>()
-			{
-				@Override public Boolean call(String param)
+				webEngine.setOnError(new EventHandler<WebErrorEvent>()
 				{
-					Log.debug("web","t:"+Thread.currentThread().getId()+" CONFIRM: "+param);
-					return events.onConfirm(param);
-				}
-			});
+					@Override public void handle(final WebErrorEvent event)
+					{
+						Log.debug("web","thread:"+(Platform.isFxApplicationThread()?"javafx":"main")+"ERROR:"+event.getMessage());
+							events.onError(event.getMessage());
+					}
+				});
 
-			webEngine.setOnError(new EventHandler<WebErrorEvent>()
-			{
-				@Override public void handle(final WebErrorEvent event)
-				{
-					Log.debug("web","thread:"+(Platform.isFxApplicationThread()?"javafx":"main")+"ERROR:"+event.getMessage());
-						events.onError(event.getMessage());
-				}
-			});
+				webView.setVisible(false);
+				wi.addWebViewControl(webView);
 
-			webView.setVisible(false);
-			wi.addWebViewControl(webView);
-
-			if(emptyList) 
-				wi.setCurPage(that);
-		}
-	});
+				if(emptyList) 
+					wi.setCurPage(that);
+			}
+		});
     }
 
 	private boolean busy=false;
@@ -307,20 +269,14 @@ class WebPage implements Browser
 		    //if(info.forTEXT&&info.isVisible()) System.out.println("DOM: node:"+n.getNodeName()+", "+(!(n instanceof HTMLElement)?n.getNodeValue():((HTMLElement)n).getTextContent())); // +" text:"+info.forTEXT+
 		    domIdx.put(n, i);
 		    dom.add(info);
+		    //
 		}
-		// keep node parent's info
+ 		// keep node parent's info
 		for(NodeInfo info:dom)
 		{
-			do
-			{
-				final org.w3c.dom.Node parent=info.node.getParentNode();
-				if(parent==null) break;
-				if(domIdx.containsKey(parent))
-				{
-					info.parent=domIdx.get(parent);
-					break;
-				}
-			} while(true);
+			final org.w3c.dom.Node parent=info.node.getParentNode();
+			if(domIdx.containsKey(parent))
+				info.parent=domIdx.get(parent);
 		}
 		// reselect window object (for example if page was reloaded)
 		window=(JSObject)webEngine.executeScript("window");
@@ -376,7 +332,9 @@ class WebPage implements Browser
 
     @Override public String getTitle()
     {
-		if(webEngine==null) return "";
+		if(webEngine==null)// return null; // FIXME: throw exception when webEngine not ready to use
+		    //throw new NullPointerException("webEngine not initialized");
+			return "";
 		return webEngine.titleProperty().get();
     }
 
@@ -423,7 +381,6 @@ class WebPage implements Browser
     {
 	return domIdx.size();
     }
-
 	@Override public SelectorChilds rootChilds(boolean visible)
 	{
 		Vector<Integer> childs=new Vector<Integer>();

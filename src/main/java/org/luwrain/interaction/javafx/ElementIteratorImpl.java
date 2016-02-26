@@ -68,7 +68,7 @@ class ElementIteratorImpl implements ElementIterator
 
     @Override public String getType()
     {
-	if(current().node instanceof org.w3c.dom.Text)
+    	if(current().node instanceof org.w3c.dom.Text)
 	    return "text"; else 
 	    if(current().node instanceof HTMLInputElement)
 	    {
@@ -94,9 +94,18 @@ class ElementIteratorImpl implements ElementIterator
 		{
 		    return "image";
 		} else
-			    if(current().node instanceof HTMLSelectElement)
+			if(current().node instanceof HTMLSelectElement)
 		{
 			return "select";
+		} else
+		    if(current().node instanceof HTMLTableElement)
+		{
+		    return "table";
+		} else
+		    if(current().node instanceof HTMLUListElement
+		     ||current().node instanceof HTMLOListElement)
+		{
+	    	return "list";
 		} else
 		{
 		    return current().node.getNodeName().toLowerCase();
@@ -348,8 +357,8 @@ class ElementIteratorImpl implements ElementIterator
     	} // FIXME: make better error handling
     	catch(Exception e)
     	{
-    		e.printStackTrace();
-    		return null;
+    		//e.printStackTrace();
+    		return "";
     	}
     }
 
