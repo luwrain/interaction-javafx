@@ -381,7 +381,7 @@ class WebPage implements Browser
     {
 	return domIdx.size();
     }
-	@Override public SelectorChilds rootChilds(boolean visible)
+	@Override public SelectorChildren rootChildren(boolean visible)
 	{
 		Vector<Integer> childs=new Vector<Integer>();
 		SelectorAllImpl all=new SelectorAllImpl(visible);
@@ -394,6 +394,6 @@ class WebPage implements Browser
 				childs.add(domIdx.get(info.node));
 			if(!all.moveNext(list)) break;
 		}
-		return new SelectorChildsImpl(visible,childs.toArray(new Integer[childs.size()]));
+		return new SelectorChildrenImpl(visible,childs.toArray(new Integer[childs.size()]));
 	}
 }

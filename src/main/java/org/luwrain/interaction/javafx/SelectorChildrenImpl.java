@@ -21,18 +21,18 @@ import org.luwrain.browser.*;	// select filter for any text container element's,
 
 // null string threat as any values
 // TODO: make RegEx support in filter
-class SelectorChildsImpl extends SelectorAllImpl implements SelectorChilds
+class SelectorChildrenImpl extends SelectorAllImpl implements SelectorChildren
 {
 	Integer[] childs=new Integer[0];
 	int idx=0;
 	
-    SelectorChildsImpl(boolean visible,Integer[] childs)
+    SelectorChildrenImpl(boolean visible,Integer[] childs)
     {
 	super(visible);
 	this.childs=childs;
     }
     
-    @Override public void setChildsList(Integer[] childs)
+    @Override public void setChildrenList(Integer[] childs)
     {
     	this.childs=childs;
     }
@@ -80,7 +80,7 @@ class SelectorChildsImpl extends SelectorAllImpl implements SelectorChilds
     	return false;
     }
 
-	@Override public int getChildsCount()
+	@Override public int getChildrenCount()
 	{
 		return childs.length;
 	}

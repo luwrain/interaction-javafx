@@ -496,11 +496,11 @@ class ElementIteratorImpl implements ElementIterator
 		parent.pos=page.dom.get(pos).parent;
 		return parent;
 	}
-	@Override public SelectorChilds getChilds(boolean visible)
+	@Override public SelectorChildren getChildren(boolean visible)
 	{
-		return Utils.fxcall(new Callable<SelectorChilds>()
+		return Utils.fxcall(new Callable<SelectorChildren>()
 		{
-			@Override public SelectorChilds call() throws Exception
+			@Override public SelectorChildren call() throws Exception
 			{
 				//System.out.println("CHILDS");
 				Vector<Integer> childs=new Vector<Integer>();
@@ -511,7 +511,7 @@ class ElementIteratorImpl implements ElementIterator
 					if(info.parent!=null&&page.dom.get(info.parent).equals(node))
 						childs.add(page.domIdx.get(info.node)); // it is ugly way to get index, but for loop have inaccessible index
 				}
-				return new SelectorChildsImpl(visible,childs.toArray(new Integer[childs.size()]));
+				return new SelectorChildrenImpl(visible,childs.toArray(new Integer[childs.size()]));
 			}
 		},null);
 	}
