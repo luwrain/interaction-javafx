@@ -231,7 +231,38 @@ class WebPage implements Browser
 		
 		dom=new Vector<NodeInfo>();
 		domIdx=new LinkedHashMap<org.w3c.dom.Node, Integer>();
-		JSObject js=(JSObject)webEngine.executeScript("(function(){function nodewalk(node){var res=[];if(node){node=node.firstChild;while(node!= null){if(node.nodeType!=3||node.nodeValue.trim()!=='') res[res.length]=node;res=res.concat(nodewalk(node));node=node.nextSibling;}}return res;};var lst=nodewalk(document);var res=[];for(var i=0;i<lst.length;i++){res.push({n:lst[i],r:(lst[i].getBoundingClientRect?lst[i].getBoundingClientRect():(lst[i].parentNode.getBoundingClientRect?lst[i].parentNode.getBoundingClientRect():null))});};return res;})()");;
+		JSObject js=(JSObject)webEngine.executeScript("(function(){"
+				+ "function nodewalk(node){"
+				+   "var res=[];"
+				+   "if(node){"
+				+ 	  "node=node.firstChild;"
+				+     "while(node!= null){"
+				+       "if(node.nodeType!=3||node.nodeValue.trim()!=='') "
+				+       "res[res.length]=node;"
+				+       "res=res.concat(nodewalk(node));"
+				+       "node=node.nextSibling;}"
+				+     "}"
+				+   "return res;"
+				+ "};"
+				+ "var lst=nodewalk(document);"
+				+ "var res=[];"
+				+ "for(var i=0;i<lst.length;i++){"
+				+ "res.push({"
+				+   "n:lst[i],"
+				+   "r:(lst[i].getBoundingClientRect?"
+				+     "lst[i].getBoundingClientRect():"
+				+     "((function(nnn){"
+				+     "try{"
+				+       "var range=document.createRange();"
+				+       "range.selectNodeContents(nnn);"
+				+       "return range.getBoundingClientRect();}"
+				+     "catch(e)"
+				+       "{return null;};"
+				+     "})(lst[i])"
+				+     "))"
+				+   "});"
+				+ "};"
+				+ "return res;})()");
 		Object o;
 		for(int i=0;!(o=js.getMember(String.valueOf(i))).getClass().equals(String.class);i++)
 		{
@@ -264,7 +295,7 @@ class WebPage implements Browser
 		    	info.forTEXT=true;
 		    }
 		    boolean ignore=checkNodeForIgnoreChildren(n);
-		    //Log.debug("web","DOM: "+i+": "+info.node.getClass().getSimpleName()+", r:"+info.rect.x+"x"+info.rect.y+"-"+info.rect.width+"x"+info.rect.height+" ignore:"+ignore+", text:"+info.forTEXT);
+		    //System.out.println("DOM: "+i+": "+info.node.getClass().getSimpleName()+", r:"+info.rect.x+"x"+info.rect.y+"-"+info.rect.width+"x"+info.rect.height+" ignore:"+ignore+", text:"+info.forTEXT);
 		    if(ignore) info.forTEXT=false;
 		    //if(info.forTEXT&&info.isVisible()) System.out.println("DOM: node:"+n.getNodeName()+", "+(!(n instanceof HTMLElement)?n.getNodeValue():((HTMLElement)n).getTextContent())); // +" text:"+info.forTEXT+
 		    domIdx.put(n, i);
