@@ -6,17 +6,14 @@ import org.luwrain.core.NullCheck;;
 
 import javafx.application.Application;
 import javafx.geometry.*;
-//import javafx.geometry.Insets;
-//import javafx.geometry.VPos;
 import javafx.scene.*;
 import javafx.stage.*;
 import javafx.scene.canvas.*;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.text.*;
-//import javafx.scene.text.TextBuilder;
 
-class MainApp extends Application
+public class MainApp extends Application
 {
     static private final int MIN_TABLE_WIDTH = 16;
     static private final int MIN_TABLE_HEIGHT = 8;
@@ -79,7 +76,7 @@ class MainApp extends Application
 	}
     }
 
-MainApp()
+    public MainApp()
     {
 	that=this;
     }
@@ -102,7 +99,7 @@ MainApp()
     }
 
     @SuppressWarnings("deprecation") 
-void setInteractionFont(Font font, Font font2)
+    void setInteractionFont(Font font, Font font2)
     {
 	NullCheck.notNull(font, "font");
 	NullCheck.notNull(font2, "font2");
@@ -116,7 +113,7 @@ void setInteractionFont(Font font, Font font2)
 	return 	font;
     }
 
-boolean initTable()
+    boolean initTable()
     {
 	double width = canvasWidth;
 	double height = canvasHeight;
@@ -143,7 +140,7 @@ boolean initTable()
 	}
 	tableWidth = width_;
 	tableHeight = height_;
-	    Log.debug("javafx", "initializing the table of size " + tableWidth + "x" + tableHeight);
+	Log.debug("javafx", "initializing the table of size " + tableWidth + "x" + tableHeight);
 	synchronized(tableSync)
 	{
 	    table = new char[tableWidth][];
@@ -160,19 +157,19 @@ boolean initTable()
 		    tableFont2[i][j]=false;
 		}
 	}
-		synchronized(vertSync)
-		{
-			vertLines = new OnScreenLineTracker[tableWidth];
-			for(int i = 0;i < tableWidth;i++)
-			    vertLines[i] = new OnScreenLineTracker();
-		}
-		synchronized(horizSync)
-		{
-			horizLines = new OnScreenLineTracker[tableHeight];
-			for(int i = 0;i < tableHeight;i++)
-			    horizLines[i] = new OnScreenLineTracker();
-		}
-		return true;
+	synchronized(vertSync)
+	{
+	    vertLines = new OnScreenLineTracker[tableWidth];
+	    for(int i = 0;i < tableWidth;i++)
+		vertLines[i] = new OnScreenLineTracker();
+	}
+	synchronized(horizSync)
+	{
+	    horizLines = new OnScreenLineTracker[tableHeight];
+	    for(int i = 0;i < tableHeight;i++)
+		horizLines[i] = new OnScreenLineTracker();
+	}
+	return true;
     }
 
     int getTableWidth()
@@ -180,7 +177,7 @@ boolean initTable()
 	return tableWidth;
     }
 
-int getTableHeight()
+    int getTableHeight()
     {
 	return tableHeight;
     }
@@ -275,9 +272,9 @@ int getTableHeight()
 	    if (l > r || t > b) return;
 	    for(int i = l;i <= r;i++)
 	    	for(int j = t;j <= b;j++)
-			{
-	    		table[i][j] = ' ';
-	    		tableFont2[i][j]=false;
+		{
+		    table[i][j] = ' ';
+		    tableFont2[i][j]=false;
     		}
     	}
     	synchronized(vertSync)
@@ -303,7 +300,7 @@ int getTableHeight()
 	synchronized(tableSync)
 	{
 	    gc.setTextBaseline(VPos.TOP);
-		// canvas is transparent, so background color was filled rect before
+	    // canvas is transparent, so background color was filled rect before
 	    gc.setFill(bkgColor);
 	    gc.fillRect(0,0,primary.getWidth()-1,primary.getHeight()-1);
 	    gc.setFont(font);
@@ -312,7 +309,7 @@ int getTableHeight()
 	    for(int i=0;i<tableHeight;i++)
 	    {
 	    	for(int j=0;j<tableWidth;j++)
-	    		chars[j]=tableFont2[j][i]?' ':table[j][i];
+		    chars[j]=tableFont2[j][i]?' ':table[j][i];
 	    	gc.fillText(new String(chars),marginLeft,(i*fontHeight)+marginTop);
 	    }
 	    gc.setFont(font2);
@@ -320,8 +317,8 @@ int getTableHeight()
 	    for(int i=0;i<tableHeight;i++)
 	    {
 	    	for(int j=0;j<tableWidth;j++)
-	    		if(tableFont2[j][i])
-	    			gc.fillText(""+table[j][i],marginLeft+j*fontWidth,(i*fontHeight)+marginTop);
+		    if(tableFont2[j][i])
+			gc.fillText(""+table[j][i],marginLeft+j*fontWidth,(i*fontHeight)+marginTop);
 	    }
 	}
 	synchronized(vertSync)
