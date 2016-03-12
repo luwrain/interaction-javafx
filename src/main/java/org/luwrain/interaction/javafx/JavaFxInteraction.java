@@ -1,19 +1,3 @@
-/*
-   Copyright 2015-2016 Roman Volovodov <gr.rPman@gmail.com>
-   Copyright 2012-2016 Michael Pozhidaev <michael.pozhidaev@gmail.com>
-
-   This file is part of the LUWRAIN.
-
-   LUWRAIN is free software; you can redistribute it and/or
-   modify it under the terms of the GNU General Public
-   License as published by the Free Software Foundation; either
-   version 3 of the License, or (at your option) any later version.
-
-   LUWRAIN is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-   General Public License for more details.
-*/
 
 package org.luwrain.interaction.javafx;
 
@@ -42,12 +26,13 @@ public class JavaFxInteraction implements Interaction
     private static final String FRAME_TITLE = "LUWRAIN";
     private boolean drawingInProgress=false;
     private int currentFontSize = 14;
-    private String fontName = "Consolas";
+    private int currentFontSize2 = 14;
+    private String fontName = "Monospaced";
+    private String fontName2 = "Consolas";
     final Vector<WebPage> webPages=new Vector<WebPage>();
     private WebPage currentWebPage=null;
     private KeyboardHandler keyboard;
     private MainJavafxApp frame;
-
 
     static class MainJavafxThread implements Runnable
     {
@@ -105,11 +90,14 @@ public class JavaFxInteraction implements Interaction
 		currentFontSize = params.initialFontSize;
 		int wndWidth = params.wndWidth;
 		int wndHeight = params.wndHeight;
-		frame.setInteractionFont(createFont(currentFontSize));
+		frame.setInteractionFont(createFont(currentFontSize),createFont2(currentFontSize));
 		frame.setColors(
 				Utils.InteractionParamColorToFx(params.fontColor),
 				Utils.InteractionParamColorToFx(params.bkgColor),
 				Utils.InteractionParamColorToFx(params.splitterColor));
+		frame.setColors2(
+				Utils.InteractionParamColorToFx(params.fontColor2),
+				Utils.InteractionParamColorToFx(params.bkgColor2));
 		frame.setMargin(params.marginLeft,params.marginTop,params.marginRight,params.marginBottom);
 		//frame.primary.requestFocus();
 		// FIXME: make better OS abstraction, but now we have only two OS types, windows like and other, like *nix
@@ -132,7 +120,16 @@ public class JavaFxInteraction implements Interaction
 	    }
 	};
 
-	boolean res=Utils.fxcall(task,false);
+	FutureTask<Boolean> query=new FutureTask<Boolean>(task){};
+	Platform.runLater(query);
+	boolean res=false;
+	try
+	{
+		res=query.get();
+	} catch(InterruptedException|ExecutionException e)
+	{
+		e.printStackTrace();
+	}
 	if(!res) 
 	    return false;
 	if(!frame.initTable())
@@ -163,11 +160,12 @@ public class JavaFxInteraction implements Interaction
 	Log.debug("javafx", "trying to change font size to " + size);
 	final Font oldFont = frame.getInteractionFont();
 	final Font probeFont = createFont(size);
-	frame.setInteractionFont(probeFont);
+	final Font probeFont2 = createFont2(size);
+	frame.setInteractionFont(probeFont,probeFont2);
 	if (!frame.initTable())
 	{
 	    Log.error("javafx", "table reinitialization with new font size failed, rolling back to previous settings");
-	    frame.setInteractionFont(oldFont);
+	    frame.setInteractionFont(oldFont,oldFont);
 	    return false;
 	}
 	Log.debug("javafx", "the table said new size is OK, saving new settings");
@@ -202,9 +200,13 @@ public class JavaFxInteraction implements Interaction
 
     @Override public void drawText(int x,int y,String text)
     {
+    	drawText(x,y,text,false);
+    }
+    @Override public void drawText(int x,int y,String text,boolean font2)
+    {
 		if(text==null) 
 		    return;
-		frame.putString(x,y, Str.replaceIsoControlChars(text));
+		frame.putString(x,y, Str.replaceIsoControlChars(text),font2);
     }
 
     @Override public void endDrawSession()
@@ -252,6 +254,12 @@ public class JavaFxInteraction implements Interaction
     {
 		final Font res=Font.font(fontName,desirableFontSize);
 		Log.debug("javafx", "try to select font: \""+fontName+"\" but using font: \"" + res.getName() + "\"");
+		return res;
+    }
+    private Font createFont2(int desirableFontSize)
+    {
+		final Font res=Font.font(fontName2,desirableFontSize);
+		Log.debug("javafx", "try to select font2: \""+fontName2+"\" but using font: \"" + res.getName() + "\"");
 		return res;
     }
 

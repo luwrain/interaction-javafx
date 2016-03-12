@@ -6,6 +6,7 @@ import java.io.StringWriter;
 import java.util.Date;
 import java.util.Vector;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.FutureTask;
 
 import javax.xml.transform.Transformer;
@@ -498,7 +499,7 @@ class ElementIteratorImpl implements ElementIterator
 	}
 	@Override public SelectorChildren getChildren(boolean visible)
 	{
-		return Utils.fxcall(new Callable<SelectorChildren>()
+		FutureTask<SelectorChildren> query=new FutureTask<SelectorChildren>(new Callable<SelectorChildren>()
 		{
 			@Override public SelectorChildren call() throws Exception
 			{
@@ -513,6 +514,16 @@ class ElementIteratorImpl implements ElementIterator
 				}
 				return new SelectorChildrenImpl(visible,childs.toArray(new Integer[childs.size()]));
 			}
-		},null);
+		});
+		Platform.runLater(query);
+		try 
+		{
+			return query.get();
+		}
+		catch(InterruptedException|ExecutionException e)
+		{
+			e.printStackTrace();
+			return null;
+		}
 	}
 }

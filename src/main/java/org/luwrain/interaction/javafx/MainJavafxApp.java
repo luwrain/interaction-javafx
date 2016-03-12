@@ -1,19 +1,3 @@
-/*
-   Copyright 2015-2016 Roman Volovodov <gr.rPman@gmail.com>
-   Copyright 2012-2016 Michael Pozhidaev <michael.pozhidaev@gmail.com>
-
-   This file is part of the LUWRAIN.
-
-   LUWRAIN is free software; you can redistribute it and/or
-   modify it under the terms of the GNU General Public
-   License as published by the Free Software Foundation; either
-   version 3 of the License, or (at your option) any later version.
-
-   LUWRAIN is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-   General Public License for more details.
-*/
 
 package org.luwrain.interaction.javafx;
 
@@ -41,11 +25,14 @@ public class MainJavafxApp extends Application
     ResizableCanvas canvas;
     GraphicsContext gc;
 
-    Font font;
     Bounds bounds;
 
+    Font font;
+    Font font2;
     private Color fontColor = Color.WHITE;
     private Color bkgColor = Color.BLACK;
+    private Color fontColor2 = Color.RED;
+    private Color bkgColor2 = Color.BLACK;
     private Color splitterColor = Color.GRAY;
 
     private int hotPointX = -1;
@@ -59,6 +46,7 @@ public class MainJavafxApp extends Application
     private int tableWidth = 0;
     private int tableHeight = 0;
     private char[][] table;
+    private boolean[][] tableFont2;
     private OnScreenLineTracker[] vertLines;
     private OnScreenLineTracker[] horizLines;
 
@@ -137,9 +125,10 @@ public class MainJavafxApp extends Application
         //primary.show();        
     }
 
-    @SuppressWarnings("deprecation") void setInteractionFont(Font font)
+    @SuppressWarnings("deprecation") void setInteractionFont(Font font,Font font2)
     {
-	this.font=font;
+    	this.font=font;
+    	this.font2=font2;
         bounds = TextBuilder.create().text("A").font(font).build().getLayoutBounds();
     }
 
@@ -180,11 +169,18 @@ public class MainJavafxApp extends Application
 	synchronized(tableSync)
 	{
 	    table = new char[tableWidth][];
+	    tableFont2=new boolean[tableWidth][];
 	    for(int i = 0;i < tableWidth;i++)
-		table[i] = new char[tableHeight];
+	    {
+	    	table[i] = new char[tableHeight];
+	    	tableFont2[i]=new boolean[tableHeight];
+	    }
 	    for(int i = 0;i < tableWidth;i++)
 		for(int j = 0;j < tableHeight;j++)
+		{
 		    table[i][j] = ' ';
+		    tableFont2[i][j]=false;
+		}
 	}
 		synchronized(vertSync)
 		{
@@ -218,6 +214,13 @@ public class MainJavafxApp extends Application
 	this.fontColor = fontColor;
 	this.bkgColor = bkgColor;
 	this.splitterColor = splitterColor;
+    }
+    void setColors2(Color fontColor,Color bkgColor)
+    {
+	if (fontColor == null || bkgColor == null || splitterColor == null)
+	    return;
+	this.fontColor2 = fontColor;
+	this.bkgColor2 = bkgColor;
     }
 
     void setMargin(int marginLeft,int marginTop,int marginRight,int marginBottom)
@@ -263,7 +266,7 @@ public class MainJavafxApp extends Application
 	hotPointY = y;
     }
 
-    void putString(int x, int y, String text)
+    void putString(int x, int y, String text,boolean font2)
     {
 	synchronized(tableSync)
 	{
@@ -274,7 +277,10 @@ public class MainJavafxApp extends Application
 		return;
 	    final int bound = x + text.length() <= tableWidth?text.length():tableWidth - x;
 	    for(int i = 0;i < bound;i++)
-		table[x + i][y] = text.charAt(i) != '\0'?text.charAt(i):' ';
+	    {
+	    	table[x + i][y] = text.charAt(i) != '\0'?text.charAt(i):' ';
+	    	tableFont2[x + i][y]=font2;
+	    }
 	}
     }
 
@@ -289,8 +295,11 @@ public class MainJavafxApp extends Application
     	{
 	    if (l > r || t > b) return;
 	    for(int i = l;i <= r;i++)
-		for(int j = t;j <= b;j++)
-		    table[i][j] = ' ';
+	    	for(int j = t;j <= b;j++)
+			{
+	    		table[i][j] = ' ';
+	    		tableFont2[i][j]=false;
+    		}
     	}
     	synchronized(vertSync)
     	{
@@ -323,11 +332,17 @@ public class MainJavafxApp extends Application
 	    char[] chars=new char[tableWidth];
 	    for(int i=0;i<tableHeight;i++)
 	    {
-		for(int j=0;j<tableWidth;j++)
-		    chars[j]=table[j][i];
-		gc.fillText(new String(chars),
-			    marginLeft,
-			    (i*fontHeight)+marginTop);
+	    	for(int j=0;j<tableWidth;j++)
+	    		chars[j]=tableFont2[j][i]?' ':table[j][i];
+	    	gc.fillText(new String(chars),marginLeft,(i*fontHeight)+marginTop);
+	    }
+	    gc.setFont(font2);
+	    gc.setFill(fontColor2);
+	    for(int i=0;i<tableHeight;i++)
+	    {
+	    	for(int j=0;j<tableWidth;j++)
+	    		if(tableFont2[j][i])
+	    			gc.fillText(""+table[j][i],marginLeft+j*fontWidth,(i*fontHeight)+marginTop);
 	    }
 	}
 	synchronized(vertSync)
