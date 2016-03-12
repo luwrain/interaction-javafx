@@ -29,9 +29,9 @@ public class MainApp extends Application
     private Bounds bounds;
     private Font font;
     private     Font font2;
-    private Color fontColor = Color.WHITE;
+    private Color fontColor = Color.GREY;
+    private Color font2Color = Color.WHITE;
     private Color bkgColor = Color.BLACK;
-    private Color fontColor2 = Color.RED;
     private Color bkgColor2 = Color.BLACK;
     private Color splitterColor = Color.GRAY;
     private double canvasWidth;
@@ -187,21 +187,17 @@ public class MainApp extends Application
 	return tableHeight;
     }
 
-    void setColors(Color fontColor,Color bkgColor,Color splitterColor)
+    void setColors(Color fontColor, Color font2color,
+		   Color bkgColor, Color splitterColor)
     {
-	if (fontColor == null || bkgColor == null || splitterColor == null)
-	    return;
+	NullCheck.notNull(fontColor, "fontColor");
+	NullCheck.notNull(font2Color, "font2Color");
+	NullCheck.notNull(bkgColor, "bkgColor");
+	NullCheck.notNull(splitterColor, "splitterColor");
 	this.fontColor = fontColor;
+	this.font2Color = font2Color;
 	this.bkgColor = bkgColor;
 	this.splitterColor = splitterColor;
-    }
-
-    void setColors2(Color fontColor,Color bkgColor)
-    {
-	if (fontColor == null || bkgColor == null || splitterColor == null)
-	    return;
-	this.fontColor2 = fontColor;
-	this.bkgColor2 = bkgColor;
     }
 
     void setMargin(int marginLeft,int marginTop,int marginRight,int marginBottom)
@@ -247,20 +243,19 @@ public class MainApp extends Application
 	hotPointY = y;
     }
 
-    void putString(int x, int y, String text,boolean font2)
+    void putString(int x, int y, String text, boolean withFont2)
     {
+	NullCheck.notNull(text, "text");
 	synchronized(tableSync)
 	{
 	    if (table == null || x >= tableWidth || y >= tableHeight ||
 		x >= table.length || y >= table[x].length)
 		return;
-	    if (text == null)
-		return;
 	    final int bound = x + text.length() <= tableWidth?text.length():tableWidth - x;
 	    for(int i = 0;i < bound;i++)
 	    {
 	    	table[x + i][y] = text.charAt(i) != '\0'?text.charAt(i):' ';
-	    	tableFont2[x + i][y]=font2;
+	    	tableFont2[x + i][y] = withFont2;
 	    }
 	}
     }
@@ -318,7 +313,7 @@ public class MainApp extends Application
 	    	gc.fillText(new String(chars),marginLeft,(i*fontHeight)+marginTop);
 	    }
 	    gc.setFont(font2);
-	    gc.setFill(fontColor2);
+	    gc.setFill(font2Color);
 	    for(int i=0;i<tableHeight;i++)
 	    {
 	    	for(int j=0;j<tableWidth;j++)

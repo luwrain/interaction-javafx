@@ -53,11 +53,9 @@ public class JavaFxInteraction implements Interaction
 		frame.setInteractionFont(createFont(currentFontSize),createFont2(currentFontSize));
 		frame.setColors(
 				Utils.InteractionParamColorToFx(params.fontColor),
+				Utils.InteractionParamColorToFx(params.font2Color),
 				Utils.InteractionParamColorToFx(params.bkgColor),
 				Utils.InteractionParamColorToFx(params.splitterColor));
-		frame.setColors2(
-				 Utils.InteractionParamColorToFx(params.fontColor2),
-				 Utils.InteractionParamColorToFx(params.bkgColor2));
 		frame.setMargin(params.marginLeft,params.marginTop,params.marginRight,params.marginBottom);
 		//frame.primary.requestFocus();
 		// FIXME: make better OS abstraction, but now we have only two OS types, windows like and other, like *nix
@@ -210,9 +208,9 @@ int y)
 
     private Font createFont(int desirableFontSize)
     {
-		final Font res = Font.font(fontName,desirableFontSize);
-		Log.debug("javafx", "tried to create font with name \'" + fontName + "\', and actually got the font with name \'" + res.getName() + "\'");
-		return res;
+	final Font res = Font.font(fontName,desirableFontSize);
+	Log.debug("javafx", "tried to create font with name \'" + fontName + "\', and actually got the font with name \'" + res.getName() + "\'");
+	return res;
     }
 
     private Font createFont2(int desirableFontSize)
