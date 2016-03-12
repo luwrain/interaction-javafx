@@ -33,45 +33,7 @@ public class JavaFxInteraction implements Interaction
     private WebPage currentWebPage=null;
     private KeyboardHandler keyboard;
     private MainJavafxApp frame;
-
-    static class MainJavafxThread implements Runnable
-    {
-	static Object sync=new Object();
-	static boolean ready=false;
-
-	static void waitJavaFx()
-	{
-	    synchronized(sync)
-	    {
-		try {
-		    while(!ready) 
-			sync.wait();
-		} 
-		catch(InterruptedException e)
-		{
-		    // TODO: make better error handling
-		    e.printStackTrace();
-		}
-	    }
-	}
-
-	public static void notifyJavaFx()
-	{
-	    synchronized(sync)
-	    {
-		ready=true;sync.notify();
-	    }
-	}
-
-	@Override public void run()
-	{
-	    MainJavafxApp.launch(MainJavafxApp.class);
-	    // closed via Alt+F4 or any other window based task killer
-	    System.exit(2);
-	}
-    } //MainJavafxThread
-
-    final Thread threadfx=new Thread(new MainJavafxThread());
+    final Thread threadfx = new Thread(new AppThread());
 
     @Override public boolean init(final InteractionParams params,final OperatingSystem os)
     {
@@ -80,7 +42,7 @@ public class JavaFxInteraction implements Interaction
 	    fontName = params.fontName;
 	threadfx.start();
 	// wait for thread starts and finished javafx init
-	MainJavafxThread.waitJavaFx();
+	AppThread.waitJavaFx();
 	frame=MainJavafxApp.getClassObject();
 
 	Callable<Boolean> task=new Callable<Boolean>()

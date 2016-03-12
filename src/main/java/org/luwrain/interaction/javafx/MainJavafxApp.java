@@ -2,7 +2,7 @@
 package org.luwrain.interaction.javafx;
 
 import org.luwrain.core.Log;
-import org.luwrain.interaction.javafx.JavaFxInteraction.MainJavafxThread;
+import org.luwrain.core.NullCheck;;
 
 import javafx.application.Application;
 import javafx.geometry.Bounds;
@@ -99,30 +99,20 @@ public class MainJavafxApp extends Application
 
     @Override public void start(final Stage primary) throws Exception
     {
-    	MainJavafxThread.notifyJavaFx();
+	NullCheck.notNull(primary, "primary");
+AppThread.notifyJavaFx();
 
 	this.primary=primary;
 	primary.setResizable(true);
-
 	root=new StackPane();
 	root.resize(1024, 768);
         canvas = new ResizableCanvas();
-
         root.getChildren().add(canvas);
         primary.setScene(new Scene(root));
-
         canvas.widthProperty().bind(root.widthProperty());
         canvas.heightProperty().bind(root.heightProperty());
-
-        //AnchorPane.setTopAnchor(canvas,0.0);
-        //AnchorPane.setLeftAnchor(canvas,0.0);
-        //AnchorPane.setRightAnchor(canvas,0.0);
-        //AnchorPane.setBottomAnchor(canvas,0.0);
-
         gc = canvas.getGraphicsContext2D();
-
         root.setBackground(new Background(new BackgroundFill(Color.BLACK, CornerRadii.EMPTY, Insets.EMPTY)));
-        //primary.show();        
     }
 
     @SuppressWarnings("deprecation") void setInteractionFont(Font font,Font font2)
