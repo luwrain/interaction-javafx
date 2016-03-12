@@ -2,7 +2,7 @@
 package org.luwrain.interaction.javafx;
 
 import org.luwrain.core.Log;
-import org.luwrain.core.NullCheck;;
+import org.luwrain.core.NullCheck;
 
 import javafx.application.Application;
 import javafx.geometry.*;
