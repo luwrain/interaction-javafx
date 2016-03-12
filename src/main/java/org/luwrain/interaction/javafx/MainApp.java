@@ -113,6 +113,11 @@ public class MainApp extends Application
 	return 	font;
     }
 
+    Font getInteractionFont2()
+    {
+	return 	font;
+    }
+
     boolean initTable()
     {
 	double width = canvasWidth;
