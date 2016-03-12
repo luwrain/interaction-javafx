@@ -5,44 +5,47 @@ import org.luwrain.core.Log;
 import org.luwrain.core.NullCheck;;
 
 import javafx.application.Application;
-import javafx.geometry.Bounds;
-import javafx.geometry.Insets;
-import javafx.geometry.VPos;
+import javafx.geometry.*;
+//import javafx.geometry.Insets;
+//import javafx.geometry.VPos;
 import javafx.scene.*;
 import javafx.stage.*;
 import javafx.scene.canvas.*;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
-import javafx.scene.text.Font;
-import javafx.scene.text.TextBuilder;
+import javafx.scene.text.*;
+//import javafx.scene.text.TextBuilder;
 
-public class MainJavafxApp extends Application
+class MainApp extends Application
 {
-	static private final int MIN_TABLE_WIDTH = 16;
+    static private final int MIN_TABLE_WIDTH = 16;
     static private final int MIN_TABLE_HEIGHT = 8;
 
+    static private MainApp that = null;
+
     StackPane root;
-    ResizableCanvas canvas;
-    GraphicsContext gc;
+    boolean doPaint=true;
+    Stage primary;
 
-    Bounds bounds;
-
-    Font font;
-    Font font2;
+    private ResizableCanvas canvas;
+    private GraphicsContext gc;
+    private Bounds bounds;
+    private Font font;
+    private     Font font2;
     private Color fontColor = Color.WHITE;
     private Color bkgColor = Color.BLACK;
     private Color fontColor2 = Color.RED;
     private Color bkgColor2 = Color.BLACK;
     private Color splitterColor = Color.GRAY;
+    private double canvasWidth;
+    private double canvasHeight;
 
     private int hotPointX = -1;
-	private int hotPointY = -1;
+    private int hotPointY = -1;
     private int marginLeft = 0;
     private int marginTop = 0;
     private int marginRight = 0;
     private int marginBottom = 0;
-    private double canvasWidth;
-    private double canvasHeight;
     private int tableWidth = 0;
     private int tableHeight = 0;
     private char[][] table;
@@ -50,58 +53,41 @@ public class MainJavafxApp extends Application
     private OnScreenLineTracker[] vertLines;
     private OnScreenLineTracker[] horizLines;
 
-    // for synchronize
+    //For synchronizing
     private final Object tableSync = new Object();
     private final Object vertSync = new Object();
     private final Object horizSync = new Object();
 
-    boolean doPaint=true;
-
-    Stage primary;
-
     // make canvas resizable
-    class ResizableCanvas extends Canvas
+    static private class ResizableCanvas extends Canvas
     {
 	ResizableCanvas()
 	{
-	    // hack for 
 	    super(1024,768);
 	}
-
 	@Override public boolean isResizable() 
 	{
 	    return true;
 	}
-
 	@Override public double prefWidth(double height) 
 	{
 	    return getWidth();
 	}
-
 	@Override public double prefHeight(double width) 
 	{
 	    return getHeight();
 	}
     }
 
-    // one way to give access JavaFx object (created inside Application.launch)
-    static MainJavafxApp that=null;
-
-    public MainJavafxApp()
+MainApp()
     {
 	that=this;
-    }
-
-    static public MainJavafxApp getClassObject()
-    {
-	return that;
     }
 
     @Override public void start(final Stage primary) throws Exception
     {
 	NullCheck.notNull(primary, "primary");
-AppThread.notifyJavaFx();
-
+	AppThread.notifyJavaFx();
 	this.primary=primary;
 	primary.setResizable(true);
 	root=new StackPane();
@@ -115,8 +101,11 @@ AppThread.notifyJavaFx();
         root.setBackground(new Background(new BackgroundFill(Color.BLACK, CornerRadii.EMPTY, Insets.EMPTY)));
     }
 
-    @SuppressWarnings("deprecation") void setInteractionFont(Font font,Font font2)
+    @SuppressWarnings("deprecation") 
+void setInteractionFont(Font font, Font font2)
     {
+	NullCheck.notNull(font, "font");
+	NullCheck.notNull(font2, "font2");
     	this.font=font;
     	this.font2=font2;
         bounds = TextBuilder.create().text("A").font(font).build().getLayoutBounds();
@@ -127,8 +116,7 @@ AppThread.notifyJavaFx();
 	return 	font;
     }
 
-
-    public boolean initTable()
+boolean initTable()
     {
 	double width = canvasWidth;
 	double height = canvasHeight;
@@ -192,7 +180,7 @@ AppThread.notifyJavaFx();
 	return tableWidth;
     }
 
-    public int getTableHeight()
+int getTableHeight()
     {
 	return tableHeight;
     }
@@ -205,6 +193,7 @@ AppThread.notifyJavaFx();
 	this.bkgColor = bkgColor;
 	this.splitterColor = splitterColor;
     }
+
     void setColors2(Color fontColor,Color bkgColor)
     {
 	if (fontColor == null || bkgColor == null || splitterColor == null)
@@ -416,5 +405,10 @@ AppThread.notifyJavaFx();
 	    if (horizLines[y] != null)
 		horizLines[y].cover(left, right);
 	}
+    }
+
+    static MainApp getClassObject()
+    {
+	return that;
     }
 }

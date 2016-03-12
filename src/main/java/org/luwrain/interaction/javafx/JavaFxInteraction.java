@@ -1,10 +1,13 @@
 
 package org.luwrain.interaction.javafx;
 
-import java.util.Vector;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.FutureTask;
+import java.util.*;
+import java.util.concurrent.*;
+
+import org.luwrain.core.*;
+import org.luwrain.os.*;
+import org.luwrain.util.*;
+import org.luwrain.browser.*;
 
 import javafx.stage.Screen;
 import javafx.application.Platform;
@@ -15,25 +18,22 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.web.WebView;
 
-import org.luwrain.browser.Browser;
-import org.luwrain.core.*;
-import org.luwrain.os.*;
-import org.luwrain.util.Str;
-
 public class JavaFxInteraction implements Interaction
 {
-    private static final int MIN_FONT_SIZE = 4;
-    private static final String FRAME_TITLE = "LUWRAIN";
-    private boolean drawingInProgress=false;
-    private int currentFontSize = 14;
-    private int currentFontSize2 = 14;
-    private String fontName = "Monospaced";
-    private String fontName2 = "Consolas";
-    final Vector<WebPage> webPages=new Vector<WebPage>();
-    private WebPage currentWebPage=null;
+    static private final int MIN_FONT_SIZE = 4;
+    static private final String FRAME_TITLE = "LUWRAIN";
+
     private KeyboardHandler keyboard;
-    private MainJavafxApp frame;
+    private boolean drawingInProgress = false;
+    private int currentFontSize = 14;
+    private String fontName = "Monospaced";
+        private String fontName2 = "Consolas";
+
+    private MainApp frame;
     final Thread threadfx = new Thread(new AppThread());
+
+    final Vector<WebPage> webPages = new Vector<WebPage>();
+    private WebPage currentWebPage = null;
 
     @Override public boolean init(final InteractionParams params,final OperatingSystem os)
     {
@@ -43,7 +43,7 @@ public class JavaFxInteraction implements Interaction
 	threadfx.start();
 	// wait for thread starts and finished javafx init
 	AppThread.waitJavaFx();
-	frame=MainJavafxApp.getClassObject();
+	frame = MainApp.getClassObject();
 
 	Callable<Boolean> task=new Callable<Boolean>()
 	{

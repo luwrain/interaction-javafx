@@ -34,7 +34,7 @@ class AppThread implements Runnable
 
     @Override public void run()
     {
-	MainJavafxApp.launch(MainJavafxApp.class);
+	MainApp.launch(MainApp.class);
 	System.exit(2);
     }
 } //MainJavafxThread
