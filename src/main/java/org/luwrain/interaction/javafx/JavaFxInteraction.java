@@ -6,7 +6,7 @@ import java.util.concurrent.*;
 
 import org.luwrain.core.*;
 import org.luwrain.os.*;
-import org.luwrain.util.*;
+//import org.luwrain.util.*;
 import org.luwrain.browser.*;
 
 import javafx.stage.Screen;
@@ -161,14 +161,14 @@ public class JavaFxInteraction implements Interaction
 				   String text)
     {
 	NullCheck.notNull(text, "text");
-    	drawText(x, y, Str.replaceIsoControlChars(text), false);
+    	drawText(x, y, TextUtils.replaceIsoControlChars(text), false);
     }
 
     @Override public void drawText(int x, int y,
 				   String text, boolean withFont2)
     {
 	NullCheck.notNull(text, "text");
-	frame.putString(x, y, Str.replaceIsoControlChars(text), withFont2);
+	frame.putString(x, y, TextUtils.replaceIsoControlChars(text), withFont2);
     }
 
     @Override public void endDrawSession()
