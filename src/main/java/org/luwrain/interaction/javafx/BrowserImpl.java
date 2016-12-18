@@ -23,20 +23,19 @@ import javafx.scene.input.KeyEvent;
 import javafx.util.Callback;
 import netscape.javascript.JSObject;
 
-import org.luwrain.browser.*;
-import org.luwrain.browser.Events.WebState;
-import org.luwrain.core.Interaction;
-import org.luwrain.core.Log;
-import org.luwrain.interaction.javafx.JavaFxInteraction;
 import org.w3c.dom.Node;
 import org.w3c.dom.html.*;
 import org.w3c.dom.views.DocumentView;
 
 import com.sun.webkit.dom.DOMWindowImpl;
 
-class WebPage implements Browser
+import org.luwrain.core.*;
+import org.luwrain.browser.*;
+import org.luwrain.browser.Events.WebState;
+
+class BrowserImpl implements Browser
 {
-    private JavaFxInteraction wi;
+    private final JavaFxInteraction interaction;
 
     private WebView webView;
     WebEngine webEngine;
@@ -50,17 +49,18 @@ class WebPage implements Browser
     private JSObject window=null;
     private boolean userStops=false;
 
-    WebPage(JavaFxInteraction interaction)
+    BrowserImpl(JavaFxInteraction interaction)
     {
-	wi = interaction;
+	NullCheck.notNull(interaction, "interaction");
+	this.interaction = interaction;
     }
 
     // make new empty WebPage (like about:blank) and add it to WebEngineInteraction's webPages
     @Override public void init(final org.luwrain.browser.Events events)
     {
-	final WebPage that=this;
-	final boolean emptyList=wi.webPages.isEmpty();
-	wi.webPages.add(this);
+	final BrowserImpl that=this;
+	final boolean emptyList = interaction.browsers.isEmpty();
+	interaction.browsers.add(this);
 	Platform.runLater(new Runnable() {
 		@Override public void run()
 		{
@@ -73,7 +73,8 @@ class WebPage implements Browser
 						     //Log.debug("web","KeyReleased: "+event.toString());
 						     switch(event.getCode())
 						     {
-						     case ESCAPE:wi.setCurPageVisibility(false);break;
+						     case ESCAPE:
+							 interaction.setCurrentBrowserVisibility(false);break;
 						     default:break;
 						     }
 						 }
@@ -147,10 +148,10 @@ class WebPage implements Browser
 				});
 
 				webView.setVisible(false);
-				wi.addWebViewControl(webView);
+				interaction.addWebViewControl(webView);
 
 				if(emptyList) 
-					wi.setCurPage(that);
+					interaction.setCurrentBrowser(that);
 			}
 		});
     }
@@ -164,21 +165,22 @@ class WebPage implements Browser
     // remove WebPage from WebEngineInteraction's webPages list and stop WebEngine work, prepare for destroy
     @Override public void Remove()
     {
-	int pos=wi.webPages.indexOf(this);
-	final boolean success=wi.webPages.remove(this);
+	int pos = interaction.browsers.indexOf(this);
+	final boolean success = interaction.browsers.remove(this);
 	if(!success) 
 	    Log.warning("web","Can't found WebPage to remove it from WebEngineInteraction");
 	setVisibility(false);
 	if(pos!=-1)
 	{
-	    if(pos<wi.webPages.size())
+	    if(pos < interaction.browsers.size())
 	    {
-		wi.setCurPage(wi.webPages.get(pos));
+		interaction.setCurrentBrowser(interaction.browsers.get(pos));
 	    }
 	} else
 	{
-	    if(wi.webPages.isEmpty()) wi.setCurPage(null); else 
-	    	wi.setCurPage(wi.webPages.lastElement());
+	    if(interaction.browsers.isEmpty()) 
+interaction.setCurrentBrowser(null); else 
+	    	interaction.setCurrentBrowser(interaction.browsers.lastElement());
 	}
     }
 
@@ -186,7 +188,7 @@ class WebPage implements Browser
     {
 	if(enable)
 	{ // set visibility for this webpage on and change focus to it later (text page visibility is off)
-	    wi.disablePaint();
+	    interaction.disablePaint();
 	    Platform.runLater(new Runnable(){@Override public void run() {
 		//Log.debug("web","request focus "+webView);
 		webView.setVisible(true);
@@ -197,7 +199,7 @@ class WebPage implements Browser
 	    //wi.frame.setVisible(true);
 	    Platform.runLater(new Runnable(){@Override public void run()
 	    {
-		    wi.enablePaint();
+		    interaction.enablePaint();
 			webView.setVisible(false);
 	    }});
 	}

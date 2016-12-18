@@ -50,7 +50,8 @@ class SelectorTextImpl extends SelectorAllImpl implements SelectorText
     @Override public boolean suits(ElementIterator wel_)
     {
 	final ElementIteratorImpl wel = (ElementIteratorImpl)wel_;
-	if(wel.page.dom.size()<=wel.pos||wel.pos<0) return false;
+	if(wel.browser.dom.size()<=wel.pos||wel.pos<0) 
+return false;
 	//	wel.current = wel.page.dom.get(wel.pos);
 	if(visible&&!checkVisible(wel)) 
 	    return false;

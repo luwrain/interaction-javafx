@@ -31,8 +31,8 @@ public class JavaFxInteraction implements Interaction
     private MainApp frame;
     final Thread threadfx = new Thread(new AppThread());
 
-    final Vector<WebPage> webPages = new Vector<WebPage>();
-    private WebPage currentWebPage = null;
+    final Vector<BrowserImpl> browsers = new Vector<BrowserImpl>();
+    private BrowserImpl currentBrowser = null;
 
     @Override public boolean init(final InteractionParams params,final OperatingSystem os)
     {
@@ -222,44 +222,33 @@ int y)
 
     @Override public Browser createBrowser()
     {
-	return new WebPage(this);
+	return new BrowserImpl(this);
     }
 
-    WebPage getCurPage()
+    BrowserImpl getCurrentBrowser()
     {
-	return currentWebPage;
+	return currentBrowser;
     }
 
     // change current page to curPage, if it null, change previous current page to not visible 
-    void setCurPage(WebPage curPage,boolean visibility)
+    void setCurrentBrowser(BrowserImpl newCurrentBrowser, boolean visibility)
     {
-	if(currentWebPage!=null)
-	{ // change visibility current page to off
-	    currentWebPage.setVisibility(false);
-	}
-	currentWebPage = curPage;
-	if(curPage==null)
-	{
-	} else
-	{
-	    currentWebPage.setVisibility(visibility);
-	}
+	if(currentBrowser != null)
+	    currentBrowser.setVisibility(false);
+	currentBrowser = newCurrentBrowser;
+	if(currentBrowser != null)
+	    currentBrowser.setVisibility(visibility);
     }
 
-    void setCurPage(WebPage curPage)
+    void setCurrentBrowser(BrowserImpl newCurrentBrowser)
     {
-	setCurPage(curPage,false);
+setCurrentBrowser(newCurrentBrowser, false);
     }
 
-    void setCurPageVisibility(boolean enable)
+    void setCurrentBrowserVisibility(boolean enable)
     {
-	if(currentWebPage!=null)
-	{
-	    currentWebPage.setVisibility(enable);
-	} else
-	{
-	    // todo: make warning to log about no current web page
-	}
+	if(currentBrowser != null)
+currentBrowser.setVisibility(enable);
     }
 
     void addWebViewControl(WebView webView)

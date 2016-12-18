@@ -33,7 +33,7 @@ abstract class SelectorImpl implements Selector
     {
 	final ElementIteratorImpl itImpl = (ElementIteratorImpl)it;
 	final int origState = itImpl.pos;
-	final int count = itImpl.page.numElements();
+	final int count = itImpl.browser.numElements();
 	itImpl.pos = 0;
 	while(itImpl.pos < count && !suits(itImpl)) 
 	    ++itImpl.pos;
@@ -56,7 +56,7 @@ abstract class SelectorImpl implements Selector
     {
 	final ElementIteratorImpl itImpl = (ElementIteratorImpl)it;
 	final int origState = itImpl.pos;
-	final int count = itImpl.page.numElements();
+	final int count = itImpl.browser.numElements();
 	++itImpl.pos;
 	while(itImpl.pos < count && !suits(itImpl)) 
 	    ++itImpl.pos;
