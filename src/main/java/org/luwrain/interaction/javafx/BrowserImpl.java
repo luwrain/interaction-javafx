@@ -185,113 +185,112 @@ return true;
     @Override public void RescanDOM()
     {
     	busy=true;
-    	Callable<Integer> task=new Callable<Integer>(){
-	    @Override public Integer call() throws Exception
-	    {
-htmlDoc = (HTMLDocument)webEngine.getDocument();
-		if(htmlDoc == null)
-return null;
-		htmlWnd=(DOMWindowImpl)((DocumentView)htmlDoc).getDefaultView();
-		
-		dom=new Vector<NodeInfo>();
-		domIdx=new LinkedHashMap<org.w3c.dom.Node, Integer>();
-		JSObject js=(JSObject)webEngine.executeScript("(function(){"
-				+ "function nodewalk(node){"
-				+   "var res=[];"
-				+   "if(node){"
-				+ 	  "node=node.firstChild;"
-				+     "while(node!= null){"
-				+       "if(node.nodeType!=3||node.nodeValue.trim()!=='') "
-				+       "res[res.length]=node;"
-				+       "res=res.concat(nodewalk(node));"
-				+       "node=node.nextSibling;}"
-				+     "}"
-				+   "return res;"
-				+ "};"
-				+ "var lst=nodewalk(document);"
-				+ "var res=[];"
-				+ "for(var i=0;i<lst.length;i++){"
-				+ "res.push({"
-				+   "n:lst[i],"
-				+   "r:(lst[i].getBoundingClientRect?"
-				+     "lst[i].getBoundingClientRect():"
-				+     "((function(nnn){"
-				+     "try{"
-				+       "var range=document.createRange();"
-				+       "range.selectNodeContents(nnn);"
-				+       "return range.getBoundingClientRect();}"
-				+     "catch(e)"
-				+       "{return null;};"
-				+     "})(lst[i])"
-				+     "))"
-				+   "});"
-				+ "};"
-				+ "return res;})()");
-		Object o;
-		for(int i=0;!(o=js.getMember(String.valueOf(i))).getClass().equals(String.class);i++)
-		{
-		    JSObject rect=(JSObject)((JSObject)o).getMember("r");
-		    final org.w3c.dom.Node n=(org.w3c.dom.Node)((JSObject)o).getMember("n");
-		    final NodeInfo info=new NodeInfo();
-		    if(rect==null)
-		    {
-			info.rect=new Rectangle(0,0,0,0);
-		    } else
-		    {
-			int x=(int)Double.parseDouble(rect.getMember("left").toString());
-			int y=(int)Double.parseDouble(rect.getMember("top").toString());
-			int width=(int)Double.parseDouble(rect.getMember("width").toString());
-			int height=(int)Double.parseDouble(rect.getMember("height").toString());
-			info.rect=new Rectangle(x,y,width,height);
-		    }
-		    info.node=n;
-		    // by default, only leaf nodes good for TEXT 
-		    info.forTEXT=!n.hasChildNodes();
-		    // make decision about TEXT nodes by class
-		    if(n instanceof HTMLAnchorElement
-		      ||n instanceof HTMLButtonElement
-		      ||n instanceof HTMLInputElement
-		    //||n.getClass()==com.sun.webkit.dom.HTMLPreElementImpl.class
-		      ||n instanceof HTMLSelectElement
-		      ||n instanceof HTMLTextAreaElement
-		      ||n instanceof HTMLSelectElement)
-		    {
-		    	info.forTEXT=true;
-		    }
-		    boolean ignore=checkNodeForIgnoreChildren(n);
-		    //System.out.println("DOM: "+i+": "+info.node.getClass().getSimpleName()+", r:"+info.rect.x+"x"+info.rect.y+"-"+info.rect.width+"x"+info.rect.height+" ignore:"+ignore+", text:"+info.forTEXT);
-		    if(ignore) info.forTEXT=false;
-		    //if(info.forTEXT&&info.isVisible()) System.out.println("DOM: node:"+n.getNodeName()+", "+(!(n instanceof HTMLElement)?n.getNodeValue():((HTMLElement)n).getTextContent())); // +" text:"+info.forTEXT+
-		    domIdx.put(n, i);
-		    dom.add(info);
-		    //
-		}
- 		// keep node parent's info
-		for(NodeInfo info:dom)
-		{
-			final org.w3c.dom.Node parent=info.node.getParentNode();
-			if(domIdx.containsKey(parent))
-				info.parent=domIdx.get(parent);
-		}
-		// reselect window object (for example if page was reloaded)
-		window=(JSObject)webEngine.executeScript("window");
+    	final Callable<Integer> task = ()->{
+	    htmlDoc = (HTMLDocument)webEngine.getDocument();
+	    if(htmlDoc == null)
 		return null;
-	    }};
-
-		FutureTask<Integer> query=new FutureTask<Integer>(task){};
-		if(Platform.isFxApplicationThread())
-		{ // direct call
-			try {task.call();}
-			catch(Exception e) {e.printStackTrace();}
-		} else
+	    htmlWnd = (DOMWindowImpl)((DocumentView)htmlDoc).getDefaultView();
+	    dom = new Vector<NodeInfo>();
+	    domIdx = new LinkedHashMap<org.w3c.dom.Node, Integer>();
+	    final JSObject js = (JSObject)webEngine.executeScript("(function(){"
+								  + "function nodewalk(node){"
+								  +   "var res=[];"
+								  +   "if(node){"
+								  + 	  "node=node.firstChild;"
+								  +     "while(node!= null){"
+								  +       "if(node.nodeType!=3||node.nodeValue.trim()!=='') "
+								  +       "res[res.length]=node;"
+								  +       "res=res.concat(nodewalk(node));"
+								  +       "node=node.nextSibling;}"
+								  +     "}"
+								  +   "return res;"
+								  + "};"
+								  + "var lst=nodewalk(document);"
+								  + "var res=[];"
+								  + "for(var i=0;i<lst.length;i++){"
+								  + "res.push({"
+								  +   "n:lst[i],"
+								  +   "r:(lst[i].getBoundingClientRect?"
+								  +     "lst[i].getBoundingClientRect():"
+								  +     "((function(nnn){"
+								  +     "try{"
+								  +       "var range=document.createRange();"
+								  +       "range.selectNodeContents(nnn);"
+								  +       "return range.getBoundingClientRect();}"
+								  +     "catch(e)"
+								  +       "{return null;};"
+								  +     "})(lst[i])"
+								  +     "))"
+								  +   "});"
+								  + "};"
+								  + "return res;})()");
+	    Object o;
+	    for(int i=0;!(o=js.getMember(String.valueOf(i))).getClass().equals(String.class);i++)
+	    {
+		final JSObject rect=(JSObject)((JSObject)o).getMember("r");
+		final org.w3c.dom.Node n=(org.w3c.dom.Node)((JSObject)o).getMember("n");
+		final NodeInfo info=new NodeInfo();
+		if(rect == null)
+		    info.rect = new Rectangle(0,0,0,0); else
 		{
-			// call from awt thread 
-			Platform.runLater(query);
-			// waiting for rescan end
-			try {query.get();}
-			catch(InterruptedException|ExecutionException e) {e.printStackTrace();}
+		    final int x = (int)Double.parseDouble(rect.getMember("left").toString());
+		    final int y = (int)Double.parseDouble(rect.getMember("top").toString());
+		    final int width=(int)Double.parseDouble(rect.getMember("width").toString());
+		    final int height=(int)Double.parseDouble(rect.getMember("height").toString());
+		    info.rect = new Rectangle(x,y,width,height);
 		}
-		busy=false;
+		info.node = n;
+		info.forTEXT = !n.hasChildNodes();
+		// make decision about TEXT nodes by class
+		if(n instanceof HTMLAnchorElement
+		   ||n instanceof HTMLButtonElement
+		   ||n instanceof HTMLInputElement
+		   //||n.getClass() == com.sun.webkit.dom.HTMLPreElementImpl.class
+		   ||n instanceof HTMLSelectElement
+		   ||n instanceof HTMLTextAreaElement
+		   ||n instanceof HTMLSelectElement)
+		    info.forTEXT=true;
+		final boolean ignore = checkNodeForIgnoreChildren(n);
+		if(ignore) 
+		    info.forTEXT=false;
+		domIdx.put(n, i);
+		dom.add(info);
+	    }
+	    for(NodeInfo info: dom)
+	    {
+		final org.w3c.dom.Node parent = info.node.getParentNode();
+		if(domIdx.containsKey(parent))
+		    info.parent = domIdx.get(parent);
+	    }
+	    window = (JSObject)webEngine.executeScript("window");
+	    return null;
+	};
+	FutureTask<Integer> query=new FutureTask<Integer>(task){};
+	if(Platform.isFxApplicationThread())
+	{ // direct call
+	    try {
+		task.call();
+	    }
+	    catch(Exception e) 
+	    {
+		e.printStackTrace();
+	    }
+	} else
+	{
+	    Platform.runLater(query);
+	    try {
+		query.get();
+	    }
+	    catch(InterruptedException e)
+	    {
+		Thread.currentThread().interrupt();
+	    }
+	    catch(ExecutionException e) 
+	    {
+		e.printStackTrace();
+	    }
+	}
+	busy=false;
     }
 
 	// start loading page via link
