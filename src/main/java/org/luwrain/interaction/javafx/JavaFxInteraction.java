@@ -6,7 +6,7 @@ import java.util.concurrent.*;
 
 import org.luwrain.core.*;
 import org.luwrain.os.*;
-import org.luwrain.util.*;
+//import org.luwrain.util.*;
 import org.luwrain.browser.*;
 
 import javafx.stage.Screen;
@@ -31,8 +31,8 @@ public class JavaFxInteraction implements Interaction
     private MainApp frame;
     final Thread threadfx = new Thread(new AppThread());
 
-    final Vector<WebPage> webPages = new Vector<WebPage>();
-    private WebPage currentWebPage = null;
+    final Vector<BrowserImpl> browsers = new Vector<BrowserImpl>();
+    private BrowserImpl currentBrowser = null;
 
     @Override public boolean init(final InteractionParams params,final OperatingSystem os)
     {
@@ -161,14 +161,14 @@ public class JavaFxInteraction implements Interaction
 				   String text)
     {
 	NullCheck.notNull(text, "text");
-    	drawText(x, y, Str.replaceIsoControlChars(text), false);
+    	drawText(x, y, TextUtils.replaceIsoControlChars(text), false);
     }
 
     @Override public void drawText(int x, int y,
 				   String text, boolean withFont2)
     {
 	NullCheck.notNull(text, "text");
-	frame.putString(x, y, Str.replaceIsoControlChars(text), withFont2);
+	frame.putString(x, y, TextUtils.replaceIsoControlChars(text), withFont2);
     }
 
     @Override public void endDrawSession()
@@ -222,44 +222,33 @@ int y)
 
     @Override public Browser createBrowser()
     {
-	return new WebPage(this);
+	return new BrowserImpl(this);
     }
 
-    WebPage getCurPage()
+    BrowserImpl getCurrentBrowser()
     {
-	return currentWebPage;
+	return currentBrowser;
     }
 
     // change current page to curPage, if it null, change previous current page to not visible 
-    void setCurPage(WebPage curPage,boolean visibility)
+    void setCurrentBrowser(BrowserImpl newCurrentBrowser, boolean visibility)
     {
-	if(currentWebPage!=null)
-	{ // change visibility current page to off
-	    currentWebPage.setVisibility(false);
-	}
-	currentWebPage = curPage;
-	if(curPage==null)
-	{
-	} else
-	{
-	    currentWebPage.setVisibility(visibility);
-	}
+	if(currentBrowser != null)
+	    currentBrowser.setVisibility(false);
+	currentBrowser = newCurrentBrowser;
+	if(currentBrowser != null)
+	    currentBrowser.setVisibility(visibility);
     }
 
-    void setCurPage(WebPage curPage)
+    void setCurrentBrowser(BrowserImpl newCurrentBrowser)
     {
-	setCurPage(curPage,false);
+setCurrentBrowser(newCurrentBrowser, false);
     }
 
-    void setCurPageVisibility(boolean enable)
+    void setCurrentBrowserVisibility(boolean enable)
     {
-	if(currentWebPage!=null)
-	{
-	    currentWebPage.setVisibility(enable);
-	} else
-	{
-	    // todo: make warning to log about no current web page
-	}
+	if(currentBrowser != null)
+currentBrowser.setVisibility(enable);
     }
 
     void addWebViewControl(WebView webView)
