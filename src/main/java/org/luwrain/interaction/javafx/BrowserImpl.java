@@ -2,12 +2,8 @@
 package org.luwrain.interaction.javafx;
 
 import java.awt.Rectangle;
-import java.util.Date;
-import java.util.LinkedHashMap;
-import java.util.Vector;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.FutureTask;
+import java.util.*;
+import java.util.concurrent.*;
 
 import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
@@ -26,7 +22,6 @@ import netscape.javascript.JSObject;
 import org.w3c.dom.Node;
 import org.w3c.dom.html.*;
 import org.w3c.dom.views.DocumentView;
-
 import com.sun.webkit.dom.DOMWindowImpl;
 
 import org.luwrain.core.*;
@@ -36,18 +31,16 @@ import org.luwrain.browser.Events.WebState;
 class BrowserImpl implements Browser
 {
     private final JavaFxInteraction interaction;
-
-    private WebView webView;
-    WebEngine webEngine;
+    private WebView webView = null;
+    private WebEngine webEngine = null;
 
     // list of all nodes in web page
-    Vector<NodeInfo> dom=new Vector<NodeInfo>();
-    // index map for fast get node position
+    private Vector<NodeInfo> dom=new Vector<NodeInfo>();
     LinkedHashMap<org.w3c.dom.Node,Integer> domIdx = new LinkedHashMap<org.w3c.dom.Node, Integer>();
-    private HTMLDocument htmlDoc=null;
-    DOMWindowImpl htmlWnd=null;
-    private JSObject window=null;
-    private boolean userStops=false;
+    private HTMLDocument htmlDoc = null;
+    DOMWindowImpl htmlWnd = null;
+    private JSObject window = null;
+    private boolean userStops = false;
 
     BrowserImpl(JavaFxInteraction interaction)
     {
@@ -429,4 +422,10 @@ interaction.setCurrentBrowser(null); else
 		}
 		return new SelectorChildrenImpl(visible,childs.toArray(new Integer[childs.size()]));
 	}
+
+    Vector<NodeInfo> getDom()
+    {
+	return dom;
+    }
+
 }

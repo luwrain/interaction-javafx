@@ -52,13 +52,13 @@ class ElementIteratorImpl implements ElementIterator
 
     @Override public boolean isVisible()
     {
-    	NodeInfo info = browser.dom.get(pos);
+    	final NodeInfo info = browser.getDom().get(pos);
     	return info.isVisible();
     }
 
     @Override public boolean forTEXT()
 	{
-    	NodeInfo info = browser.dom.get(pos);
+	    final NodeInfo info = browser.getDom().get(pos);
     	return info.forTEXT;
 	}
 
@@ -169,8 +169,8 @@ class ElementIteratorImpl implements ElementIterator
     	if(!browser.domIdx.containsKey(current().node)) 
 	    return null;
     	int pos = browser.domIdx.get(current().node);
-    	if(browser.dom.size()<=pos) return null;
-    	return browser.dom.get(pos).rect;
+    	if(browser.getDom().size()<=pos) return null;
+    	return browser.getDom().get(pos).rect;
     }
 
     @Override public boolean isEditable()
@@ -197,7 +197,7 @@ class ElementIteratorImpl implements ElementIterator
 
     @Override public void setText(String text)
     {
-    	Log.debug("web","setText: "+current().node.getClass().getSimpleName()+", rect:" + browser.dom.get(browser.domIdx.get(current().node)).rect);
+    	Log.debug("javafx","setText: "+current().node.getClass().getSimpleName()+", rect:" + browser.getDom().get(browser.domIdx.get(current().node)).rect);
 	if(current().node instanceof HTMLInputElement)
 		{
 		    final HTMLInputElement input=((HTMLInputElement)current().node);
@@ -271,7 +271,7 @@ class ElementIteratorImpl implements ElementIterator
 		if(!browser.domIdx.containsKey(current().node)) 
 			return "";
 		try{
-		    return browser.webEngine.executeScript("(function(){var x=window."+GET_NODE_TEXT+";return x.innerText===undefined?x.nodeValue:x.innerText})()").toString();
+		    return browser.executeScript("(function(){var x=window."+GET_NODE_TEXT+";return x.innerText===undefined?x.nodeValue:x.innerText})()").toString();
 		}
 		catch(Exception e)
 		{
@@ -376,7 +376,7 @@ class ElementIteratorImpl implements ElementIterator
 			{
 			    browser.htmlWnd.setMember(GET_NODE_TEXT, current().node);
 			    try{
-				browser.webEngine.executeScript("(function(){var x=window."+GET_NODE_TEXT+";x.form.submit();})()");
+				browser.executeScript("(function(){var x=window."+GET_NODE_TEXT+";x.form.submit();})()");
 			    }
 			    catch(Exception e)
 			    {
@@ -391,7 +391,7 @@ class ElementIteratorImpl implements ElementIterator
 		{
 		    browser.htmlWnd.setMember(GET_NODE_TEXT, current().node);
 		    try{
-			browser.webEngine.executeScript("(function(){var x=window."+GET_NODE_TEXT+";x.click();})()");
+			browser.executeScript("(function(){var x=window."+GET_NODE_TEXT+";x.click();})()");
 		    }
 		    catch(Exception e)
 		    {
@@ -427,7 +427,7 @@ class ElementIteratorImpl implements ElementIterator
     
     public boolean isChanged()
 	{
-		NodeInfo info=browser.dom.get(pos);
+	    final NodeInfo info = browser.getDom().get(pos);
 		if(info.hashTime==0)
 		{ // need to get hash
 			info.calcHash(getHtml());
@@ -487,14 +487,14 @@ class ElementIteratorImpl implements ElementIterator
 
 	public NodeInfo current()
     {
-	return browser.dom.get(pos);
+	return browser.getDom().get(pos);
     }
 	@Override public ElementIterator getParent()
 	{
-		if(browser.dom.get(pos).parent==null)
+	    if(browser.getDom().get(pos).parent==null)
 			return null;
 		ElementIteratorImpl parent=new ElementIteratorImpl(browser);
-		parent.pos = browser.dom.get(pos).parent;
+		parent.pos = browser.getDom().get(pos).parent;
 		return parent;
 	}
 	@Override public SelectorChildren getChildren(boolean visible)
@@ -506,10 +506,10 @@ class ElementIteratorImpl implements ElementIterator
 				//System.out.println("CHILDS");
 				Vector<Integer> childs=new Vector<Integer>();
 				NodeInfo node=current();
-				for(NodeInfo info: browser.dom)
+				for(NodeInfo info: browser.getDom())
 				{
 					//System.out.println("CHILDS: test parents "+info.node+" for "+(info.parent==null?"null":page.dom.get(info.parent).node)+"=="+node.node+(info.parent!=null&&page.dom.get(info.parent).equals(node)));
-					if(info.parent!=null && browser.dom.get(info.parent).equals(node))
+				    if(info.parent!=null && browser.getDom().get(info.parent).equals(node))
 						childs.add(browser.domIdx.get(info.node)); // it is ugly way to get index, but for loop have inaccessible index
 				}
 				return new SelectorChildrenImpl(visible,childs.toArray(new Integer[childs.size()]));
