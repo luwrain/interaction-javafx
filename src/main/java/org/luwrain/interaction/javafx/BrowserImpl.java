@@ -37,7 +37,7 @@ class BrowserImpl implements Browser
 
     // list of all nodes in web page
     private Vector<NodeInfo> dom=new Vector<NodeInfo>();
-    LinkedHashMap<org.w3c.dom.Node,Integer> domIdx = new LinkedHashMap<org.w3c.dom.Node, Integer>();
+    private LinkedHashMap<org.w3c.dom.Node,Integer> domMap = new LinkedHashMap<org.w3c.dom.Node, Integer>();
     private HTMLDocument htmlDoc = null;
     DOMWindowImpl htmlWnd = null;
     private JSObject window = null;
@@ -191,7 +191,7 @@ return true;
 		return null;
 	    htmlWnd = (DOMWindowImpl)((DocumentView)htmlDoc).getDefaultView();
 	    dom = new Vector<NodeInfo>();
-	    domIdx = new LinkedHashMap<org.w3c.dom.Node, Integer>();
+	    domMap = new LinkedHashMap<org.w3c.dom.Node, Integer>();
 	    final JSObject js = (JSObject)webEngine.executeScript("(function(){"
 								  + "function nodewalk(node){"
 								  +   "var res=[];"
@@ -253,14 +253,14 @@ return true;
 		final boolean ignore = checkNodeForIgnoreChildren(n);
 		if(ignore) 
 		    info.forTEXT=false;
-		domIdx.put(n, i);
+		domMap.put(n, i);
 		dom.add(info);
 	    }
 	    for(NodeInfo info: dom)
 	    {
 		final org.w3c.dom.Node parent = info.node.getParentNode();
-		if(domIdx.containsKey(parent))
-		    info.parent = domIdx.get(parent);
+		if(domMap.containsKey(parent))
+		    info.parent = domMap.get(parent);
 	    }
 	    window = (JSObject)webEngine.executeScript("window");
 	    return null;
@@ -365,7 +365,7 @@ String tagName, String attrName, String attrValue)
 
     @Override public int numElements()
     {
-	return domIdx.size();
+	return domMap.size();
     }
 
 	@Override public SelectorChildren rootChildren(boolean visible)
@@ -378,7 +378,7 @@ String tagName, String attrName, String attrValue)
 		{
 			NodeInfo info=list.current(); 
 			if(info.parent==null)
-				childs.add(domIdx.get(info.node));
+				childs.add(domMap.get(info.node));
 			if(!all.moveNext(list)) break;
 		}
 		return new SelectorChildrenImpl(visible,childs.toArray(new Integer[childs.size()]));
@@ -387,5 +387,10 @@ String tagName, String attrName, String attrValue)
     Vector<NodeInfo> getDom()
     {
 	return dom;
+    }
+
+    Map<org.w3c.dom.Node,Integer> getDomMap()
+    {
+	return domMap;
     }
 }

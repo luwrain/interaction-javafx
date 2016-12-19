@@ -166,9 +166,9 @@ class ElementIteratorImpl implements ElementIterator
     
     @Override public Rectangle getRect()
     {
-    	if(!browser.domIdx.containsKey(current().node)) 
+    	if(!browser.getDomMap().containsKey(current().node)) 
 	    return null;
-    	int pos = browser.domIdx.get(current().node);
+    	final int pos = browser.getDomMap().get(current().node);
     	if(browser.getDom().size()<=pos) return null;
     	return browser.getDom().get(pos).rect;
     }
@@ -197,7 +197,7 @@ class ElementIteratorImpl implements ElementIterator
 
     @Override public void setText(String text)
     {
-    	Log.debug("javafx","setText: "+current().node.getClass().getSimpleName()+", rect:" + browser.getDom().get(browser.domIdx.get(current().node)).rect);
+    	Log.debug("javafx","setText: "+current().node.getClass().getSimpleName()+", rect:" + browser.getDom().get(browser.getDomMap().get(current().node)).rect);
 	if(current().node instanceof HTMLInputElement)
 		{
 		    final HTMLInputElement input=((HTMLInputElement)current().node);
@@ -268,7 +268,7 @@ class ElementIteratorImpl implements ElementIterator
 	    @Override public String call()
 	    {
 		browser.htmlWnd.setMember(GET_NODE_TEXT, current().node);
-		if(!browser.domIdx.containsKey(current().node)) 
+		if(!browser.getDomMap().containsKey(current().node)) 
 			return "";
 		try{
 		    return browser.executeScript("(function(){var x=window."+GET_NODE_TEXT+";return x.innerText===undefined?x.nodeValue:x.innerText})()").toString();
@@ -510,7 +510,7 @@ class ElementIteratorImpl implements ElementIterator
 				{
 					//System.out.println("CHILDS: test parents "+info.node+" for "+(info.parent==null?"null":page.dom.get(info.parent).node)+"=="+node.node+(info.parent!=null&&page.dom.get(info.parent).equals(node)));
 				    if(info.parent!=null && browser.getDom().get(info.parent).equals(node))
-						childs.add(browser.domIdx.get(info.node)); // it is ugly way to get index, but for loop have inaccessible index
+					childs.add(browser.getDomMap().get(info.node)); // it is ugly way to get index, but for loop have inaccessible index
 				}
 				return new SelectorChildrenImpl(visible,childs.toArray(new Integer[childs.size()]));
 			}
