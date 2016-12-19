@@ -49,101 +49,76 @@ class BrowserImpl implements Browser
 	this.interaction = interaction;
     }
 
-    @Override public void init(final org.luwrain.browser.Events events)
+    @Override public void init(org.luwrain.browser.Events events)
     {
 	final BrowserImpl browser = this;
 	final boolean emptyList = interaction.browsers.isEmpty();
 	interaction.browsers.add(this);
 	Platform.runLater(()->{
-		    webView = new WebView();
-		    webEngine = webView.getEngine();
-		    webView.setOnKeyReleased((event)->onKeyReleased(event));
-		    webEngine.getLoadWorker().stateProperty().addListener(new ChangeListener<State>()
-									  {
-									      @Override public void changed(ObservableValue<? extends State> ov,State oldState,final State newState)
-									      {
-										  Log.debug("web","State changed to: "+newState.name()+", "+webEngine.getLoadWorker().getState().toString()+", url:"+webEngine.getLocation());
-										  if(newState==State.CANCELLED)
-										  { // if canceled not by user, so that is a file downloads
-										      if(!userStops)
-										      { // if it not by user
-											  if(events.onDownloadStart(webEngine.getLocation())) return;
-										      }
-										  }
-										  WebState state=WebState.CANCELLED;
-										  switch(newState)
-										  {
-										  case CANCELLED:	state=WebState.CANCELLED;break;
-										  case FAILED:	state=WebState.FAILED;break;
-										  case READY:		state=WebState.READY;break;
-										  case RUNNING:	state=WebState.RUNNING;break;
-										  case SCHEDULED:	state=WebState.SCHEDULED;break;
-										  case SUCCEEDED:	state=WebState.SUCCEEDED;break;
-										  }
-										  events.onChangeState(state);
-									      }
-									  });
-	    
-		    webEngine.getLoadWorker().progressProperty().addListener(new ChangeListener<Number>()
-		    {
-		    	@Override public void changed(ObservableValue<? extends Number> ov,Number o,final Number n)
-		    	{
-		    		events.onProgress(n);
-		    	}
-		    });
+		webView = new WebView();
+		webEngine = webView.getEngine();
+		webView.setOnKeyReleased((event)->onKeyReleased(event));
+		webEngine.getLoadWorker().stateProperty().addListener((ov,oldState,newState)->onStateChange(events, ov, oldState, newState));
+		webEngine.getLoadWorker().progressProperty().addListener((ov,o,n)->events.onProgress(n));
+		webEngine.setOnAlert((event)->events.onAlert(event.getData()));
+		webEngine.setPromptHandler((event)->events.onPrompt(event.getMessage(),event.getDefaultValue()));
+		webEngine.setConfirmHandler((param)->events.onConfirm(param));
+		webEngine.setOnError((event)->events.onError(event.getMessage()));
+		webView.setVisible(false);
+		interaction.addWebViewControl(webView);
+		if(emptyList) 
+		    interaction.setCurrentBrowser(browser);
+	    });
+    }
 
-		    webEngine.setOnAlert(new EventHandler<WebEvent<String>>() {
-			    @Override public void handle(final WebEvent<String> event)
-			    {
-						Log.debug("web","t:"+Thread.currentThread().getId()+" ALERT:"+event.getData());
-							events.onAlert(event.getData());
-					}
-				});
-
-				webEngine.setPromptHandler(new Callback<PromptData,String>() {
-					@Override public String call(final PromptData event)
-					{
-					    Log.debug("web","t:"+Thread.currentThread().getId()+" PROMPT:"+event.getMessage()+"', default '"+event.getDefaultValue()+"'");
-								return events.onPrompt(event.getMessage(),event.getDefaultValue());
-					}
-					});
-
-				webEngine.setConfirmHandler(new Callback<String,Boolean>()
-				{
-					@Override public Boolean call(String param)
-					{
-						Log.debug("web","t:"+Thread.currentThread().getId()+" CONFIRM: "+param);
-						return events.onConfirm(param);
-					}
-				});
-
-				webEngine.setOnError(new EventHandler<WebErrorEvent>()
-				{
-					@Override public void handle(final WebErrorEvent event)
-					{
-						Log.debug("web","thread:"+(Platform.isFxApplicationThread()?"javafx":"main")+"ERROR:"+event.getMessage());
-							events.onError(event.getMessage());
-					}
-				});
-
-				webView.setVisible(false);
-				interaction.addWebViewControl(webView);
-
-				if(emptyList) 
-					interaction.setCurrentBrowser(browser);
-				//	    }
-		});
+    private void onStateChange(org.luwrain.browser.Events events, ObservableValue<? extends State> ov,
+			       State oldState, State newState)
+    {
+	Log.debug("javafx","browser state changed to: "+newState.name()+", "+webEngine.getLoadWorker().getState().toString()+", url:"+webEngine.getLocation());
+	if(newState == State.CANCELLED)
+	{ // if canceled not by user, so that is a file downloads
+	    if(!userStops)
+	    { // if it not by user
+		if(events.onDownloadStart(webEngine.getLocation())) 
+		    return;
+	    }
+	}
+	final WebState state;
+	switch(newState)
+	{
+	case CANCELLED:
+	    state=WebState.CANCELLED;
+	    break;
+	case FAILED:	
+	    state=WebState.FAILED;
+	    break;
+	case READY:		
+	    state=WebState.READY;
+	    break;
+	case RUNNING:	
+	    state=WebState.RUNNING;
+	    break;
+	case SCHEDULED:	
+	    state=WebState.SCHEDULED;
+	    break;
+	case SUCCEEDED:	
+	    state=WebState.SUCCEEDED;
+	    break;
+	default:
+	    state = WebState.CANCELLED;
+	}
+	events.onChangeState(state);
     }
 
     private void onKeyReleased(KeyEvent event)
     {
-						     //Log.debug("web","KeyReleased: "+event.toString());
-						     switch(event.getCode())
-						     {
-						     case ESCAPE:
-							 interaction.setCurrentBrowserVisibility(false);break;
-						     default:break;
-						     }
+	//Log.debug("web","KeyReleased: "+event.toString());
+	switch(event.getCode())
+	{
+	case ESCAPE:
+	    interaction.setCurrentBrowserVisibility(false);break;
+	default:break;
+	}
     }
 
     //kaka
