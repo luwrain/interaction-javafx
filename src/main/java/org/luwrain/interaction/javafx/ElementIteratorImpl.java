@@ -2,29 +2,13 @@
 package org.luwrain.interaction.javafx;
 
 import java.awt.Rectangle;
-import java.io.StringWriter;
-import java.util.Date;
-import java.util.Vector;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.FutureTask;
+import java.util.*;
+import java.util.concurrent.*;
 
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
-
-import javafx.application.Platform;
-
-import org.w3c.dom.Node;
 import org.w3c.dom.css.CSSStyleDeclaration;
 import org.w3c.dom.html.*;
-import org.w3c.dom.ls.DOMImplementationLS;
-import org.w3c.dom.ls.LSSerializer;
-
-import com.sun.webkit.dom.*;
 import org.w3c.dom.*;
+import javafx.application.Platform;
 
 import org.luwrain.browser.*;
 import org.luwrain.core.*;
@@ -32,7 +16,7 @@ import org.luwrain.core.*;
 class ElementIteratorImpl implements ElementIterator
 {
     // javascript window's property names for using in executeScrypt
-    static final String GET_NODE_TEXT="get_node_text";
+        static final String GET_NODE_TEXT="get_node_text";
 
     final BrowserImpl browser;
     int pos=0;
@@ -57,7 +41,7 @@ return browser.getDom().get(pos).isVisible();
 
     @Override public boolean forTEXT()
 	{
-return browser.getDom().get(pos).forTEXT;
+return browser.getDom().get(pos).forText;
 	}
 
     @Override public int getPos()

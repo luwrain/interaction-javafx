@@ -56,7 +56,7 @@ return false;
 	if(visible&&!checkVisible(wel)) 
 	    return false;
 	// current selector's checks
-	if(!wel.current().forTEXT) 
+	if(!wel.current().forText) 
 return false;
 	String text=wel.getText(); // TODO: if filter is null, we can skip getText for each node in list to speed up walking but consume empty text nodes
 	//System.out.println("CHECK: node:"+wel.current.node.getNodeName()+", "+(!(wel.current.node instanceof HTMLElement)?wel.current.node.getNodeValue():((HTMLElement)wel.current.node).getTextContent())); // +" text:"+info.forTEXT+);

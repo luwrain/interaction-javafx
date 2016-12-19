@@ -110,7 +110,7 @@ class BrowserImpl implements Browser
 	    {
 		final JSObject rect=(JSObject)((JSObject)o).getMember("r");
 		final org.w3c.dom.Node n=(org.w3c.dom.Node)((JSObject)o).getMember("n");
-		final NodeInfo info=new NodeInfo();
+		final NodeInfo info=new NodeInfo(n);
 		if(rect == null)
 		    info.rect = new Rectangle(0,0,0,0); else
 		{
@@ -120,8 +120,7 @@ class BrowserImpl implements Browser
 		    final int height=(int)Double.parseDouble(rect.getMember("height").toString());
 		    info.rect = new Rectangle(x,y,width,height);
 		}
-		info.node = n;
-		info.forTEXT = !n.hasChildNodes();
+		info.forText = !n.hasChildNodes();
 		// make decision about TEXT nodes by class
 		if(n instanceof HTMLAnchorElement
 		   ||n instanceof HTMLButtonElement
@@ -130,13 +129,17 @@ class BrowserImpl implements Browser
 		   ||n instanceof HTMLSelectElement
 		   ||n instanceof HTMLTextAreaElement
 		   ||n instanceof HTMLSelectElement)
-		    info.forTEXT=true;
+		    info.forText = true;
 		final boolean ignore = checkNodeForIgnoreChildren(n);
 		if(ignore) 
-		    info.forTEXT=false;
+		    info.forText = false;
 		domMap.put(n, i);
 		dom.add(info);
 	    }
+
+	    for(NodeInfo n: dom)
+		Log.debug("javafx-dom", n.descr());
+
 	    for(NodeInfo info: dom)
 	    {
 		final org.w3c.dom.Node parent = info.node.getParentNode();
