@@ -6,17 +6,11 @@ import java.util.*;
 import java.util.concurrent.*;
 
 import javafx.application.Platform;
-import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.concurrent.Worker.State;
-import javafx.event.EventHandler;
-import javafx.scene.web.PromptData;
 import javafx.scene.web.WebEngine;
-import javafx.scene.web.WebErrorEvent;
-import javafx.scene.web.WebEvent;
 import javafx.scene.web.WebView;
 import javafx.scene.input.KeyEvent;
-import javafx.util.Callback;
 import netscape.javascript.JSObject;
 
 import org.w3c.dom.Node;
@@ -34,12 +28,10 @@ class BrowserImpl implements Browser
     private WebView webView = null;
     private WebEngine webEngine = null;
     private boolean busy = false;
-
-    // list of all nodes in web page
     private Vector<NodeInfo> dom=new Vector<NodeInfo>();
     private LinkedHashMap<org.w3c.dom.Node,Integer> domMap = new LinkedHashMap<org.w3c.dom.Node, Integer>();
     private HTMLDocument htmlDoc = null;
-    DOMWindowImpl htmlWnd = null;
+    DOMWindowImpl htmlWnd = null;//FIXME:
     private JSObject window = null;
     private boolean userStops = false;
 
@@ -69,117 +61,6 @@ class BrowserImpl implements Browser
 		if(emptyList) 
 		    interaction.setCurrentBrowser(browser);
 	    });
-    }
-
-    private void onStateChange(org.luwrain.browser.Events events, ObservableValue<? extends State> ov,
-			       State oldState, State newState)
-    {
-	Log.debug("javafx","browser state changed to: "+newState.name()+", "+webEngine.getLoadWorker().getState().toString()+", url:"+webEngine.getLocation());
-	if(newState == State.CANCELLED)
-	{ // if canceled not by user, so that is a file downloads
-	    if(!userStops)
-	    { // if it not by user
-		if(events.onDownloadStart(webEngine.getLocation())) 
-		    return;
-	    }
-	}
-	final WebState state;
-	switch(newState)
-	{
-	case CANCELLED:
-	    state=WebState.CANCELLED;
-	    break;
-	case FAILED:	
-	    state=WebState.FAILED;
-	    break;
-	case READY:		
-	    state=WebState.READY;
-	    break;
-	case RUNNING:	
-	    state=WebState.RUNNING;
-	    break;
-	case SCHEDULED:	
-	    state=WebState.SCHEDULED;
-	    break;
-	case SUCCEEDED:	
-	    state=WebState.SUCCEEDED;
-	    break;
-	default:
-	    state = WebState.CANCELLED;
-	}
-	events.onChangeState(state);
-    }
-
-    private void onKeyReleased(KeyEvent event)
-    {
-	//Log.debug("web","KeyReleased: "+event.toString());
-	switch(event.getCode())
-	{
-	case ESCAPE:
-	    interaction.setCurrentBrowserVisibility(false);break;
-	default:break;
-	}
-    }
-
-    @Override public boolean isBusy()
-    {
-		return busy;
-    }
-
-    @Override public void Remove()
-    {
-	final int pos = interaction.browsers.indexOf(this);
-	final boolean success = interaction.browsers.remove(this);
-	if(!success) 
-	    Log.warning("web","Can't found WebPage to remove it from WebEngineInteraction");
-	setVisibility(false);
-	if(pos!=-1)
-	{
-	    if(pos < interaction.browsers.size())
-	    {
-		interaction.setCurrentBrowser(interaction.browsers.get(pos));
-	    }
-	} else
-	{
-	    if(interaction.browsers.isEmpty()) 
-interaction.setCurrentBrowser(null); else 
-	    	interaction.setCurrentBrowser(interaction.browsers.lastElement());
-	}
-    }
-
-    @Override public void setVisibility(boolean enable)
-    {
-	if(enable)
-	{
-	    interaction.disablePaint();
-	Platform.runLater(()->{
-		webView.setVisible(true);
-		webView.requestFocus();
-	    });
-    } else
-	{
-	    Platform.runLater(()->{
-		    interaction.enablePaint();
-			webView.setVisible(false);
-	    });
-	}
-    }
-
-    @Override public boolean getVisibility()
-    {
-	return webView.isVisible();
-    }
-
-    private boolean checkNodeForIgnoreChildren(Node node)
-    {
-    	if(node == null) 
-return false;
-    	final Node parent = node.getParentNode();
-    	if(parent == null) 
-return false;
-    	if(parent instanceof HTMLAnchorElement)
-return true;
-    	return checkNodeForIgnoreChildren(parent);
     }
 
     @Override public void RescanDOM()
@@ -293,6 +174,67 @@ return true;
 	busy=false;
     }
 
+    @Override public boolean isBusy()
+    {
+	return busy;
+    }
+
+    @Override public void Remove()
+    {
+	final int pos = interaction.browsers.indexOf(this);
+	final boolean success = interaction.browsers.remove(this);
+	if(!success) 
+	    Log.warning("web","Can't found WebPage to remove it from WebEngineInteraction");
+	setVisibility(false);
+	if(pos!=-1)
+	{
+	    if(pos < interaction.browsers.size())
+	    {
+		interaction.setCurrentBrowser(interaction.browsers.get(pos));
+	    }
+	} else
+	{
+	    if(interaction.browsers.isEmpty()) 
+		interaction.setCurrentBrowser(null); else 
+	    	interaction.setCurrentBrowser(interaction.browsers.lastElement());
+	}
+    }
+
+    @Override public void setVisibility(boolean enable)
+    {
+	if(enable)
+	{
+	    interaction.disablePaint();
+	    Platform.runLater(()->{
+		    webView.setVisible(true);
+		    webView.requestFocus();
+		});
+	} else
+	{
+	    Platform.runLater(()->{
+		    interaction.enablePaint();
+		    webView.setVisible(false);
+		});
+	}
+    }
+
+    @Override public boolean getVisibility()
+    {
+	return webView.isVisible();
+    }
+
+    private boolean checkNodeForIgnoreChildren(Node node)
+    {
+    	if(node == null) 
+	    return false;
+    	final Node parent = node.getParentNode();
+    	if(parent == null) 
+	    return false;
+    	if(parent instanceof HTMLAnchorElement)
+	    return true;
+    	return checkNodeForIgnoreChildren(parent);
+    }
+
     @Override public void load(String url)
     {
 	NullCheck.notNull(url, "url");
@@ -392,5 +334,55 @@ String tagName, String attrName, String attrValue)
     Map<org.w3c.dom.Node,Integer> getDomMap()
     {
 	return domMap;
+    }
+
+    private void onStateChange(org.luwrain.browser.Events events, ObservableValue<? extends State> ov,
+			       State oldState, State newState)
+    {
+	Log.debug("javafx","browser state changed to: "+newState.name()+", "+webEngine.getLoadWorker().getState().toString()+", url:"+webEngine.getLocation());
+	if(newState == State.CANCELLED)
+	{ // if canceled not by user, so that is a file downloads
+	    if(!userStops)
+	    { // if it not by user
+		if(events.onDownloadStart(webEngine.getLocation())) 
+		    return;
+	    }
+	}
+	final WebState state;
+	switch(newState)
+	{
+	case CANCELLED:
+	    state=WebState.CANCELLED;
+	    break;
+	case FAILED:	
+	    state=WebState.FAILED;
+	    break;
+	case READY:		
+	    state=WebState.READY;
+	    break;
+	case RUNNING:	
+	    state=WebState.RUNNING;
+	    break;
+	case SCHEDULED:	
+	    state=WebState.SCHEDULED;
+	    break;
+	case SUCCEEDED:	
+	    state=WebState.SUCCEEDED;
+	    break;
+	default:
+	    state = WebState.CANCELLED;
+	}
+	events.onChangeState(state);
+    }
+
+    private void onKeyReleased(KeyEvent event)
+    {
+	//Log.debug("web","KeyReleased: "+event.toString());
+	switch(event.getCode())
+	{
+	case ESCAPE:
+	    interaction.setCurrentBrowserVisibility(false);break;
+	default:break;
+	}
     }
 }
