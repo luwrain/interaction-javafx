@@ -121,18 +121,14 @@ class BrowserImpl implements Browser
 	}
     }
 
-    //kaka
-
-
     @Override public boolean isBusy()
     {
 		return busy;
     }
-    
-    // remove WebPage from WebEngineInteraction's webPages list and stop WebEngine work, prepare for destroy
+
     @Override public void Remove()
     {
-	int pos = interaction.browsers.indexOf(this);
+	final int pos = interaction.browsers.indexOf(this);
 	final boolean success = interaction.browsers.remove(this);
 	if(!success) 
 	    Log.warning("web","Can't found WebPage to remove it from WebEngineInteraction");
@@ -154,21 +150,18 @@ interaction.setCurrentBrowser(null); else
     @Override public void setVisibility(boolean enable)
     {
 	if(enable)
-	{ // set visibility for this webpage on and change focus to it later (text page visibility is off)
+	{
 	    interaction.disablePaint();
-	    Platform.runLater(new Runnable(){@Override public void run() {
-		//Log.debug("web","request focus "+webView);
+	Platform.runLater(()->{
 		webView.setVisible(true);
 		webView.requestFocus();
-	    }});
-	} else
-	{ // set text page visibility to on and current webpage to off
-	    //wi.frame.setVisible(true);
-	    Platform.runLater(new Runnable(){@Override public void run()
-	    {
+	    });
+    } else
+	{
+	    Platform.runLater(()->{
 		    interaction.enablePaint();
 			webView.setVisible(false);
-	    }});
+	    });
 	}
     }
 
@@ -177,25 +170,27 @@ interaction.setCurrentBrowser(null); else
 	return webView.isVisible();
     }
 
-    // check node in scanned dom structure to have in parent one of ignore children situation, for example anchor tag, return true if children must be ignored 
     private boolean checkNodeForIgnoreChildren(Node node)
     {
-    	if(node==null) return false;
-    	Node parrent=node.getParentNode();
-    	if(parrent==null) return false;
-    	if(parrent instanceof HTMLAnchorElement) return true;
-    	return checkNodeForIgnoreChildren(parrent);
+    	if(node == null) 
+return false;
+    	final Node parent = node.getParentNode();
+    	if(parent == null) 
+return false;
+    	if(parent instanceof HTMLAnchorElement)
+return true;
+    	return checkNodeForIgnoreChildren(parent);
     }
-    
-    // rescan current page DOM model and refill list of nodes with it bounded rectangles
+
     @Override public void RescanDOM()
     {
     	busy=true;
     	Callable<Integer> task=new Callable<Integer>(){
 	    @Override public Integer call() throws Exception
 	    {
-		htmlDoc=(HTMLDocument)webEngine.getDocument();
-		if(htmlDoc==null) return null;
+htmlDoc = (HTMLDocument)webEngine.getDocument();
+		if(htmlDoc == null)
+return null;
 		htmlWnd=(DOMWindowImpl)((DocumentView)htmlDoc).getDefaultView();
 		
 		dom=new Vector<NodeInfo>();
