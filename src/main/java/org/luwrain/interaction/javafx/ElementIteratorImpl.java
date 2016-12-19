@@ -36,12 +36,12 @@ class ElementIteratorImpl implements ElementIterator
 
     @Override public boolean isVisible()
     {
-return browser.getDom().get(pos).isVisible();
+	return current().isVisible();
     }
 
     @Override public boolean forTEXT()
 	{
-return browser.getDom().get(pos).forText;
+	    return current().forText;
 	}
 
     @Override public int getPos()
@@ -467,7 +467,7 @@ return browser.getDom().get(pos).forText;
 		// FIXME: make better error handling
 	}
 
-	public NodeInfo current()
+    NodeInfo current()
     {
 	return browser.getDom().get(pos);
     }

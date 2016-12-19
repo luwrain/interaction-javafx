@@ -28,6 +28,7 @@ final org.w3c.dom.Node node;
 
     String descr()
     {
-	return node.getClass().getName().substring(node.getClass().getName().lastIndexOf(".")) + " " + node.getNodeValue();
+	//	return node.getClass().getName().substring(node.getClass().getName().lastIndexOf(".")) + " " + node.getNodeValue();
+	return node.getNodeName() + " " + node.getNodeValue();
     }
 }
