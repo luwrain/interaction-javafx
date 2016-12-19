@@ -33,6 +33,7 @@ class BrowserImpl implements Browser
     private final JavaFxInteraction interaction;
     private WebView webView = null;
     private WebEngine webEngine = null;
+    private boolean busy = false;
 
     // list of all nodes in web page
     private Vector<NodeInfo> dom=new Vector<NodeInfo>();
@@ -48,30 +49,15 @@ class BrowserImpl implements Browser
 	this.interaction = interaction;
     }
 
-    // make new empty WebPage (like about:blank) and add it to WebEngineInteraction's webPages
     @Override public void init(final org.luwrain.browser.Events events)
     {
-	final BrowserImpl that=this;
+	final BrowserImpl browser = this;
 	final boolean emptyList = interaction.browsers.isEmpty();
 	interaction.browsers.add(this);
-	Platform.runLater(new Runnable() {
-		@Override public void run()
-		{
-		    webView=new WebView();
-		    webEngine=webView.getEngine();
-		    webView.setOnKeyReleased(new EventHandler<KeyEvent>()
-					     {
-						 @Override public void handle(KeyEvent event)
-						 {
-						     //Log.debug("web","KeyReleased: "+event.toString());
-						     switch(event.getCode())
-						     {
-						     case ESCAPE:
-							 interaction.setCurrentBrowserVisibility(false);break;
-						     default:break;
-						     }
-						 }
-					     });
+	Platform.runLater(()->{
+		    webView = new WebView();
+		    webEngine = webView.getEngine();
+		    webView.setOnKeyReleased((event)->onKeyReleased(event));
 		    webEngine.getLoadWorker().stateProperty().addListener(new ChangeListener<State>()
 									  {
 									      @Override public void changed(ObservableValue<? extends State> ov,State oldState,final State newState)
@@ -97,7 +83,7 @@ class BrowserImpl implements Browser
 										  events.onChangeState(state);
 									      }
 									  });
-		    
+	    
 		    webEngine.getLoadWorker().progressProperty().addListener(new ChangeListener<Number>()
 		    {
 		    	@Override public void changed(ObservableValue<? extends Number> ov,Number o,final Number n)
@@ -120,7 +106,7 @@ class BrowserImpl implements Browser
 					    Log.debug("web","t:"+Thread.currentThread().getId()+" PROMPT:"+event.getMessage()+"', default '"+event.getDefaultValue()+"'");
 								return events.onPrompt(event.getMessage(),event.getDefaultValue());
 					}
-				});
+					});
 
 				webEngine.setConfirmHandler(new Callback<String,Boolean>()
 				{
@@ -144,12 +130,25 @@ class BrowserImpl implements Browser
 				interaction.addWebViewControl(webView);
 
 				if(emptyList) 
-					interaction.setCurrentBrowser(that);
-			}
+					interaction.setCurrentBrowser(browser);
+				//	    }
 		});
     }
 
-	private boolean busy=false;
+    private void onKeyReleased(KeyEvent event)
+    {
+						     //Log.debug("web","KeyReleased: "+event.toString());
+						     switch(event.getCode())
+						     {
+						     case ESCAPE:
+							 interaction.setCurrentBrowserVisibility(false);break;
+						     default:break;
+						     }
+    }
+
+    //kaka
+
+
     @Override public boolean isBusy()
     {
 		return busy;
