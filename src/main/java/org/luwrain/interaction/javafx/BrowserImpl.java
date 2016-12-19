@@ -293,56 +293,43 @@ return true;
 	busy=false;
     }
 
-	// start loading page via link
-    @Override public void load(String link)
+    @Override public void load(String url)
     {
-    	final String l = link;
-    	Platform.runLater(new Runnable() {
-    		@Override public void run()
-    		{
-				webEngine.load(l);
-    		}});
+	NullCheck.notNull(url, "url");
+    	Platform.runLater(()->webEngine.load(url));
     }
 
-    // start loading page by it's content
     @Override public void loadContent(String text)
     {
-		final String t = text;
-		Platform.runLater(new Runnable() {
-			@Override public void run()
-			{
-			    webEngine.loadContent(t);
-			}});
+	NullCheck.notNull(text, "text");
+	Platform.runLater(()->webEngine.loadContent(text));
     }
 
     @Override public void stop()
     {
-		Platform.runLater(new Runnable() {
-			@Override public void run()
-			{
-			    webEngine.getLoadWorker().cancel();
-			}});
+	Platform.runLater(()->webEngine.getLoadWorker().cancel());
     }
 
     @Override public String getTitle()
     {
-		if(webEngine==null)// return null; // FIXME: throw exception when webEngine not ready to use
-		    //throw new NullPointerException("webEngine not initialized");
-			return "";
+		if(webEngine == null)
+return "";
 		return webEngine.titleProperty().get();
     }
 
     @Override public String getUrl()
     {
-		if(webEngine==null) //return null; // FIXME: throw exception when webEngine not ready to use
-		    throw new NullPointerException("webEngine not initialized");
+		if(webEngine == null)
+		    return "";
 		return webEngine.getLocation();
     }
 
     @Override public Object executeScript(String script)
     {
-		if(webEngine==null) //return null; // FIXME: throw exception when webEngine not ready to use
-		    throw new NullPointerException("webEngine initialized");
+	NullCheck.notNull(script, "script");
+		if(webEngine == null)
+		    return null;
+		//FIXME:In JavaFX thread
 		return webEngine.executeScript(script);
     }
 
@@ -351,13 +338,18 @@ return true;
     	return new SelectorAllImpl(visible);
     }
 
-    @Override public SelectorText selectorText(boolean visible,String filter)
+    @Override public SelectorText selectorText(boolean visible, String filter)
     {
+	NullCheck.notNull(filter, "filter");
 	return new SelectorTextImpl(visible,filter);
     }
 
-    @Override public SelectorTag selectorTag(boolean visible,String tagName,String attrName,String attrValue)
+    @Override public SelectorTag selectorTag(boolean visible,
+String tagName, String attrName, String attrValue)
     {
+	NullCheck.notNull(tagName, "tagName");
+	NullCheck.notNull(attrName, "attrName");
+	NullCheck.notNull(attrValue, "attrValue");
 	return new SelectorTagImpl(visible,tagName,attrName,attrValue);
     }
 
@@ -375,6 +367,7 @@ return true;
     {
 	return domIdx.size();
     }
+
 	@Override public SelectorChildren rootChildren(boolean visible)
 	{
 		Vector<Integer> childs=new Vector<Integer>();
@@ -395,5 +388,4 @@ return true;
     {
 	return dom;
     }
-
 }
