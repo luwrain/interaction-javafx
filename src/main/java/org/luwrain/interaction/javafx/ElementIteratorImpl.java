@@ -39,11 +39,11 @@ class ElementIteratorImpl implements ElementIterator
 
     ElementIteratorImpl(BrowserImpl browser)
     {
+	NullCheck.notNull(browser, "browser");
 	this.browser = browser;
     }
 
-
-    public ElementIterator clone()
+    @Override public ElementIterator clone()
     {
     	ElementIteratorImpl result=new ElementIteratorImpl(browser);
     	result.pos=pos;
@@ -52,14 +52,12 @@ class ElementIteratorImpl implements ElementIterator
 
     @Override public boolean isVisible()
     {
-    	final NodeInfo info = browser.getDom().get(pos);
-    	return info.isVisible();
+return browser.getDom().get(pos).isVisible();
     }
 
     @Override public boolean forTEXT()
 	{
-	    final NodeInfo info = browser.getDom().get(pos);
-    	return info.forTEXT;
+return browser.getDom().get(pos).forTEXT;
 	}
 
     @Override public int getPos()
@@ -144,6 +142,7 @@ class ElementIteratorImpl implements ElementIterator
 	    }
     	return text==null?"":text;
     }
+
     @Override public String[] getMultipleText()
     {
     	if(current().node instanceof HTMLSelectElement)
@@ -154,7 +153,6 @@ class ElementIteratorImpl implements ElementIterator
  			{
  				Node option=select.getOptions().item(i);
  				if(option==null) continue; // so strange but happends
- 				//Log.debug("web",option.getNodeValue()+"["+i+"]="+option.getTextContent());
  				res.add(option.getTextContent());
  			}
     		return res.toArray(new String[res.size()]);
@@ -163,7 +161,7 @@ class ElementIteratorImpl implements ElementIterator
     		return new String[]{getText()};
     	}
     }
-    
+
     @Override public Rectangle getRect()
     {
     	if(!browser.getDomMap().containsKey(current().node)) 
