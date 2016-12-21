@@ -29,12 +29,25 @@ class BrowserImpl implements Browser
     private WebEngine webEngine = null;
     private boolean busy = false;
     private Vector<NodeInfo> dom=new Vector<NodeInfo>();
-    private LinkedHashMap<org.w3c.dom.Node,Integer> domMap = new LinkedHashMap<org.w3c.dom.Node, Integer>();
+    private LinkedHashMap<Node,Integer> domMap = new LinkedHashMap<Node, Integer>();
     private HTMLDocument htmlDoc = null;
     DOMWindowImpl htmlWnd = null;//FIXME:
     private JSObject window = null;
     private boolean userStops = false;
 
+    /** return current browser's list of nodes, WARNING, use w3c node only in Browser's thread */
+    @Override public Vector<NodeInfo> getDOMList()
+    {
+    	return dom;
+    }
+    /** return reverse index HashMap for accessing NodeInfo index in dom list by w3c Node */
+    @Override public LinkedHashMap<Node,Integer> getDOMmap()
+    {
+    	return domMap;
+    }
+    
+    public 
+    
     BrowserImpl(JavaFxInteraction interaction)
     {
 	NullCheck.notNull(interaction, "interaction");
@@ -72,7 +85,7 @@ class BrowserImpl implements Browser
 		return null;
 	    htmlWnd = (DOMWindowImpl)((DocumentView)htmlDoc).getDefaultView();
 	    dom = new Vector<NodeInfo>();
-	    domMap = new LinkedHashMap<org.w3c.dom.Node, Integer>();
+	    domMap = new LinkedHashMap<Node, Integer>();
 	    final JSObject js = (JSObject)webEngine.executeScript("(function(){"
 								  + "function nodewalk(node){"
 								  +   "var res=[];"
@@ -109,18 +122,19 @@ class BrowserImpl implements Browser
 	    for(int i=0;!(o=js.getMember(String.valueOf(i))).getClass().equals(String.class);i++)
 	    {
 		final JSObject rect=(JSObject)((JSObject)o).getMember("r");
-		final org.w3c.dom.Node n=(org.w3c.dom.Node)((JSObject)o).getMember("n");
-		final NodeInfo info=new NodeInfo(n);
-		if(rect == null)
-		    info.rect = new Rectangle(0,0,0,0); else
+		final Node n=(Node)((JSObject)o).getMember("n");
+	    int x = 0;
+	    int y = 0;
+	    int width = 0;
+	    int height = 0;
+		if(rect != null)
 		{
-		    final int x = (int)Double.parseDouble(rect.getMember("left").toString());
-		    final int y = (int)Double.parseDouble(rect.getMember("top").toString());
-		    final int width=(int)Double.parseDouble(rect.getMember("width").toString());
-		    final int height=(int)Double.parseDouble(rect.getMember("height").toString());
-		    info.rect = new Rectangle(x,y,width,height);
+		    x = (int)Double.parseDouble(rect.getMember("left").toString());
+		    y = (int)Double.parseDouble(rect.getMember("top").toString());
+		    width=(int)Double.parseDouble(rect.getMember("width").toString());
+		    height=(int)Double.parseDouble(rect.getMember("height").toString());
 		}
-		info.forText = !n.hasChildNodes();
+		boolean forText = !n.hasChildNodes();
 		// make decision about TEXT nodes by class
 		if(n instanceof HTMLAnchorElement
 		   ||n instanceof HTMLButtonElement
@@ -129,10 +143,11 @@ class BrowserImpl implements Browser
 		   ||n instanceof HTMLSelectElement
 		   ||n instanceof HTMLTextAreaElement
 		   ||n instanceof HTMLSelectElement)
-		    info.forText = true;
+		    forText = true;
 		final boolean ignore = checkNodeForIgnoreChildren(n);
 		if(ignore) 
-		    info.forText = false;
+		    forText = false;
+		final NodeInfo info=new NodeInfo(n,x,y,width,height,forText);
 		domMap.put(n, i);
 		dom.add(info);
 		Log.debug("javafx-dom", i+": "+info.descr());
@@ -141,9 +156,9 @@ class BrowserImpl implements Browser
 
 	    for(NodeInfo info: dom)
 	    {
-		final org.w3c.dom.Node parent = info.node.getParentNode();
+		final Node parent = info.getNode().getParentNode();
 		if(domMap.containsKey(parent))
-		    info.parent = domMap.get(parent);
+		    info.setParent(domMap.get(parent));
 	    }
 	    window = (JSObject)webEngine.executeScript("window");
 	    return null;
@@ -277,31 +292,6 @@ return "";
 		return webEngine.executeScript(script);
     }
 
-    @Override public SelectorAll selectorAll(boolean visible)
-    {
-    	return new SelectorAllImpl(visible);
-    }
-
-    @Override public SelectorText selectorText(boolean visible, String filter)
-    {
-	NullCheck.notNull(filter, "filter");
-	return new SelectorTextImpl(visible,filter);
-    }
-
-    @Override public SelectorTag selectorTag(boolean visible,
-String tagName, String attrName, String attrValue)
-    {
-	NullCheck.notNull(tagName, "tagName");
-	NullCheck.notNull(attrName, "attrName");
-	NullCheck.notNull(attrValue, "attrValue");
-	return new SelectorTagImpl(visible,tagName,attrName,attrValue);
-    }
-
-    @Override public SelectorCss selectorCss(boolean visible,String tagName,String styleName,String styleValue)
-    {
-	return new SelectorCssImpl(visible,tagName,styleName,styleValue);
-    }
-
     @Override public ElementIterator iterator()
     {
 	return new ElementIteratorImpl(this);
@@ -310,32 +300,6 @@ String tagName, String attrName, String attrValue)
     @Override public int numElements()
     {
 	return domMap.size();
-    }
-
-	@Override public SelectorChildren rootChildren(boolean visible)
-	{
-		Vector<Integer> childs=new Vector<Integer>();
-		SelectorAllImpl all=new SelectorAllImpl(visible);
-		ElementIteratorImpl list=new ElementIteratorImpl(this);
-		all.moveFirst(list);
-		while(true)
-		{
-			NodeInfo info=list.current(); 
-			if(info.parent==null)
-				childs.add(domMap.get(info.node));
-			if(!all.moveNext(list)) break;
-		}
-		return new SelectorChildrenImpl(visible,childs.toArray(new Integer[childs.size()]));
-	}
-
-    Vector<NodeInfo> getDom()
-    {
-	return dom;
-    }
-
-    Map<org.w3c.dom.Node,Integer> getDomMap()
-    {
-	return domMap;
     }
 
     private void onStateChange(org.luwrain.browser.Events events, ObservableValue<? extends State> ov,
