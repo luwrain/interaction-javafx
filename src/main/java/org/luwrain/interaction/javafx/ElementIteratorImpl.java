@@ -124,7 +124,26 @@ class ElementIteratorImpl implements ElementIterator
 	    { // any other element
 	    	text=getComputedText();
 	    }
-    	return text==null?"":text;
+    	if(text==null) text="";
+    	if(text.isEmpty())
+    	{ // if text empty, try to add info from attributes
+    		if(current().node instanceof HTMLAnchorElement
+    		 ||current().node instanceof HTMLImageElement
+    		 ||current().node instanceof HTMLInputElement)
+    		{ // title
+    			if(current().node.hasAttributes())
+    			{
+    				Node title=current().node.getAttributes().getNamedItem("title");
+    				if(title!=null)
+    					text="title:"+title.getNodeValue();
+    				Node alt=current().node.getAttributes().getNamedItem("alt");
+    				if(alt!=null)
+    					text=(!text.isEmpty()?" ":"")+"alt:"+alt.getNodeValue();
+    			}
+    		}
+    	}
+    	//
+    	return text;
     }
 
     @Override public String[] getMultipleText()
@@ -507,5 +526,10 @@ class ElementIteratorImpl implements ElementIterator
 			e.printStackTrace();
 			return null;
 		}
+	}
+
+	@Override public String getHtmlTagName()
+	{
+		return current().node.getNodeName();
 	}
 }

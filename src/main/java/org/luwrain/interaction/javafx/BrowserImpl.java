@@ -135,10 +135,9 @@ class BrowserImpl implements Browser
 		    info.forText = false;
 		domMap.put(n, i);
 		dom.add(info);
+		Log.debug("javafx-dom", i+": "+info.descr());
 	    }
 
-	    for(NodeInfo n: dom)
-		Log.debug("javafx-dom", n.descr());
 
 	    for(NodeInfo info: dom)
 	    {
