@@ -395,7 +395,12 @@ class ElementIteratorImpl implements ElementIterator
 	Platform.runLater(new Runnable() {
 		@Override public void run()
 		{
-		    browser.htmlWnd.setMember(GET_NODE_TEXT, current().getNode());
+			Node node=current().getNode();
+			if(node.getNodeType()==Node.TEXT_NODE)
+			{ // text node click sometimes does not work, move to parent
+				node=node.getParentNode();
+			}
+		    browser.htmlWnd.setMember(GET_NODE_TEXT, node);
 		    try{
 			browser.executeScript("(function(){var x=window."+GET_NODE_TEXT+";x.click();})()");
 		    }
