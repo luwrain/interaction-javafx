@@ -16,7 +16,7 @@ import org.luwrain.core.*;
 class ElementIteratorImpl implements ElementIterator
 {
     // javascript window's property names for using in executeScrypt
-        static final String GET_NODE_TEXT="get_node_text";
+	static final String GET_NODE_TEXT="get_node_text";
 
     final BrowserImpl browser;
     int pos=0;
@@ -369,18 +369,61 @@ class ElementIteratorImpl implements ElementIterator
     	}
     }
 
+    @Override public void submitEmulate()
+    {
+    	final Node node=current().getNode();
+    	Node parent=null;
+    	while((parent=node.getParentNode())!=null)
+    	{
+    		if(node instanceof HTMLInputElement
+    		 ||node instanceof HTMLSelectElement)
+    		{
+    			Platform.runLater(new Runnable() {
+    				@Override public void run()
+    				{
+    				    browser.htmlWnd.setMember(GET_NODE_TEXT, node);
+    				    try{
+    					browser.executeScript("(function(){var x=window."+GET_NODE_TEXT+";x.form.submit();})()");
+    				    }
+    				    catch(Exception e)
+    				    {
+    				    } // can't click - no reaction
+    				}
+    			    });
+    			return;
+    		} else
+   			if(node instanceof HTMLFormElement)
+    		{
+    			Platform.runLater(new Runnable() {
+    				@Override public void run()
+    				{
+    				    browser.htmlWnd.setMember(GET_NODE_TEXT, node);
+    				    try{
+    					browser.executeScript("(function(){var x=window."+GET_NODE_TEXT+";x.submit();})()");
+    				    }
+    				    catch(Exception e)
+    				    {
+    				    } // can't click - no reaction
+    				}
+    			    });
+    			return;
+    		}
+    	}
+    }
+    
     @Override public void clickEmulate()
     {
 	// click can be done only for non text nodes
-	// FIXME: emulate click for text nodex via parent node
-	if(current().getNode() instanceof HTMLInputElement)
+	final Node node=current().getNode();
+	/*
+	if(node instanceof HTMLInputElement)
 	{
 	    if(((HTMLInputElement)current().getNode()).getType().equals("submit"))
 	    { // submit button
 		Platform.runLater(new Runnable() {
 			@Override public void run()
 			{
-			    browser.htmlWnd.setMember(GET_NODE_TEXT, current().getNode());
+			    browser.htmlWnd.setMember(GET_NODE_TEXT, node);
 			    try{
 				browser.executeScript("(function(){var x=window."+GET_NODE_TEXT+";x.form.submit();})()");
 			    }
@@ -392,15 +435,16 @@ class ElementIteratorImpl implements ElementIterator
 		return;
 	    };
 	}
+	*/
 	Platform.runLater(new Runnable() {
 		@Override public void run()
 		{
-			Node node=current().getNode();
-			if(node.getNodeType()==Node.TEXT_NODE)
+			Node n=node;
+			if(n.getNodeType()==Node.TEXT_NODE)
 			{ // text node click sometimes does not work, move to parent
-				node=node.getParentNode();
+				n=n.getParentNode();
 			}
-		    browser.htmlWnd.setMember(GET_NODE_TEXT, node);
+		    browser.htmlWnd.setMember(GET_NODE_TEXT, n);
 		    try{
 			browser.executeScript("(function(){var x=window."+GET_NODE_TEXT+";x.click();})()");
 		    }

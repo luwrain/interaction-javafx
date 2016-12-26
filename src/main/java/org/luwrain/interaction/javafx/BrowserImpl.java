@@ -2,6 +2,8 @@
 package org.luwrain.interaction.javafx;
 
 import java.awt.Rectangle;
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -24,6 +26,11 @@ import org.luwrain.browser.Events.WebState;
 
 class BrowserImpl implements Browser
 {
+	/** lastModifiedTime rescan interval in milliseconds */
+	static final int LAST_MODIFIED_SCAN_INTERVAL=100;
+    // javascript window's property names for using in executeScrypt
+	static final String LUWRAIN_NODE_TEXT="luwrain_node_text";
+	
     private final JavaFxInteraction interaction;
     private WebView webView = null;
     private WebEngine webEngine = null;
@@ -34,6 +41,9 @@ class BrowserImpl implements Browser
     DOMWindowImpl htmlWnd = null;//FIXME:
     private JSObject window = null;
     private boolean userStops = false;
+
+    private JSObject luwrainJSobject=null;
+	private long lastModifiedTime;
 
     /** return current browser's list of nodes, WARNING, use w3c node only in Browser's thread */
     @Override public Vector<NodeInfo> getDOMList()
@@ -46,9 +56,7 @@ class BrowserImpl implements Browser
     	return domMap;
     }
     
-    public 
-    
-    BrowserImpl(JavaFxInteraction interaction)
+    public BrowserImpl(JavaFxInteraction interaction)
     {
 	NullCheck.notNull(interaction, "interaction");
 	this.interaction = interaction;
@@ -74,52 +82,63 @@ class BrowserImpl implements Browser
 		if(emptyList) 
 		    interaction.setCurrentBrowser(browser);
 	    });
+    // start changes detection
+	Timer timer = new Timer();
+    timer.scheduleAtFixedRate(new TimerTask()
+    {
+        @Override public void run()
+        {
+        	Platform.runLater(()->{
+				{
+					if(luwrainJSobject==null) return;
+					long time=(long)(double)luwrainJSobject.getMember("domLastTime");
+					if(time==lastModifiedTime) return;
+					//System.out.println("modified");
+					// does not call changed event first time page loaded
+					if(lastModifiedTime!=0)
+						events.onPageChanged();
+					lastModifiedTime=time;
+				}});
+        }
+    }, 0, LAST_MODIFIED_SCAN_INTERVAL);
+
     }
 
+    @Override public void doFastUpdate()
+    {
+    	Platform.runLater(()->
+    	{
+        	// check if injected object success
+        	if(luwrainJSobject==null||"_luwrain_".equals(luwrainJSobject.getMember("name")))
+        		return;
+    		window.setMember(LUWRAIN_NODE_TEXT,luwrainJSobject);
+    		webEngine.executeScript(LUWRAIN_NODE_TEXT+".doUpdate();");
+    	});
+    }
+    
     @Override public void RescanDOM()
     {
     	busy=true;
     	final Callable<Integer> task = ()->{
-	    htmlDoc = (HTMLDocument)webEngine.getDocument();
+    	// check if injected object success
+    	if(luwrainJSobject==null||"_luwrain_".equals(luwrainJSobject.getMember("name")))
+    		return null;
+	    // prepare some  objects document and window
+    	htmlDoc = (HTMLDocument)webEngine.getDocument();
 	    if(htmlDoc == null)
 		return null;
 	    htmlWnd = (DOMWindowImpl)((DocumentView)htmlDoc).getDefaultView();
 	    dom = new Vector<NodeInfo>();
 	    domMap = new LinkedHashMap<Node, Integer>();
-	    final JSObject js = (JSObject)webEngine.executeScript("(function(){"
-								  + "function nodewalk(node){"
-								  +   "var res=[];"
-								  +   "if(node){"
-								  + 	  "node=node.firstChild;"
-								  +     "while(node!= null){"
-								  +       "if(node.nodeType!=3||node.nodeValue.trim()!=='') "
-								  +       "res[res.length]=node;"
-								  +       "res=res.concat(nodewalk(node));"
-								  +       "node=node.nextSibling;}"
-								  +     "}"
-								  +   "return res;"
-								  + "};"
-								  + "var lst=nodewalk(document);"
-								  + "var res=[];"
-								  + "for(var i=0;i<lst.length;i++){"
-								  + "res.push({"
-								  +   "n:lst[i],"
-								  +   "r:(lst[i].getBoundingClientRect?"
-								  +     "lst[i].getBoundingClientRect():"
-								  +     "((function(nnn){"
-								  +     "try{"
-								  +       "var range=document.createRange();"
-								  +       "range.selectNodeContents(nnn);"
-								  +       "return range.getBoundingClientRect();}"
-								  +     "catch(e)"
-								  +       "{return null;};"
-								  +     "})(lst[i])"
-								  +     "))"
-								  +   "});"
-								  + "};"
-								  + "return res;})()");
+	    //
+    	lastModifiedTime=jsLong(luwrainJSobject.getMember("domLastTime"));
+    	Log.debug("javafx-dom","modified at: "+(int)(lastModifiedTime/1000)+", scanned:"+luwrainJSobject.getMember("scanLT")+"ms, watch:"+((JSObject)luwrainJSobject.getMember("watch")).getMember("length")+" size");
+    	final JSObject js = (JSObject)luwrainJSobject.getMember("dom");
+    	//JSObject watchArray=(JSObject)webEngine.executeScript("[]");
+    	//int j=0;
+
 	    Object o;
-	    for(int i=0;!(o=js.getMember(String.valueOf(i))).getClass().equals(String.class);i++)
+	    for(int i=0;!(o=js.getSlot(i)).getClass().equals(String.class);i++)
 	    {
 		final JSObject rect=(JSObject)((JSObject)o).getMember("r");
 		final Node n=(Node)((JSObject)o).getMember("n");
@@ -129,10 +148,10 @@ class BrowserImpl implements Browser
 	    int height = 0;
 		if(rect != null)
 		{
-		    x = (int)Double.parseDouble(rect.getMember("left").toString());
-		    y = (int)Double.parseDouble(rect.getMember("top").toString());
-		    width=(int)Double.parseDouble(rect.getMember("width").toString());
-		    height=(int)Double.parseDouble(rect.getMember("height").toString());
+		    x = (int)jsLong(rect.getMember("left"));
+		    y = (int)jsLong(rect.getMember("top"));
+		    width=(int)jsLong(rect.getMember("width"));
+		    height=(int)jsLong(rect.getMember("height"));
 		}
 		boolean forText = !n.hasChildNodes();
 		// make decision about TEXT nodes by class
@@ -150,7 +169,7 @@ class BrowserImpl implements Browser
 		final NodeInfo info=new NodeInfo(n,x,y,width,height,forText);
 		domMap.put(n, i);
 		dom.add(info);
-		Log.debug("javafx-dom", i+": "+info.descr());
+		//Log.debug("javafx-dom", i+": "+info.descr());
 	    }
 
 
@@ -191,6 +210,24 @@ class BrowserImpl implements Browser
 	busy=false;
     }
 
+    @Override public void setWatchNodes(Iterable<Integer> indexes)
+    {
+	Platform.runLater(()->
+	{
+		// check if injected object success
+		if(luwrainJSobject==null||"_luwrain_".equals(luwrainJSobject.getMember("name")))
+			return;
+		// fill javascript array
+		final JSObject js = (JSObject)luwrainJSobject.getMember("dom");
+		JSObject watchArray=(JSObject)webEngine.executeScript("[]"); // FIXME: found correct method to create js array
+		int j=0;
+		for(int i:indexes)
+			watchArray.setSlot(j++,i);
+		// set watch member
+	    luwrainJSobject.setMember("watch",watchArray);
+	});
+    }
+    
     @Override public boolean isBusy()
     {
 	return busy;
@@ -272,7 +309,7 @@ class BrowserImpl implements Browser
     @Override public String getTitle()
     {
 		if(webEngine == null)
-return "";
+			return "";
 		return webEngine.titleProperty().get();
     }
 
@@ -286,10 +323,39 @@ return "";
     @Override public Object executeScript(String script)
     {
 	NullCheck.notNull(script, "script");
-		if(webEngine == null)
-		    return null;
-		//FIXME:In JavaFX thread
+	if(webEngine == null)
+	    return null;
+	final Callable<Object> task = ()->{
 		return webEngine.executeScript(script);
+	};
+	FutureTask<Object> query=new FutureTask<Object>(task){};
+    final ExecutorService executor = Executors.newSingleThreadExecutor();
+	if(Platform.isFxApplicationThread())
+	{ // direct call
+	    try {
+	    	return task.call();
+	    }
+	    catch(Exception e) 
+	    {
+	    	e.printStackTrace();
+	    	return null;
+	    }
+	} else
+	{
+	    Platform.runLater(query);
+	    try {
+	    	return query.get();
+	    }
+	    catch(InterruptedException e)
+	    {
+		Thread.currentThread().interrupt();
+	    }
+	    catch(ExecutionException e) 
+	    {
+		e.printStackTrace();
+	    }
+	    return null;
+	}
     }
 
     @Override public ElementIterator iterator()
@@ -338,6 +404,17 @@ return "";
 	default:
 	    state = WebState.CANCELLED;
 	}
+	//
+	switch(newState)
+	{
+		//case READY:
+		case SUCCEEDED:
+	    	luwrainJSobject=(JSObject)webEngine.executeScript(luwrainJS);
+	    	// FIXME: check that luwrain object exists
+    	break;
+		default:
+			luwrainJSobject=null;
+	}
 	events.onChangeState(state);
     }
 
@@ -351,4 +428,49 @@ return "";
 	default:break;
 	}
     }
+
+    
+	static public long jsLong(Object o)
+	{
+		if(o==null) return 0;
+		if(o instanceof Double) return (long)(double)o;
+		if(o instanceof Integer) return (long)(int)o;
+		//throw new Exception("js have unknown number type: "+o.getClass().getName());
+		// FIXME: it can be happened or not?
+		return (long)Double.parseDouble(o.toString());
+	}
+    static ClassLoader cl=ClassLoader.getSystemClassLoader();
+	static public String luwrainJS;
+    /** load resource text file as javascript and replace to luwrain member */
+    static String getJSResource(String path)
+    {
+    	try
+    	{
+    		InputStream inputStream=cl.getResourceAsStream(path);
+	    	ByteArrayOutputStream result = new ByteArrayOutputStream();
+	    	byte[] buffer = new byte[1024];
+	    	int length;
+	    	while ((length = inputStream.read(buffer)) != -1) {
+	    	    result.write(buffer, 0, length);
+	    	}
+   			String txt=result.toString("UTF-8");
+   			Log.warning("javafx-dom","Loaded resource js: "+path+" "+txt.length()+" bytes");
+   			return txt;
+    	}
+    	catch(Exception e)
+    	{
+    		Log.error("javafx-dom","Loading resource error: "+path+" not loaded");
+    		e.printStackTrace();
+    		return null;
+    	}
+    }
+	static
+	{
+   		luwrainJS=getJSResource("resources/luwrainJS.js");
+	}
+
+	@Override public long getLastTimeChanged()
+	{
+		return lastModifiedTime;
+	}
 }
