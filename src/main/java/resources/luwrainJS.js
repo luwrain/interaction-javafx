@@ -20,8 +20,10 @@ new function ()
 	
 	/** recursive method to return nodes' array about children of specified node
 	 * @param node target node */
-	this.nodewalk=function(node)
+	this.nodewalk=function(node,lvl)
 	{
+		var str=node.nodeValue;if(str==null||str===undefined) str='';
+		console.log(Array(lvl).join('.')+' '+node+' '+str.replace('\n',' '));
 		var res=[];
 		if(node)
 		{
@@ -32,7 +34,7 @@ new function ()
 				{
 					res[res.length]=node;
 				}
-				res=res.concat(this.nodewalk(node));
+				res=res.concat(this.nodewalk(node,lvl+1));
 				node=node.nextSibling;
 			}
 		}
@@ -42,7 +44,7 @@ new function ()
 	/** scan full document structure and return planar array of node info as object:{n:node,r:rectangle or null,h:content_hash or null} */
 	this.scanDOM=function()
 	{
-		var lst=this.nodewalk(document);
+		var lst=this.nodewalk(document,0);
 		var res=[];
 		for(var i=0;i<lst.length;i++)
 		{
@@ -164,13 +166,13 @@ new function ()
 			/**/this.scanLT=(new Date().getTime())-t;
 		}
 		// set next time for rescan
-		this.timerid=setTimeout(function(that){that.onTimeout();},this.updateTimeout,this);
+		//this.timerid=setTimeout(function(that){that.onTimeout();},this.updateTimeout,this);
 	};
 	/** do update */
 	this.doUpdate=function()
 	{
-		clearTimeout(this.timerid);
-		this.timerid=setTimeout(function(that){that.onTimeout();},200,this);
+		//clearTimeout(this.timerid);
+		//this.timerid=setTimeout(function(that){that.onTimeout();},200,this);
 	}
 	// start auto scanning via setTimeout as fast as possible after class object created
 	this.onTimeout();
