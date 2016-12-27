@@ -21,8 +21,8 @@
       <fileset dir="./build">
         <include name="**/*.class"/>
       </fileset>
-      <fileset dir="./src/main/java/">
-        <include name="resources/*.js"/>
+      <fileset dir="./src/main/resources">
+        <include name="**/*.js"/>
       </fileset>
     </jar>
   </target>

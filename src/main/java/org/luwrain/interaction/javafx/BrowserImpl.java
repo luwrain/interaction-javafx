@@ -2,8 +2,7 @@
 package org.luwrain.interaction.javafx;
 
 import java.awt.Rectangle;
-import java.io.ByteArrayOutputStream;
-import java.io.InputStream;
+import java.io.*;
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -26,11 +25,15 @@ import org.luwrain.browser.Events.WebState;
 
 class BrowserImpl implements Browser
 {
-	/** lastModifiedTime rescan interval in milliseconds */
-	static final int LAST_MODIFIED_SCAN_INTERVAL=100;
+    static private final String RESCAN_RESOURCE_PATH = "org/luwrain/interaction/javafx/rescan.js";
+    static final ClassLoader cl=ClassLoader.getSystemClassLoader();
+    static final String luwrainJS;
+
+    /** lastModifiedTime rescan interval in milliseconds */
+    static final int LAST_MODIFIED_SCAN_INTERVAL=100;
     // javascript window's property names for using in executeScrypt
 	static final String LUWRAIN_NODE_TEXT="luwrain_node_text";
-	
+
     private final JavaFxInteraction interaction;
     private WebView webView = null;
     private WebEngine webEngine = null;
@@ -368,6 +371,11 @@ class BrowserImpl implements Browser
 	return domMap.size();
     }
 
+	@Override public long getLastTimeChanged()
+	{
+		return lastModifiedTime;
+	}
+
     private void onStateChange(org.luwrain.browser.Events events, ObservableValue<? extends State> ov,
 			       State oldState, State newState)
     {
@@ -429,48 +437,46 @@ class BrowserImpl implements Browser
 	}
     }
 
-    
 	static public long jsLong(Object o)
 	{
-		if(o==null) return 0;
-		if(o instanceof Double) return (long)(double)o;
-		if(o instanceof Integer) return (long)(int)o;
+		if(o==null) 
+return 0;
+		if(o instanceof Double) 
+return (long)(double)o;
+		if(o instanceof Integer) 
+return (long)(int)o;
 		//throw new Exception("js have unknown number type: "+o.getClass().getName());
 		// FIXME: it can be happened or not?
 		return (long)Double.parseDouble(o.toString());
 	}
-    static ClassLoader cl=ClassLoader.getSystemClassLoader();
-	static public String luwrainJS;
+
     /** load resource text file as javascript and replace to luwrain member */
     static String getJSResource(String path)
     {
-    	try
-    	{
-    		InputStream inputStream=cl.getResourceAsStream(path);
-	    	ByteArrayOutputStream result = new ByteArrayOutputStream();
-	    	byte[] buffer = new byte[1024];
-	    	int length;
-	    	while ((length = inputStream.read(buffer)) != -1) {
-	    	    result.write(buffer, 0, length);
-	    	}
-   			String txt=result.toString("UTF-8");
-   			Log.warning("javafx-dom","Loaded resource js: "+path+" "+txt.length()+" bytes");
-   			return txt;
+	NullCheck.notNull(path, "path");
+    	try {
+	    final InputStream s = cl.getResourceAsStream(path);
+	    if (s == null)
+	    {
+		Log.error("javafx", "inaccessible resource:" + path);
+		return null;
+	    }
+	    final BufferedReader r = new BufferedReader(new InputStreamReader(cl.getResourceAsStream(path)));
+	    final StringBuilder b = new StringBuilder();
+	    String line = null;
+	    while((line = r.readLine()) != null)
+		b.append(line + "\n");
+	    return new String(b);
     	}
-    	catch(Exception e)
+    	catch(IOException e)
     	{
-    		Log.error("javafx-dom","Loading resource error: "+path+" not loaded");
-    		e.printStackTrace();
-    		return null;
+	    Log.error("javafx", "unable to read system resource:" + path + ":" + e.getClass().getName() + ":" + e.getMessage());
+	    return null;
     	}
     }
-	static
-	{
-   		luwrainJS=getJSResource("resources/luwrainJS.js");
-	}
 
-	@Override public long getLastTimeChanged()
-	{
-		return lastModifiedTime;
-	}
+    static 
+    {
+	luwrainJS=getJSResource(RESCAN_RESOURCE_PATH);
+    }
 }
