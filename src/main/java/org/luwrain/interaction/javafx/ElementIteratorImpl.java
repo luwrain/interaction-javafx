@@ -139,7 +139,8 @@ class ElementIteratorImpl implements ElementIterator
     	String text="";
 		if(current().getNode() instanceof HTMLAnchorElement
    		 ||current().getNode() instanceof HTMLImageElement
-   		 ||current().getNode() instanceof HTMLInputElement)
+   		 ||current().getNode() instanceof HTMLInputElement
+   		 ||current().getNode() instanceof HTMLTextAreaElement)
    		{ // title
    			if(current().getNode().hasAttributes())
    			{
@@ -149,6 +150,9 @@ class ElementIteratorImpl implements ElementIterator
    				Node alt=current().getNode().getAttributes().getNamedItem("alt");
    				if(alt!=null)
    					text=(!text.isEmpty()?" ":"")+"alt:"+alt.getNodeValue();
+   				Node placeholder=current().getNode().getAttributes().getNamedItem("placeholder");
+   				if(placeholder!=null)
+   					text=(!text.isEmpty()?" ":"")+"alt:"+placeholder.getNodeValue();
    			}
    		}
 		return text;
