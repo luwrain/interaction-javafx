@@ -378,44 +378,38 @@ class ElementIteratorImpl implements ElementIterator
 
     @Override public void submitEmulate()
     {
-    	final Node node=current().getNode();
-    	Node parent=null;
-    	while((parent=node.getParentNode())!=null)
+    	Platform.runLater(()->
     	{
-    		if(node instanceof HTMLInputElement
-    		 ||node instanceof HTMLSelectElement)
-    		{
-    			Platform.runLater(new Runnable() {
-    				@Override public void run()
-    				{
-    				    browser.htmlWnd.setMember(GET_NODE_TEXT, node);
-    				    try{
-    					browser.executeScript("(function(){var x=window."+GET_NODE_TEXT+";x.form.submit();})()");
-    				    }
-    				    catch(Exception e)
-    				    {
-    				    } // can't click - no reaction
-    				}
-    			    });
-    			return;
-    		} else
-   			if(node instanceof HTMLFormElement)
-    		{
-    			Platform.runLater(new Runnable() {
-    				@Override public void run()
-    				{
-    				    browser.htmlWnd.setMember(GET_NODE_TEXT, node);
-    				    try{
-    					browser.executeScript("(function(){var x=window."+GET_NODE_TEXT+";x.submit();})()");
-    				    }
-    				    catch(Exception e)
-    				    {
-    				    } // can't click - no reaction
-    				}
-    			    });
-    			return;
-    		}
-    	}
+	    	Node node=current().getNode();
+	    	Node parent=null;
+	    	while((parent=node.getParentNode())!=null)
+	    	{
+	    		if(node instanceof HTMLInputElement
+	    		 ||node instanceof HTMLSelectElement)
+	    		{
+	    				    browser.htmlWnd.setMember(GET_NODE_TEXT, node);
+	    				    try{
+	    					browser.executeScript("(function(){var x=window."+GET_NODE_TEXT+";x.form.submit();})()");
+	    				    }
+	    				    catch(Exception e)
+	    				    {
+	    				    } // can't click - no reaction
+	    			return;
+	    		} else
+	   			if(node instanceof HTMLFormElement)
+	    		{
+	    				    browser.htmlWnd.setMember(GET_NODE_TEXT, node);
+	    				    try{
+	    					browser.executeScript("(function(){var x=window."+GET_NODE_TEXT+";x.submit();})()");
+	    				    }
+	    				    catch(Exception e)
+	    				    {
+	    				    } // can't click - no reaction
+	    			return;
+	    		}
+	    		node=parent;
+	    	}
+    	});
     }
     
     @Override public void clickEmulate()
