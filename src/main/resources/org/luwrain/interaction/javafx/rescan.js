@@ -10,9 +10,12 @@ new function ()
 	this.dom=[];
 	/** last date in milliseconds when dom was rescanned and found modifications, to detect changes we must store last value to compare with it later */
 	this.domLastTime=0;
+	/** count of visible elements for dom and domLast */
+	this.countVisible=0;
+	this.countVisibleLast=0;
 
 	/** next interval in milliseconds to rescan */
-	this.updateTimeout=5000;
+	this.updateTimeout=3000;
 	
 	/** performance check, store timing for last method calls */
 	this.domLT=0;
@@ -22,8 +25,8 @@ new function ()
 	 * @param node target node */
 	this.nodewalk=function(node,lvl)
 	{
-		var str=node.nodeValue;if(str==null||str===undefined) str='';
-		console.log(Array(lvl).join('.')+' '+node+' '+str.replace('\n',' '));
+		//var str=node.nodeValue;if(str==null||str===undefined) str='';str=''+str;
+		//console.log(Array(lvl).join('.')+' '+node+' "'+str.replace(/\s+/g,' ')+'"');
 		var res=[];
 		if(node)
 		{
@@ -44,12 +47,12 @@ new function ()
 	/** scan full document structure and return planar array of node info as object:{n:node,r:rectangle or null,h:content_hash or null} */
 	this.scanDOM=function()
 	{
+		this.countVisibleLast=0;
 		var lst=this.nodewalk(document,0);
 		var res=[];
 		for(var i=0;i<lst.length;i++)
 		{
-			res.push(
-			{
+			var n={
 				n:lst[i],
 				r:(
 					lst[i].getBoundingClientRect?lst[i].getBoundingClientRect():
@@ -68,8 +71,12 @@ new function ()
 					})(lst[i]))
 				),
 				h:this.getNodeHash(lst[i])
-			});
+			};
+			if(n.r!=null&&(n.r.width==0||n.r.height==0))
+				this.countVisibleLast++;
+			res.push(n);
 		};
+		//console.log('this.countVisibleLast='+this.countVisibleLast);
 		return res;
 	};
 	/** set nodes indexes list to observe modification text or position 
@@ -133,7 +140,12 @@ new function ()
 		if(this.domLast.length!=this.dom.length)
 			modified=true;
 		else
-		{ // scan for watched nodes
+		// dom visible changed
+		if(this.countVisibleLast!=this.countVisible)
+			modified=true;
+		else
+		{
+			// scan for watched nodes
 			for(var i=0;i<this.watch.length;i++) if(this.watch[i] !== undefined)
 			{
 				var index=this.watch[i];
@@ -162,17 +174,18 @@ new function ()
 		{
 			this.dom=this.domLast;
 			this.domLastTime=new Date().getTime();
+			this.countVisible=this.countVisibleLast;
 			/**/this.domLT=this.domLastLT;
 			/**/this.scanLT=(new Date().getTime())-t;
 		}
 		// set next time for rescan
-		//this.timerid=setTimeout(function(that){that.onTimeout();},this.updateTimeout,this);
+		this.timerid=setTimeout(function(that){that.onTimeout();},this.updateTimeout,this);
 	};
 	/** do update */
 	this.doUpdate=function()
 	{
-		//clearTimeout(this.timerid);
-		//this.timerid=setTimeout(function(that){that.onTimeout();},200,this);
+		clearTimeout(this.timerid);
+		this.timerid=setTimeout(function(that){that.onTimeout();},200,this);
 	}
 	// start auto scanning via setTimeout as fast as possible after class object created
 	this.onTimeout();

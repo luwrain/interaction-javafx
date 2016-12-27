@@ -47,6 +47,14 @@ class BrowserImpl implements Browser
 
     private JSObject luwrainJSobject=null;
 	private long lastModifiedTime;
+	
+	public class MyConsole
+	{
+		public void log(Object str)
+		{
+			Log.info("javafx-dom",str.toString());
+		}
+	}
 
     /** return current browser's list of nodes, WARNING, use w3c node only in Browser's thread */
     @Override public Vector<NodeInfo> getDOMList()
@@ -417,6 +425,8 @@ class BrowserImpl implements Browser
 	{
 		//case READY:
 		case SUCCEEDED:
+			JSObject window=(JSObject)webEngine.executeScript("window");
+			window.setMember("console",new MyConsole());
 	    	luwrainJSobject=(JSObject)webEngine.executeScript(luwrainJS);
 	    	// FIXME: check that luwrain object exists
     	break;

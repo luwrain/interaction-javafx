@@ -130,25 +130,28 @@ class ElementIteratorImpl implements ElementIterator
 	    	text=getComputedText();
 	    }
     	if(text==null) text="";
-    	if(text.isEmpty())
-    	{ // if text empty, try to add info from attributes
-    		if(current().getNode() instanceof HTMLAnchorElement
-    		 ||current().getNode() instanceof HTMLImageElement
-    		 ||current().getNode() instanceof HTMLInputElement)
-    		{ // title
-    			if(current().getNode().hasAttributes())
-    			{
-    				Node title=current().getNode().getAttributes().getNamedItem("title");
-    				if(title!=null)
-    					text="title:"+title.getNodeValue();
-    				Node alt=current().getNode().getAttributes().getNamedItem("alt");
-    				if(alt!=null)
-    					text=(!text.isEmpty()?" ":"")+"alt:"+alt.getNodeValue();
-    			}
-    		}
-    	}
     	//
     	return text;
+    }
+    
+    @Override public String getAltText()
+    {
+    	String text="";
+		if(current().getNode() instanceof HTMLAnchorElement
+   		 ||current().getNode() instanceof HTMLImageElement
+   		 ||current().getNode() instanceof HTMLInputElement)
+   		{ // title
+   			if(current().getNode().hasAttributes())
+   			{
+   				Node title=current().getNode().getAttributes().getNamedItem("title");
+   				if(title!=null)
+   					text="title:"+title.getNodeValue();
+   				Node alt=current().getNode().getAttributes().getNamedItem("alt");
+   				if(alt!=null)
+   					text=(!text.isEmpty()?" ":"")+"alt:"+alt.getNodeValue();
+   			}
+   		}
+		return text;
     }
 
     @Override public String[] getMultipleText()
