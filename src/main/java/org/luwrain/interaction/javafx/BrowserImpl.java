@@ -25,6 +25,7 @@ import org.luwrain.browser.Events.WebState;
 
 class BrowserImpl implements Browser
 {
+    static private final String RESCAN_RESOURCE_PATH = "org/luwrain/interaction/javafx/rescan.js";
     static final ClassLoader cl=ClassLoader.getSystemClassLoader();
     static final String luwrainJS;
 
@@ -476,6 +477,6 @@ return (long)(int)o;
 
     static 
     {
-	luwrainJS=getJSResource("resources/luwrainJS.js");
+	luwrainJS=getJSResource(RESCAN_RESOURCE_PATH);
     }
 }
