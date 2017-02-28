@@ -5,7 +5,7 @@ import java.util.*;
 import java.util.concurrent.*;
 
 import org.luwrain.core.*;
-import org.luwrain.os.*;
+import org.luwrain.base.*;
 //import org.luwrain.util.*;
 import org.luwrain.browser.*;
 
@@ -23,7 +23,7 @@ public class JavaFxInteraction implements Interaction
     static private final int MIN_FONT_SIZE = 4;
     static private final String FRAME_TITLE = "LUWRAIN";
 
-    private KeyboardHandler keyboard;
+    private org.luwrain.interaction.KeyboardHandler keyboard;
     private boolean drawingInProgress = false;
     private int currentFontSize = 14;
     private String fontName = "Monospaced";
