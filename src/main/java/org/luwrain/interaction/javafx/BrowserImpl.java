@@ -21,7 +21,7 @@ import com.sun.webkit.dom.DOMWindowImpl;
 
 import org.luwrain.core.*;
 import org.luwrain.browser.*;
-import org.luwrain.browser.Events.WebState;
+//import org.luwrain.browser.Events.WebState;
 
 class BrowserImpl implements Browser
 {
@@ -39,7 +39,7 @@ class BrowserImpl implements Browser
     private WebEngine webEngine = null;
     private boolean busy = false;
     private Vector<NodeInfo> dom=new Vector<NodeInfo>();
-    private LinkedHashMap<Node,Integer> domMap = new LinkedHashMap<Node, Integer>();
+LinkedHashMap<Node,Integer> domMap = new LinkedHashMap<Node, Integer>();
     private HTMLDocument htmlDoc = null;
     DOMWindowImpl htmlWnd = null;//FIXME:
     private JSObject window = null;
@@ -62,9 +62,12 @@ class BrowserImpl implements Browser
     	return dom;
     }
     /** return reverse index HashMap for accessing NodeInfo index in dom list by w3c Node */
-    @Override public LinkedHashMap<Node,Integer> getDOMmap()
+    @Override public int getNodeIndex(org.w3c.dom.Node node)
     {
-    	return domMap;
+	NullCheck.notNull(node, "node");
+	if (domMap == null || !domMap.containsKey(node))
+	    return -1;
+    	return domMap.get(node).intValue();
     }
     
     public BrowserImpl(JavaFxInteraction interaction)
@@ -141,9 +144,7 @@ class BrowserImpl implements Browser
 	    htmlWnd = (DOMWindowImpl)((DocumentView)htmlDoc).getDefaultView();
 	    dom = new Vector<NodeInfo>();
 	    domMap = new LinkedHashMap<Node, Integer>();
-	    //
     	lastModifiedTime=jsLong(luwrainJSobject.getMember("domLastTime"));
-    	Log.debug("javafx-dom","modified at: "+(int)(lastModifiedTime/1000)+", scanned:"+luwrainJSobject.getMember("scanLT")+"ms, watch:"+((JSObject)luwrainJSobject.getMember("watch")).getMember("length")+" size");
     	final JSObject js = (JSObject)luwrainJSobject.getMember("dom");
     	//JSObject watchArray=(JSObject)webEngine.executeScript("[]");
     	//int j=0;
@@ -300,13 +301,13 @@ class BrowserImpl implements Browser
     	return checkNodeForIgnoreChildren(parent);
     }
 
-    @Override public void load(String url)
+    @Override public void loadByUrl(String url)
     {
 	NullCheck.notNull(url, "url");
     	Platform.runLater(()->webEngine.load(url));
     }
 
-    @Override public void loadContent(String text)
+    @Override public void loadByText(String text)
     {
 	NullCheck.notNull(text, "text");
 	Platform.runLater(()->webEngine.loadContent(text));
@@ -396,29 +397,29 @@ class BrowserImpl implements Browser
 		    return;
 	    }
 	}
-	final WebState state;
+	final Events.State state;
 	switch(newState)
 	{
 	case CANCELLED:
-	    state=WebState.CANCELLED;
+	    state = Events.State.CANCELLED;
 	    break;
 	case FAILED:	
-	    state=WebState.FAILED;
+	    state = Events.State.FAILED;
 	    break;
 	case READY:		
-	    state=WebState.READY;
+	    state = Events.State.READY;
 	    break;
 	case RUNNING:	
-	    state=WebState.RUNNING;
+	    state = Events.State.RUNNING;
 	    break;
 	case SCHEDULED:	
-	    state=WebState.SCHEDULED;
+	    state = Events.State.SCHEDULED;
 	    break;
 	case SUCCEEDED:	
-	    state=WebState.SUCCEEDED;
+	    state = Events.State.SUCCEEDED;
 	    break;
 	default:
-	    state = WebState.CANCELLED;
+	    state = Events.State.CANCELLED;
 	}
 	//
 	switch(newState)

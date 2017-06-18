@@ -179,9 +179,9 @@ class ElementIteratorImpl implements ElementIterator
 
     @Override public Rectangle getRect()
     {
-    	if(!browser.getDOMmap().containsKey(current().getNode())) 
+    	if(!browser.domMap.containsKey(current().getNode())) 
 	    return null;
-    	final int pos = browser.getDOMmap().get(current().getNode());
+    	final int pos = browser.domMap.get(current().getNode());
     	if(browser.getDOMList().size()<=pos) return null;
     	return browser.getDOMList().get(pos).getRect();
     }
@@ -210,7 +210,6 @@ class ElementIteratorImpl implements ElementIterator
 
     @Override public void setText(String text)
     {
-    	Log.debug("javafx","setText: "+current().getNode().getClass().getSimpleName()+", rect:" + browser.getDOMList().get(browser.getDOMmap().get(current().getNode())).getRect());
 	if(current().getNode() instanceof HTMLInputElement)
 		{
 		    final HTMLInputElement input=((HTMLInputElement)current().getNode());
@@ -281,7 +280,7 @@ class ElementIteratorImpl implements ElementIterator
 	    @Override public String call()
 	    {
 		browser.htmlWnd.setMember(GET_NODE_TEXT, current().getNode());
-		if(!browser.getDOMmap().containsKey(current().getNode())) 
+		if(!browser.domMap.containsKey(current().getNode())) 
 			return "";
 		try{
 		    return browser.executeScript("(function(){var x=window."+GET_NODE_TEXT+";return x.innerText===undefined?x.nodeValue:x.innerText})()").toString();
