@@ -31,6 +31,8 @@ import org.luwrain.browser.*;
 
 class BrowserIteratorImpl implements BrowserIterator
 {
+    static private final String LOG_COMPONENT = JavaFxInteraction.LOG_COMPONENT;
+
     // javascript window's property names for using in executeScrypt
 	static final String GET_NODE_TEXT="get_node_text";
 
@@ -45,7 +47,7 @@ class BrowserIteratorImpl implements BrowserIterator
 
     @Override public BrowserIterator clone()
     {
-    	BrowserIteratorImpl result=new BrowserIteratorImpl(browser);
+    	final BrowserIteratorImpl result = new BrowserIteratorImpl(browser);
     	result.pos=pos;
     	return result;
     }
@@ -56,55 +58,45 @@ class BrowserIteratorImpl implements BrowserIterator
     }
 
     @Override public boolean forTEXT()
-	{
-	    return current().getForText();
-	}
+    {
+	return current().getForText();
+    }
 
     @Override public int getPos()
     {
 	return pos;
     }
-	@Override public boolean setPos(int val)
-	{
+
+    @Override public boolean setPos(int val)
+    {
 	pos=val;
 	return true;
-	}
-
+    }
 
     @Override public String getText()
     {
-    	String text="";
+    	final String text;
     	if(current().getNode() instanceof Text)
-    	{
-	    text = current().getNode().getNodeValue().trim();
-    	} else 
+	    text = current().getNode().getNodeValue().trim(); else
 	    if(current().getNode() instanceof HTMLInputElement)
-	    { // input element
+	    {
 		final HTMLInputElement input=((HTMLInputElement)current().getNode());
-			if(input.getType().equals("checkbox")
-			 ||input.getType().equals("radio"))
-			{
-		    	text=input.getChecked()?"on":"off";
-			} else
-			{
-		    	text=input.getValue();
-			}
+		if(input.getType().equals("checkbox")
+		   ||input.getType().equals("radio"))
+		    text = input.getChecked()?"on":"off"; else
+		    text = input.getValue();
 	    } else
 		if(current().getNode() instanceof HTMLSelectElement)
-	    {
-	    	HTMLSelectElement select=(HTMLSelectElement)current().getNode();
-	    	int idx=select.getSelectedIndex();
-	    	text=select.getOptions().item(idx).getTextContent();
-	    	// TODO: make multiselect support
-	    } else
-	    { // any other element
-	    	text=getComputedText();
-	    }
-    	if(text==null) text="";
-    	//
-    	return text;
+		{
+		    final HTMLSelectElement select = (HTMLSelectElement)current().getNode();
+		    final int index = select.getSelectedIndex();
+		    text = select.getOptions().item(index).getTextContent();
+		    // TODO: make multiselect support
+		} else
+		    text = getComputedText();
+	return text != null?text:"";
     }
-    
+
     @Override public String getAltText()
     {
     	String text="";
@@ -183,7 +175,7 @@ class BrowserIteratorImpl implements BrowserIterator
     {
 	if(current().getNode() instanceof HTMLInputElement)
 		{
-		    final HTMLInputElement input=((HTMLInputElement)current().getNode());
+		    final HTMLInputElement input = ((HTMLInputElement)current().getNode());
 			if(input.getType().equals("checkbox")
 			 ||input.getType().equals("radio"))
 			{
@@ -232,6 +224,7 @@ class BrowserIteratorImpl implements BrowserIterator
 	if(attr==null) return null;
 	return attr.getNodeValue();
     }
+
     private String getComputedAttributeAll()
     {
     	if(!current().getNode().hasAttributes()) 
@@ -247,39 +240,20 @@ class BrowserIteratorImpl implements BrowserIterator
 
     @Override public String getComputedText()
     {
-	Callable<String> task=new Callable<String>(){
-	    @Override public String call()
-	    {
+	final Object res = Utils.callInFxThreadSync(()->{
 		browser.htmlWnd.setMember(GET_NODE_TEXT, current().getNode());
 		if(!browser.domMap.containsKey(current().getNode())) 
-			return "";
+		    return "";
 		try{
 		    return browser.executeScript("(function(){var x=window."+GET_NODE_TEXT+";return x.innerText===undefined?x.nodeValue:x.innerText})()").toString();
 		}
-		catch(Exception e)
+		catch(Throwable e)
 		{
-		    //e.printStackTrace();
+		    Log.error(LOG_COMPONENT, "getting calculated text:" + e.getClass().getName() + ":" + e.getMessage());
 		    return "";
 		}
-	    }};
-	if(Platform.isFxApplicationThread()) 
-	    try{
-		return task.call();}
-	    catch
-	    (Exception e)
-	    {
-		return null;
-	    }
-	FutureTask<String> query=new FutureTask<String>(task);
-	Platform.runLater(query);
-	try{
-	    return query.get();
-	}
-	catch(Exception e)
-	{
-	    return null;
-	}
-	// FIXME: make better error handling
+	    });
+	return res != null?res.toString():"";
     }
 
     @Override public String getComputedStyleProperty(final String name)
@@ -430,7 +404,6 @@ class BrowserIteratorImpl implements BrowserIterator
     {
     	if(current().getNode() instanceof Text)
     		return current().getNode().getNodeValue();
-
     	String xml="";
     	/*
     	try
@@ -450,71 +423,7 @@ class BrowserIteratorImpl implements BrowserIterator
     	//Log.debug("web","Node xml:"+xml);
     	return xml;
     }
-    
-    public boolean isChanged()
-	{
-	    final NodeInfo info = browser.getDOMList().get(pos);
-		if(info.getHashTime()==0)
-		{ // need to get hash
-			info.calcHash(getHtml());
-			// first time changes are undefined
-			return false;
-		}
-		// last changes already scanned
-		int oldHash=info.getHash();
-		String html=getHtml();
-		info.calcHash(html);
-		//System.out.println("["+pos+":"+current().getNode().getClass().getSimpleName()+":"+info.hash+"]");
-		//if(oldHash!=info.hash) System.out.println("changes detected");
-		return oldHash!=info.getHash();
-	}
-/*
-	@Override public boolean isChangedAround(Selector selector,int pos,int count)
-	{
-		final ElementIteratorImpl that=this;
-		Callable<Boolean> task=new Callable<Boolean>(){
-		    @Override public Boolean call()
-		    {
-		    	int cnt;
-		    	selector.moveToPos(that, pos);
-		    	cnt=count;
-		    	while(selector.movePrev(that) && cnt-- > 0)
-			    	if(that.isChanged())
-			    		return true;
-		    	selector.moveToPos(that, pos);
-		    	cnt=count;
-		    	while(selector.moveNext(that) && cnt-- > 0)
-			    	if(that.isChanged())
-			    		return true;
-				return false;
-		    }};
-		if(Platform.isFxApplicationThread()) 
-		    try
-			{
-		    	return task.call();
-		    }
-		    catch(Exception e)
-		    {
-		    	return false;
-		    }
-		FutureTask<Boolean> query=new FutureTask<Boolean>(task);
-		Platform.runLater(query);
-		try
-		{
-			boolean res=query.get();
-		    return res;
-	    }
-		catch(Exception e)
-		{
-		    return false;
-		}
-		// FIXME: make better error handling
-	}
-*/
-    NodeInfo current()
-    {
-	return browser.getDOMList().get(pos);
-    }
+
 	@Override public BrowserIterator getParent()
 	{
 	    if(browser.getDOMList().get(pos).getParent()==null)
@@ -523,37 +432,6 @@ class BrowserIteratorImpl implements BrowserIterator
 		parent.pos = browser.getDOMList().get(pos).getParent();
 		return parent;
 	}
-	/*
-	@Override public SelectorChildren getChildren(boolean visible)
-	{
-		FutureTask<SelectorChildren> query=new FutureTask<SelectorChildren>(new Callable<SelectorChildren>()
-		{
-			@Override public SelectorChildren call() throws Exception
-			{
-				//System.out.println("CHILDS");
-				Vector<Integer> childs=new Vector<Integer>();
-				NodeInfo node=current();
-				for(NodeInfo info: browser.getDOMList())
-				{
-					//System.out.println("CHILDS: test parents "+info.node+" for "+(info.parent==null?"null":page.dom.get(info.parent).node)+"=="+node.node+(info.parent!=null&&page.dom.get(info.parent).equals(node)));
-				    if(info.parent!=null && browser.getDOMList().get(info.parent).equals(node))
-					childs.add(browser.getDOMmap().get(info.node)); // it is ugly way to get index, but for loop have inaccessible index
-				}
-				return new SelectorChildrenImpl(visible,childs.toArray(new Integer[childs.size()]));
-			}
-		});
-		Platform.runLater(query);
-		try 
-		{
-			return query.get();
-		}
-		catch(InterruptedException|ExecutionException e)
-		{
-			e.printStackTrace();
-			return null;
-		}
-	}
-	*/
 
 	@Override public String getHtmlTagName()
 	{
@@ -564,4 +442,9 @@ class BrowserIteratorImpl implements BrowserIterator
 	{
 		return browser;
 	}
+
+    private NodeInfo current()
+    {
+	return browser.getDOMList().get(pos);
+    }
 }
