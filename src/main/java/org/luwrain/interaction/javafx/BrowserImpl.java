@@ -51,33 +51,34 @@ class BrowserImpl implements Browser
 	static final String LUWRAIN_NODE_TEXT="luwrain_node_text";
 
     private final JavaFxInteraction interaction;
+
     private WebView webView = null;
     private WebEngine webEngine = null;
-    private boolean busy = false;
+    private final Object webEngineSync = new Object();
+
     private Vector<NodeInfo> dom=new Vector<NodeInfo>();
 LinkedHashMap<Node,Integer> domMap = new LinkedHashMap<Node, Integer>();
+    private final Object domSync = new Object();
+
     private HTMLDocument htmlDoc = null;
     DOMWindowImpl htmlWnd = null;//FIXME:
     private JSObject window = null;
     private boolean userStops = false;
-
     private JSObject luwrainJSobject=null;
 	private long lastModifiedTime;
-	
-	public class MyConsole
-	{
-		public void log(Object str)
-		{
-			Log.info("javafx-dom",str.toString());
-		}
-	}
+
+    BrowserImpl(JavaFxInteraction interaction)
+    {
+	NullCheck.notNull(interaction, "interaction");
+	this.interaction = interaction;
+    }
 
     /** return current browser's list of nodes, WARNING, use w3c node only in Browser's thread */
     @Override public Vector<NodeInfo> getDOMList()
     {
     	return dom;
     }
-    /** return reverse index HashMap for accessing NodeInfo index in dom list by w3c Node */
+
     @Override public int getNodeIndex(org.w3c.dom.Node node)
     {
 	NullCheck.notNull(node, "node");
@@ -85,85 +86,95 @@ LinkedHashMap<Node,Integer> domMap = new LinkedHashMap<Node, Integer>();
 	    return -1;
     	return domMap.get(node).intValue();
     }
-    
-    public BrowserImpl(JavaFxInteraction interaction)
-    {
-	NullCheck.notNull(interaction, "interaction");
-	this.interaction = interaction;
-    }
 
     @Override public void init(org.luwrain.browser.Events events)
     {
-	final BrowserImpl browser = this;
+	NullCheck.notNull(events, "events");
 	final boolean emptyList = interaction.browsers.isEmpty();
 	interaction.browsers.add(this);
-	Platform.runLater(()->{
-		webView = new WebView();
-		webEngine = webView.getEngine();
-		webView.setOnKeyReleased((event)->onKeyReleased(event));
-		webEngine.getLoadWorker().stateProperty().addListener((ov,oldState,newState)->onStateChange(events, ov, oldState, newState));
-		webEngine.getLoadWorker().progressProperty().addListener((ov,o,n)->events.onProgress(n));
-		webEngine.setOnAlert((event)->events.onAlert(event.getData()));
-		webEngine.setPromptHandler((event)->events.onPrompt(event.getMessage(),event.getDefaultValue()));
-		webEngine.setConfirmHandler((param)->events.onConfirm(param));
-		webEngine.setOnError((event)->events.onError(event.getMessage()));
-		webView.setVisible(false);
-		interaction.addWebViewControl(webView);
-		if(emptyList) 
-		    interaction.setCurrentBrowser(browser);
-	    });
-    // start changes detection
-	Timer timer = new Timer();
-    timer.scheduleAtFixedRate(new TimerTask()
+Utils.runInFxThreadSync(()->{
+	initImpl(events);
+	interaction.addWebViewControl(webView);
+	if(emptyList) 
+	    interaction.setCurrentBrowser(BrowserImpl.this);
+    });
+// start changes detection
+Timer timer = new Timer();
+timer.scheduleAtFixedRate(new TimerTask()
     {
         @Override public void run()
         {
-        	Platform.runLater(()->{
-				{
-					if(luwrainJSobject==null) return;
-					long time=(long)(double)luwrainJSobject.getMember("domLastTime");
-					if(time==lastModifiedTime) return;
-					//System.out.println("modified");
-					// does not call changed event first time page loaded
-					if(lastModifiedTime!=0)
-						events.onPageChanged();
-					lastModifiedTime=time;
-				}});
+	    Platform.runLater(()->{
+		    {
+			if(luwrainJSobject==null) return;
+			long time=(long)(double)luwrainJSobject.getMember("domLastTime");
+			if(time==lastModifiedTime) return;
+			//System.out.println("modified");
+			// does not call changed event first time page loaded
+			if(lastModifiedTime!=0)
+			    events.onPageChanged();
+			lastModifiedTime=time;
+		    }});
         }
     }, 0, LAST_MODIFIED_SCAN_INTERVAL);
+    }
 
+    private void initImpl(Events events)
+    {
+	NullCheck.notNull(events, "events");
+	synchronized(webEngineSync) {
+	    webView = new WebView();
+	    webEngine = webView.getEngine();
+	    webView.setOnKeyReleased((event)->onKeyReleased(event));
+	    webEngine.getLoadWorker().stateProperty().addListener((ov,oldState,newState)->onStateChange(events, ov, oldState, newState));
+	    webEngine.getLoadWorker().progressProperty().addListener((ov,o,n)->events.onProgress(n));
+	    webEngine.setOnAlert((event)->events.onAlert(event.getData()));
+	    webEngine.setPromptHandler((event)->events.onPrompt(event.getMessage(),event.getDefaultValue()));
+	    webEngine.setConfirmHandler((param)->events.onConfirm(param));
+	    webEngine.setOnError((event)->events.onError(event.getMessage()));
+	    webView.setVisible(false);
+	}
+	}
+
+    private boolean initialized()
+    {
+	return webEngine != null && webView != null;
     }
 
     @Override public void doFastUpdate()
     {
     	Platform.runLater(()->
-    	{
-        	// check if injected object success
-        	if(luwrainJSobject==null||"_luwrain_".equals(luwrainJSobject.getMember("name")))
-        		return;
-    		window.setMember(LUWRAIN_NODE_TEXT,luwrainJSobject);
-    		webEngine.executeScript(LUWRAIN_NODE_TEXT+".doUpdate();");
-    	});
+			  {
+			      // check if injected object success
+			      if(luwrainJSobject==null||"_luwrain_".equals(luwrainJSobject.getMember("name")))
+				  return;
+			      window.setMember(LUWRAIN_NODE_TEXT,luwrainJSobject);
+			      webEngine.executeScript(LUWRAIN_NODE_TEXT+".doUpdate();");
+			  });
     }
-    
-    @Override public void RescanDOM()
+
+    @Override public void rescanDom()
     {
-    	busy=true;
-    	final Callable<Integer> task = ()->{
-	    // check if injected object success
+	synchronized(webEngineSync) {
+	    if (!initialized())
+		return;
+	    Utils.runInFxThreadSync(()->rescanDomImpl());
+	}
+    }
+
+    private void rescanDomImpl()
+    {
+	synchronized(domSync) {
 	    if(luwrainJSobject==null||"_luwrain_".equals(luwrainJSobject.getMember("name")))
-    		return null;
-	    // prepare some  objects document and window
+		return;
 	    htmlDoc = (HTMLDocument)webEngine.getDocument();
 	    if(htmlDoc == null)
-		return null;
+		return;
 	    htmlWnd = (DOMWindowImpl)((DocumentView)htmlDoc).getDefaultView();
 	    dom = new Vector<NodeInfo>();
 	    domMap = new LinkedHashMap<Node, Integer>();
 	    lastModifiedTime=jsLong(luwrainJSobject.getMember("domLastTime"));
 	    final JSObject js = (JSObject)luwrainJSobject.getMember("dom");
-	    //JSObject watchArray=(JSObject)webEngine.executeScript("[]");
-	    //int j=0;
 	    Object o;
 	    for(int i=0;!(o=js.getSlot(i)).getClass().equals(String.class);i++)
 	    {
@@ -196,7 +207,6 @@ LinkedHashMap<Node,Integer> domMap = new LinkedHashMap<Node, Integer>();
 		final NodeInfo info=new NodeInfo(n,x,y,width,height,forText);
 		domMap.put(n, i);
 		dom.add(info);
-		//Log.debug("javafx-dom", i+": "+info.descr());
 	    }
 	    for(NodeInfo info: dom)
 	    {
@@ -205,34 +215,7 @@ LinkedHashMap<Node,Integer> domMap = new LinkedHashMap<Node, Integer>();
 		    info.setParent(domMap.get(parent));
 	    }
 	    window = (JSObject)webEngine.executeScript("window");
-	    return null;
-	};
-	FutureTask<Integer> query=new FutureTask<Integer>(task){};
-	if(Platform.isFxApplicationThread())
-	{ // direct call
-	    try {
-		task.call();
-	    }
-	    catch(Exception e) 
-	    {
-		e.printStackTrace();
-	    }
-	} else
-	{
-	    Platform.runLater(query);
-	    try {
-		query.get();
-	    }
-	    catch(InterruptedException e)
-	    {
-		Thread.currentThread().interrupt();
-	    }
-	    catch(ExecutionException e) 
-	    {
-		e.printStackTrace();
-	    }
 	}
-	busy=false;
     }
 
     @Override public void setWatchNodes(Iterable<Integer> indexes)
@@ -254,7 +237,7 @@ LinkedHashMap<Node,Integer> domMap = new LinkedHashMap<Node, Integer>();
 
     @Override public boolean isBusy()
     {
-	return busy;
+	return false;
     }
 
     @Override public void Remove()
@@ -262,7 +245,7 @@ LinkedHashMap<Node,Integer> domMap = new LinkedHashMap<Node, Integer>();
 	final int pos = interaction.browsers.indexOf(this);
 	final boolean success = interaction.browsers.remove(this);
 	if(!success) 
-	    Log.warning("web","Can't found WebPage to remove it from WebEngineInteraction");
+	    Log.warning(LOG_COMPONENT,"Can't found WebPage to remove it from WebEngineInteraction");
 	setVisibility(false);
 	if(pos!=-1)
 	{
@@ -280,36 +263,48 @@ LinkedHashMap<Node,Integer> domMap = new LinkedHashMap<Node, Integer>();
 
     @Override public void setVisibility(boolean enable)
     {
-	if (webEngine == null || webView == null)
-	    return;
-	if(enable)
-	{
-	    interaction.disablePaint();
-	    Utils.runInFxThreadAsync(()->{
-		    webView.setVisible(true);
-		    webView.requestFocus();
-		});
-	    return;
+	synchronized(webEngineSync) {
+	    if (!initialized())
+		return;
+	    if(enable)
+	    {
+		interaction.disablePaint();
+		Utils.runInFxThreadSync(()->{
+			webView.setVisible(true);
+			webView.requestFocus();
+		    });
+		return;
+	    }
+	    interaction.enablePaint();
+	    Utils.runInFxThreadSync(()->webView.setVisible(false));
 	}
-	interaction.enablePaint();
-	Utils.runInFxThreadAsync(()->webView.setVisible(false));
     }
 
     @Override public boolean getVisibility()
     {
-	return webView.isVisible();
+	synchronized(webEngineSync) {
+	    if (!initialized())
+		return false;
+	    return webView.isVisible();//FIXME:
+	}
     }
 
     @Override public void loadByUrl(String url)
     {
 	NullCheck.notNull(url, "url");
-Utils.runInFxThreadAsync(()->webEngine.load(url));
+	synchronized(webEngineSync) {
+	    if (initialized())
+		Utils.runInFxThreadSync(()->webEngine.load(url));
+	}
     }
 
     @Override public void loadByText(String text)
     {
 	NullCheck.notNull(text, "text");
-Utils.runInFxThreadAsync(()->webEngine.loadContent(text));
+	synchronized(webEngineSync) {
+	    if (initialized())
+		Utils.runInFxThreadSync(()->webEngine.loadContent(text));
+	}
     }
 
     @Override public void stop()
@@ -337,7 +332,7 @@ Utils.runInFxThreadAsync(()->webEngine.loadContent(text));
 	if(script.trim().isEmpty() || webEngine == null)
 	    return null;
 	final Callable<Object> task = ()->webEngine.executeScript(script);
-	return Utils.runInFxThreadSync(task);
+	return Utils.callInFxThreadSync(task);
     }
 
     @Override public ElementIterator iterator()

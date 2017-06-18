@@ -31,7 +31,7 @@ class Utils
 {
     static private final String LOG_COMPONENT = JavaFxInteraction.LOG_COMPONENT;
 
-    static Object runInFxThreadSync(Callable callable)
+    static Object callInFxThreadSync(Callable callable)
     {
 	NullCheck.notNull(callable, "callable");
 	if(Platform.isFxApplicationThread())
@@ -57,6 +57,37 @@ class Utils
 	{
 	    Log.error(LOG_COMPONENT, "execution exception on callable object processing:" + e.getClass().getName() + ":" + e.getMessage());
 	    return null;
+	}
+    }
+
+    static void runInFxThreadSync(Runnable runnable)
+    {
+	NullCheck.notNull(runnable, "runnable");
+	if(Platform.isFxApplicationThread())
+	    try {
+		runnable.run();
+	    	return;
+	    }
+	    catch(Throwable e) 
+	    {
+		Log.error(LOG_COMPONENT, "runnable object thrown an exception:" + e.getClass().getName() + ":" + e.getMessage());
+	    	return;
+	    }
+	final FutureTask<Object> query=new FutureTask<Object>(runnable, null);
+	Platform.runLater(query);
+	try {
+	    query.get();
+	    return;
+	}
+	catch(InterruptedException e)
+	{
+	    Thread.currentThread().interrupt();
+	    return;
+	}
+	catch(ExecutionException e) 
+	{
+	    Log.error(LOG_COMPONENT, "execution exception on runnable object processing:" + e.getClass().getName() + ":" + e.getMessage());
+	    return;
 	}
     }
 
