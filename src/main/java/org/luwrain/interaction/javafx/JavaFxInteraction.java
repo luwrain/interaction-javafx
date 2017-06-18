@@ -36,6 +36,8 @@ import javafx.scene.web.WebView;
 
 public class JavaFxInteraction implements Interaction
 {
+    static final String LOG_COMPONENT = "javafx";
+
     static private final int MIN_FONT_SIZE = 4;
     static private final String FRAME_TITLE = "LUWRAIN";
 

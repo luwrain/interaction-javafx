@@ -24,10 +24,60 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.FutureTask;
 
+import org.luwrain.core.*;
 import org.luwrain.base.InteractionParamColor;
 
 class Utils
 {
+    static private final String LOG_COMPONENT = JavaFxInteraction.LOG_COMPONENT;
+
+    static Object runInFxThreadSync(Callable callable)
+    {
+	NullCheck.notNull(callable, "callable");
+	if(Platform.isFxApplicationThread())
+	    try {
+	    	return callable.call();
+	    }
+	    catch(Throwable e) 
+	    {
+		Log.error(LOG_COMPONENT, "callable object thrown an exception:" + e.getClass().getName() + ":" + e.getMessage());
+	    	return null;
+	    }
+	final FutureTask<Object> query=new FutureTask<Object>(callable);
+	Platform.runLater(query);
+	try {
+	    return query.get();
+	}
+	catch(InterruptedException e)
+	{
+	    Thread.currentThread().interrupt();
+	    return null;
+	}
+	catch(ExecutionException e) 
+	{
+	    Log.error(LOG_COMPONENT, "execution exception on callable object processing:" + e.getClass().getName() + ":" + e.getMessage());
+	    return null;
+	}
+    }
+
+    static void runInFxThreadAsync(Runnable runnable)
+    {
+	NullCheck.notNull(runnable, "runnable");
+	if(Platform.isFxApplicationThread())
+	    try {
+		runnable.run();
+		return;
+	    }
+	    catch(Throwable e) 
+	    {
+		Log.error(LOG_COMPONENT, "runnable object thrown an exception:" + e.getClass().getName() + ":" + e.getMessage());
+	    	return;
+	    }
+	final FutureTask<Object> query=new FutureTask<Object>(runnable, null);
+	Platform.runLater(query);
+	return;
+    }
+
     static Color InteractionParamColorToFx(InteractionParamColor ipc)
     {
 	if(ipc.getPredefined()==null)

@@ -37,10 +37,10 @@ import com.sun.webkit.dom.DOMWindowImpl;
 
 import org.luwrain.core.*;
 import org.luwrain.browser.*;
-//import org.luwrain.browser.Events.WebState;
 
 class BrowserImpl implements Browser
 {
+    static final String LOG_COMPONENT = "javafx-browser";
     static private final String RESCAN_RESOURCE_PATH = "org/luwrain/interaction/javafx/rescan.js";
     static final ClassLoader cl=ClassLoader.getSystemClassLoader();
     static final String luwrainJS;
@@ -150,30 +150,29 @@ LinkedHashMap<Node,Integer> domMap = new LinkedHashMap<Node, Integer>();
     {
     	busy=true;
     	final Callable<Integer> task = ()->{
-    	// check if injected object success
-    	if(luwrainJSobject==null||"_luwrain_".equals(luwrainJSobject.getMember("name")))
+	    // check if injected object success
+	    if(luwrainJSobject==null||"_luwrain_".equals(luwrainJSobject.getMember("name")))
     		return null;
 	    // prepare some  objects document and window
-    	htmlDoc = (HTMLDocument)webEngine.getDocument();
+	    htmlDoc = (HTMLDocument)webEngine.getDocument();
 	    if(htmlDoc == null)
 		return null;
 	    htmlWnd = (DOMWindowImpl)((DocumentView)htmlDoc).getDefaultView();
 	    dom = new Vector<NodeInfo>();
 	    domMap = new LinkedHashMap<Node, Integer>();
-    	lastModifiedTime=jsLong(luwrainJSobject.getMember("domLastTime"));
-    	final JSObject js = (JSObject)luwrainJSobject.getMember("dom");
-    	//JSObject watchArray=(JSObject)webEngine.executeScript("[]");
-    	//int j=0;
-
+	    lastModifiedTime=jsLong(luwrainJSobject.getMember("domLastTime"));
+	    final JSObject js = (JSObject)luwrainJSobject.getMember("dom");
+	    //JSObject watchArray=(JSObject)webEngine.executeScript("[]");
+	    //int j=0;
 	    Object o;
 	    for(int i=0;!(o=js.getSlot(i)).getClass().equals(String.class);i++)
 	    {
 		final JSObject rect=(JSObject)((JSObject)o).getMember("r");
 		final Node n=(Node)((JSObject)o).getMember("n");
-	    int x = 0;
-	    int y = 0;
-	    int width = 0;
-	    int height = 0;
+		int x = 0;
+		int y = 0;
+		int width = 0;
+		int height = 0;
 		if(rect != null)
 		{
 		    x = (int)jsLong(rect.getMember("left"));
@@ -199,8 +198,6 @@ LinkedHashMap<Node,Integer> domMap = new LinkedHashMap<Node, Integer>();
 		dom.add(info);
 		//Log.debug("javafx-dom", i+": "+info.descr());
 	    }
-
-
 	    for(NodeInfo info: dom)
 	    {
 		final Node parent = info.getNode().getParentNode();
@@ -240,8 +237,7 @@ LinkedHashMap<Node,Integer> domMap = new LinkedHashMap<Node, Integer>();
 
     @Override public void setWatchNodes(Iterable<Integer> indexes)
     {
-	Platform.runLater(()->
-	{
+	Platform.runLater(()->{
 		// check if injected object success
 		if(luwrainJSobject==null||"_luwrain_".equals(luwrainJSobject.getMember("name")))
 			return;
@@ -255,7 +251,7 @@ LinkedHashMap<Node,Integer> domMap = new LinkedHashMap<Node, Integer>();
 	    luwrainJSobject.setMember("watch",watchArray);
 	});
     }
-    
+
     @Override public boolean isBusy()
     {
 	return busy;
@@ -284,20 +280,19 @@ LinkedHashMap<Node,Integer> domMap = new LinkedHashMap<Node, Integer>();
 
     @Override public void setVisibility(boolean enable)
     {
+	if (webEngine == null || webView == null)
+	    return;
 	if(enable)
 	{
 	    interaction.disablePaint();
-	    Platform.runLater(()->{
+	    Utils.runInFxThreadAsync(()->{
 		    webView.setVisible(true);
 		    webView.requestFocus();
 		});
-	} else
-	{
-	    Platform.runLater(()->{
-		    interaction.enablePaint();
-		    webView.setVisible(false);
-		});
+	    return;
 	}
+	interaction.enablePaint();
+	Utils.runInFxThreadAsync(()->webView.setVisible(false));
     }
 
     @Override public boolean getVisibility()
@@ -305,28 +300,16 @@ LinkedHashMap<Node,Integer> domMap = new LinkedHashMap<Node, Integer>();
 	return webView.isVisible();
     }
 
-    private boolean checkNodeForIgnoreChildren(Node node)
-    {
-    	if(node == null) 
-	    return false;
-    	final Node parent = node.getParentNode();
-    	if(parent == null) 
-	    return false;
-    	if(parent instanceof HTMLAnchorElement)
-	    return true;
-    	return checkNodeForIgnoreChildren(parent);
-    }
-
     @Override public void loadByUrl(String url)
     {
 	NullCheck.notNull(url, "url");
-    	Platform.runLater(()->webEngine.load(url));
+Utils.runInFxThreadAsync(()->webEngine.load(url));
     }
 
     @Override public void loadByText(String text)
     {
 	NullCheck.notNull(text, "text");
-	Platform.runLater(()->webEngine.loadContent(text));
+Utils.runInFxThreadAsync(()->webEngine.loadContent(text));
     }
 
     @Override public void stop()
@@ -351,39 +334,10 @@ LinkedHashMap<Node,Integer> domMap = new LinkedHashMap<Node, Integer>();
     @Override public Object executeScript(String script)
     {
 	NullCheck.notNull(script, "script");
-	if(webEngine == null)
+	if(script.trim().isEmpty() || webEngine == null)
 	    return null;
-	final Callable<Object> task = ()->{
-		return webEngine.executeScript(script);
-	};
-	FutureTask<Object> query=new FutureTask<Object>(task){};
-    final ExecutorService executor = Executors.newSingleThreadExecutor();
-	if(Platform.isFxApplicationThread())
-	{ // direct call
-	    try {
-	    	return task.call();
-	    }
-	    catch(Exception e) 
-	    {
-	    	e.printStackTrace();
-	    	return null;
-	    }
-	} else
-	{
-	    Platform.runLater(query);
-	    try {
-	    	return query.get();
-	    }
-	    catch(InterruptedException e)
-	    {
-		Thread.currentThread().interrupt();
-	    }
-	    catch(ExecutionException e) 
-	    {
-		e.printStackTrace();
-	    }
-	    return null;
-	}
+	final Callable<Object> task = ()->webEngine.executeScript(script);
+	return Utils.runInFxThreadSync(task);
     }
 
     @Override public ElementIterator iterator()
@@ -505,5 +459,17 @@ return (long)(int)o;
     static 
     {
 	luwrainJS=getJSResource(RESCAN_RESOURCE_PATH);
+    }
+
+    private boolean checkNodeForIgnoreChildren(Node node)
+    {
+    	if(node == null) 
+	    return false;
+    	final Node parent = node.getParentNode();
+    	if(parent == null) 
+	    return false;
+    	if(parent instanceof HTMLAnchorElement)
+	    return true;
+    	return checkNodeForIgnoreChildren(parent);
     }
 }
