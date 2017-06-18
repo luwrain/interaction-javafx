@@ -26,26 +26,26 @@ import org.w3c.dom.html.*;
 import org.w3c.dom.*;
 import javafx.application.Platform;
 
-import org.luwrain.browser.*;
 import org.luwrain.core.*;
+import org.luwrain.browser.*;
 
-class ElementIteratorImpl implements ElementIterator
+class BrowserIteratorImpl implements BrowserIterator
 {
     // javascript window's property names for using in executeScrypt
 	static final String GET_NODE_TEXT="get_node_text";
 
-    final BrowserImpl browser;
-    int pos=0;
+    private final BrowserImpl browser;
+    private int pos = 0;
 
-    ElementIteratorImpl(BrowserImpl browser)
+    BrowserIteratorImpl(BrowserImpl browser)
     {
 	NullCheck.notNull(browser, "browser");
 	this.browser = browser;
     }
 
-    @Override public ElementIterator clone()
+    @Override public BrowserIterator clone()
     {
-    	ElementIteratorImpl result=new ElementIteratorImpl(browser);
+    	BrowserIteratorImpl result=new BrowserIteratorImpl(browser);
     	result.pos=pos;
     	return result;
     }
@@ -64,57 +64,12 @@ class ElementIteratorImpl implements ElementIterator
     {
 	return pos;
     }
-	@Override public void setPos(int val)
+	@Override public boolean setPos(int val)
 	{
 	pos=val;
+	return true;
 	}
 
-
-    @Override public String getType()
-    {
-    	if(current().getNode() instanceof org.w3c.dom.Text)
-	    return "text"; else 
-	    if(current().getNode() instanceof HTMLInputElement)
-	    {
-		try {
-			String type=current().getNode().getAttributes().getNamedItem("type").getNodeValue();
-			if(type.equals("button")) return "button";
-		    return "input "+type;
-		}
-		catch(Exception e) 
-		{
-		    return "input";
-		}
-	    } else
-		if(current().getNode() instanceof HTMLButtonElement)
-		{
-		    return "button";
-		} else
-		    if(current().getNode() instanceof HTMLAnchorElement)
-	    {
-		return "link";
-	    } else
-			if(current().getNode() instanceof HTMLImageElement)
-		{
-		    return "image";
-		} else
-			if(current().getNode() instanceof HTMLSelectElement)
-		{
-			return "select";
-		} else
-		    if(current().getNode() instanceof HTMLTableElement)
-		{
-		    return "table";
-		} else
-		    if(current().getNode() instanceof HTMLUListElement
-		     ||current().getNode() instanceof HTMLOListElement)
-		{
-	    	return "list";
-		} else
-		{
-		    return current().getNode().getNodeName().toLowerCase();
-		}
-    }
 
     @Override public String getText()
     {
@@ -560,11 +515,11 @@ class ElementIteratorImpl implements ElementIterator
     {
 	return browser.getDOMList().get(pos);
     }
-	@Override public ElementIterator getParent()
+	@Override public BrowserIterator getParent()
 	{
 	    if(browser.getDOMList().get(pos).getParent()==null)
 			return null;
-		ElementIteratorImpl parent=new ElementIteratorImpl(browser);
+		BrowserIteratorImpl parent=new BrowserIteratorImpl(browser);
 		parent.pos = browser.getDOMList().get(pos).getParent();
 		return parent;
 	}

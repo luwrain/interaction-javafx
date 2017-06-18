@@ -309,7 +309,7 @@ timer.scheduleAtFixedRate(new TimerTask()
 
     @Override public void stop()
     {
-	Platform.runLater(()->webEngine.getLoadWorker().cancel());
+	Utils.runInFxThreadSync(()->webEngine.getLoadWorker().cancel());
     }
 
     @Override public String getTitle()
@@ -335,9 +335,9 @@ timer.scheduleAtFixedRate(new TimerTask()
 	return Utils.callInFxThreadSync(task);
     }
 
-    @Override public ElementIterator iterator()
+    @Override public BrowserIterator createIterator()
     {
-	return new ElementIteratorImpl(this);
+	return new BrowserIteratorImpl(this);
     }
 
     @Override public int numElements()
@@ -413,6 +413,18 @@ timer.scheduleAtFixedRate(new TimerTask()
 	}
     }
 
+    private boolean checkNodeForIgnoreChildren(Node node)
+    {
+    	if(node == null) 
+	    return false;
+    	final Node parent = node.getParentNode();
+    	if(parent == null) 
+	    return false;
+    	if(parent instanceof HTMLAnchorElement)
+	    return true;
+    	return checkNodeForIgnoreChildren(parent);
+    }
+
 	static public long jsLong(Object o)
 	{
 		if(o==null) 
@@ -454,17 +466,5 @@ return (long)(int)o;
     static 
     {
 	luwrainJS=getJSResource(RESCAN_RESOURCE_PATH);
-    }
-
-    private boolean checkNodeForIgnoreChildren(Node node)
-    {
-    	if(node == null) 
-	    return false;
-    	final Node parent = node.getParentNode();
-    	if(parent == null) 
-	    return false;
-    	if(parent instanceof HTMLAnchorElement)
-	    return true;
-    	return checkNodeForIgnoreChildren(parent);
     }
 }
