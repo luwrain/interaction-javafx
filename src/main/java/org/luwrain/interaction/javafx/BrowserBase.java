@@ -85,6 +85,7 @@ DOMWindowImpl htmlWnd = null;
 
 void rescanDomImpl()
     {
+	try {
 	    if(injectionRes == null || "_luwrain_".equals(injectionRes.getMember("name")))
 		return;
 	    htmlDoc = (HTMLDocument)webEngine.getDocument();
@@ -135,13 +136,18 @@ void rescanDomImpl()
 		    info.setParent(domMap.get(parent));
 	    }
 	    window = (JSObject)webEngine.executeScript("window");
+	    Log.debug(LOG_COMPONENT, "DOM rescan finished with " + dom.size() + " items (thread \'" + Thread.currentThread().getName() + "\')");
+	}
+	catch(Throwable e)
+	{
+	    Log.error(LOG_COMPONENT, "unable to rescan DOM:" + e.getClass().getName() + ":" + e.getMessage());
+	}
     }
 
     private void onStateChanged(BrowserEvents events, ObservableValue<? extends State> ov,
 			       State oldState, State newState)
     {
-	Log.debug(LOG_COMPONENT, "new state notification:" + oldState.toString() + " -> " + newState.toString());
-	Log.debug(LOG_COMPONENT, "browser state changed to: "+newState.name()+", "+webEngine.getLoadWorker().getState().toString()+", url:"+webEngine.getLocation());
+	Log.debug(LOG_COMPONENT, "new state notification:" + oldState.toString() + " -> " + newState.toString() + " (thread \'" + Thread.currentThread() + "\')");
 	if(newState == State.CANCELLED)
 	{ // if canceled not by user, so that is a file downloads
 	    if(!userStops)
