@@ -59,9 +59,10 @@ DOMWindowImpl htmlWnd = null;
 	this.injectedScriptText = injectedScriptText;
     }
 
-void initImpl(BrowserEvents events)
+    void initImpl(BrowserEvents events)
     {
-	NullCheck.notNull(events, "events");
+	try {
+	    NullCheck.notNull(events, "events");
 	    webView = new WebView();
 	    webEngine = webView.getEngine();
 	    webView.setOnKeyReleased((event)->onKeyReleased(event));
@@ -72,7 +73,15 @@ void initImpl(BrowserEvents events)
 	    webEngine.setConfirmHandler((param)->events.onConfirm(param));
 	    webEngine.setOnError((event)->events.onError(event.getMessage()));
 	    webView.setVisible(false);
+	    Log.debug(LOG_COMPONENT, "WebEngine object initialized");
 	}
+	catch(Throwable e)
+	{
+	    Log.error(LOG_COMPONENT, "unable to initialize WebEngine and WebView:" + e.getClass().getName() + ":" + e.getMessage());
+	    webView = null;
+	    webEngine = null;
+	}
+    }
 
 void rescanDomImpl()
     {
@@ -128,9 +137,10 @@ void rescanDomImpl()
 	    window = (JSObject)webEngine.executeScript("window");
     }
 
-    private synchronized void onStateChanged(BrowserEvents events, ObservableValue<? extends State> ov,
+    private void onStateChanged(BrowserEvents events, ObservableValue<? extends State> ov,
 			       State oldState, State newState)
     {
+	Log.debug(LOG_COMPONENT, "new state notification:" + oldState.toString() + " -> " + newState.toString());
 	Log.debug(LOG_COMPONENT, "browser state changed to: "+newState.name()+", "+webEngine.getLoadWorker().getState().toString()+", url:"+webEngine.getLocation());
 	if(newState == State.CANCELLED)
 	{ // if canceled not by user, so that is a file downloads
@@ -179,13 +189,13 @@ void rescanDomImpl()
 	events.onChangeState(state);
     }
 
-    private synchronized void onKeyReleased(KeyEvent event)
+    private void onKeyReleased(KeyEvent event)
     {
 	switch(event.getCode())
 	{
 	case ESCAPE:
 	    //	    interaction.setCurrentBrowserVisibility(false);
-break;
+	    break;
 	default:break;
 	}
     }

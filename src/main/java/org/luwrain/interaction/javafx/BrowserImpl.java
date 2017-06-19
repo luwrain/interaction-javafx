@@ -53,9 +53,10 @@ class BrowserImpl extends BrowserBase implements Browser
 	this.interaction = interaction;
     }
 
-    @Override public synchronized void init(BrowserEvents events)
+    @Override public void init(BrowserEvents events)
     {
 	NullCheck.notNull(events, "events");
+	Log.debug(LOG_COMPONENT, "initializing new browser instance");
 	final boolean emptyList = interaction.browsers.isEmpty();
 	interaction.browsers.add(this);
 	Utils.runInFxThreadSync(()->{
@@ -64,6 +65,7 @@ class BrowserImpl extends BrowserBase implements Browser
 		if(emptyList) 
 		    interaction.setCurrentBrowser(BrowserImpl.this);
 	    });
+	/*
 	// start changes detection
 	final Timer timer = new Timer();
 	timer.scheduleAtFixedRate(new TimerTask()
@@ -84,6 +86,7 @@ class BrowserImpl extends BrowserBase implements Browser
 			    }});
 		}
 	    }, 0, LAST_MODIFIED_SCAN_INTERVAL);
+	*/
     }
 
     private boolean initialized()
@@ -103,7 +106,7 @@ class BrowserImpl extends BrowserBase implements Browser
 			  });
     }
 
-    @Override public synchronized void rescanDom()
+    @Override public void rescanDom()
     {
 	if (!initialized())
 	    return;
@@ -127,7 +130,7 @@ class BrowserImpl extends BrowserBase implements Browser
 	    });
     }
 
-    @Override public synchronized void close()
+    @Override public void close()
     {
 	final int pos = interaction.browsers.indexOf(this);
 	final boolean success = interaction.browsers.remove(this);
@@ -148,7 +151,7 @@ class BrowserImpl extends BrowserBase implements Browser
 	}
     }
 
-    @Override public synchronized void setVisibility(boolean enable)
+    @Override public void setVisibility(boolean enable)
     {
 	if (!initialized())
 	    return;
@@ -165,14 +168,14 @@ class BrowserImpl extends BrowserBase implements Browser
 	Utils.runInFxThreadSync(()->webView.setVisible(false));
     }
 
-    @Override public synchronized boolean getVisibility()
+    @Override public boolean getVisibility()
     {
 	if (!initialized())
 	    return false;
 	return webView.isVisible();//FIXME:
     }
 
-    @Override public synchronized void loadByUrl(String url)
+    @Override public void loadByUrl(String url)
     {
 	NullCheck.notNull(url, "url");
 	if (initialized())
