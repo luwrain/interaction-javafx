@@ -216,6 +216,7 @@ class BrowserImpl extends BrowserBase implements Browser
 
     @Override public BrowserIterator createIterator()
     {
+	InvalidThreadException.checkThread("BrowserImpl.createIterator()");
 	return new BrowserIteratorImpl(this);
     }
 
