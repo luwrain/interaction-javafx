@@ -45,6 +45,18 @@ class BrowserIteratorImpl implements BrowserIterator
 	this.browser = browser;
     }
 
+@Override public boolean isParent(BrowserIterator it)
+    {
+	//FIXME:
+	return false;
+    }
+
+@Override public boolean withoutParent()
+    {
+	//FIXME:
+	return false;
+    }
+
     @Override public BrowserIterator clone()
     {
     	final BrowserIteratorImpl result = new BrowserIteratorImpl(browser);
@@ -145,8 +157,9 @@ class BrowserIteratorImpl implements BrowserIterator
     	if(!browser.domMap.containsKey(current().getNode())) 
 	    return null;
     	final int pos = browser.domMap.get(current().getNode());
-    	if(browser.getDOMList().size()<=pos) return null;
-    	return browser.getDOMList().get(pos).getRect();
+    	if(browser.dom.size()<=pos)
+return null;
+    	return browser.dom.get(pos).getRect();
     }
 
     @Override public boolean isEditable()
@@ -426,10 +439,10 @@ class BrowserIteratorImpl implements BrowserIterator
 
 	@Override public BrowserIterator getParent()
 	{
-	    if(browser.getDOMList().get(pos).getParent()==null)
+	    if(browser.dom.get(pos).getParent()==null)
 			return null;
 		BrowserIteratorImpl parent=new BrowserIteratorImpl(browser);
-		parent.pos = browser.getDOMList().get(pos).getParent();
+		parent.pos = browser.dom.get(pos).getParent();
 		return parent;
 	}
 
@@ -445,6 +458,6 @@ class BrowserIteratorImpl implements BrowserIterator
 
     private NodeInfo current()
     {
-	return browser.getDOMList().get(pos);
+	return browser.dom.get(pos);
     }
 }

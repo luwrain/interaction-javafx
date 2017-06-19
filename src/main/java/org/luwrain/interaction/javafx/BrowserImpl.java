@@ -54,17 +54,14 @@ class BrowserImpl implements Browser
 
     private WebView webView = null;
     private WebEngine webEngine = null;
-    private final Object webEngineSync = new Object();
-
-    private Vector<NodeInfo> dom=new Vector<NodeInfo>();
+    Vector<NodeInfo> dom=new Vector<NodeInfo>();
 LinkedHashMap<Node,Integer> domMap = new LinkedHashMap<Node, Integer>();
-    private final Object domSync = new Object();
 
     private HTMLDocument htmlDoc = null;
-    DOMWindowImpl htmlWnd = null;//FIXME:
+DOMWindowImpl htmlWnd = null;
     private JSObject window = null;
     private boolean userStops = false;
-    private JSObject luwrainJSobject=null;
+    private JSObject luwrainJSobject = null;
 	private long lastModifiedTime;
 
     BrowserImpl(JavaFxInteraction interaction)
@@ -73,21 +70,7 @@ LinkedHashMap<Node,Integer> domMap = new LinkedHashMap<Node, Integer>();
 	this.interaction = interaction;
     }
 
-    /** return current browser's list of nodes, WARNING, use w3c node only in Browser's thread */
-    @Override public Vector<NodeInfo> getDOMList()
-    {
-    	return dom;
-    }
-
-    @Override public int getNodeIndex(org.w3c.dom.Node node)
-    {
-	NullCheck.notNull(node, "node");
-	if (domMap == null || !domMap.containsKey(node))
-	    return -1;
-    	return domMap.get(node).intValue();
-    }
-
-    @Override public void init(org.luwrain.browser.Events events)
+    @Override public synchronized void init(BrowserEvents events)
     {
 	NullCheck.notNull(events, "events");
 	final boolean emptyList = interaction.browsers.isEmpty();
@@ -119,21 +102,19 @@ timer.scheduleAtFixedRate(new TimerTask()
     }, 0, LAST_MODIFIED_SCAN_INTERVAL);
     }
 
-    private void initImpl(Events events)
+    private void initImpl(BrowserEvents events)
     {
 	NullCheck.notNull(events, "events");
-	synchronized(webEngineSync) {
 	    webView = new WebView();
 	    webEngine = webView.getEngine();
 	    webView.setOnKeyReleased((event)->onKeyReleased(event));
-	    webEngine.getLoadWorker().stateProperty().addListener((ov,oldState,newState)->onStateChange(events, ov, oldState, newState));
+	    webEngine.getLoadWorker().stateProperty().addListener((ov,oldState,newState)->onStateChanged(events, ov, oldState, newState));
 	    webEngine.getLoadWorker().progressProperty().addListener((ov,o,n)->events.onProgress(n));
 	    webEngine.setOnAlert((event)->events.onAlert(event.getData()));
 	    webEngine.setPromptHandler((event)->events.onPrompt(event.getMessage(),event.getDefaultValue()));
 	    webEngine.setConfirmHandler((param)->events.onConfirm(param));
 	    webEngine.setOnError((event)->events.onError(event.getMessage()));
 	    webView.setVisible(false);
-	}
 	}
 
     private boolean initialized()
@@ -153,18 +134,15 @@ timer.scheduleAtFixedRate(new TimerTask()
 			  });
     }
 
-    @Override public void rescanDom()
+    @Override public synchronized void rescanDom()
     {
-	synchronized(webEngineSync) {
 	    if (!initialized())
 		return;
 	    Utils.runInFxThreadSync(()->rescanDomImpl());
-	}
     }
 
     private void rescanDomImpl()
     {
-	synchronized(domSync) {
 	    if(luwrainJSobject==null||"_luwrain_".equals(luwrainJSobject.getMember("name")))
 		return;
 	    htmlDoc = (HTMLDocument)webEngine.getDocument();
@@ -215,7 +193,6 @@ timer.scheduleAtFixedRate(new TimerTask()
 		    info.setParent(domMap.get(parent));
 	    }
 	    window = (JSObject)webEngine.executeScript("window");
-	}
     }
 
     @Override public void setWatchNodes(Iterable<Integer> indexes)
@@ -235,12 +212,7 @@ timer.scheduleAtFixedRate(new TimerTask()
 	});
     }
 
-    @Override public boolean isBusy()
-    {
-	return false;
-    }
-
-    @Override public void Remove()
+    @Override public synchronized void close()
     {
 	final int pos = interaction.browsers.indexOf(this);
 	final boolean success = interaction.browsers.remove(this);
@@ -261,9 +233,8 @@ timer.scheduleAtFixedRate(new TimerTask()
 	}
     }
 
-    @Override public void setVisibility(boolean enable)
+    @Override public synchronized void setVisibility(boolean enable)
     {
-	synchronized(webEngineSync) {
 	    if (!initialized())
 		return;
 	    if(enable)
@@ -277,34 +248,27 @@ timer.scheduleAtFixedRate(new TimerTask()
 	    }
 	    interaction.enablePaint();
 	    Utils.runInFxThreadSync(()->webView.setVisible(false));
-	}
     }
 
-    @Override public boolean getVisibility()
+    @Override public synchronized boolean getVisibility()
     {
-	synchronized(webEngineSync) {
 	    if (!initialized())
 		return false;
 	    return webView.isVisible();//FIXME:
-	}
     }
 
-    @Override public void loadByUrl(String url)
+    @Override public synchronized void loadByUrl(String url)
     {
 	NullCheck.notNull(url, "url");
-	synchronized(webEngineSync) {
 	    if (initialized())
 		Utils.runInFxThreadSync(()->webEngine.load(url));
-	}
     }
 
-    @Override public void loadByText(String text)
+    @Override public synchronized void loadByText(String text)
     {
 	NullCheck.notNull(text, "text");
-	synchronized(webEngineSync) {
 	    if (initialized())
 		Utils.runInFxThreadSync(()->webEngine.loadContent(text));
-	}
     }
 
     @Override public void stop()
@@ -312,21 +276,21 @@ timer.scheduleAtFixedRate(new TimerTask()
 	Utils.runInFxThreadSync(()->webEngine.getLoadWorker().cancel());
     }
 
-    @Override public String getTitle()
+    @Override public synchronized String getTitle()
     {
 		if(webEngine == null)
 			return "";
 		return webEngine.titleProperty().get();
     }
 
-    @Override public String getUrl()
+    @Override public synchronized String getUrl()
     {
 		if(webEngine == null)
 		    return "";
 		return webEngine.getLocation();
     }
 
-    @Override public Object executeScript(String script)
+    @Override public synchronized Object executeScript(String script)
     {
 	NullCheck.notNull(script, "script");
 	if(script.trim().isEmpty() || webEngine == null)
@@ -350,10 +314,10 @@ timer.scheduleAtFixedRate(new TimerTask()
 		return lastModifiedTime;
 	}
 
-    private void onStateChange(org.luwrain.browser.Events events, ObservableValue<? extends State> ov,
+    private synchronized void onStateChanged(BrowserEvents events, ObservableValue<? extends State> ov,
 			       State oldState, State newState)
     {
-	Log.debug("javafx","browser state changed to: "+newState.name()+", "+webEngine.getLoadWorker().getState().toString()+", url:"+webEngine.getLocation());
+	Log.debug(LOG_COMPONENT, "browser state changed to: "+newState.name()+", "+webEngine.getLoadWorker().getState().toString()+", url:"+webEngine.getLocation());
 	if(newState == State.CANCELLED)
 	{ // if canceled not by user, so that is a file downloads
 	    if(!userStops)
@@ -362,31 +326,30 @@ timer.scheduleAtFixedRate(new TimerTask()
 		    return;
 	    }
 	}
-	final Events.State state;
+	final BrowserEvents.State state;
 	switch(newState)
 	{
 	case CANCELLED:
-	    state = Events.State.CANCELLED;
+	    state = BrowserEvents.State.CANCELLED;
 	    break;
 	case FAILED:	
-	    state = Events.State.FAILED;
+	    state = BrowserEvents.State.FAILED;
 	    break;
 	case READY:		
-	    state = Events.State.READY;
+	    state = BrowserEvents.State.READY;
 	    break;
 	case RUNNING:	
-	    state = Events.State.RUNNING;
+	    state = BrowserEvents.State.RUNNING;
 	    break;
 	case SCHEDULED:	
-	    state = Events.State.SCHEDULED;
+	    state = BrowserEvents.State.SCHEDULED;
 	    break;
 	case SUCCEEDED:	
-	    state = Events.State.SUCCEEDED;
+	    state = BrowserEvents.State.SUCCEEDED;
 	    break;
 	default:
-	    state = Events.State.CANCELLED;
+	    state = BrowserEvents.State.CANCELLED;
 	}
-	//
 	switch(newState)
 	{
 		//case READY:
@@ -402,9 +365,8 @@ timer.scheduleAtFixedRate(new TimerTask()
 	events.onChangeState(state);
     }
 
-    private void onKeyReleased(KeyEvent event)
+    private synchronized void onKeyReleased(KeyEvent event)
     {
-	//Log.debug("web","KeyReleased: "+event.toString());
 	switch(event.getCode())
 	{
 	case ESCAPE:
@@ -438,7 +400,6 @@ return (long)(int)o;
 		return (long)Double.parseDouble(o.toString());
 	}
 
-    /** load resource text file as javascript and replace to luwrain member */
     static String getJSResource(String path)
     {
 	NullCheck.notNull(path, "path");
