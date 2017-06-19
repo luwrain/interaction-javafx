@@ -279,9 +279,9 @@ class BrowserIteratorImpl implements BrowserIterator
 	return style.getCssText();
     }
 
-    @Override public void submitEmulate()
+    @Override public void emulateSubmit()
     {
-	InvalidThreadException.checkThread("BrowserImpl.submitEmulate()");
+	InvalidThreadException.checkThread("BrowserImpl.emulateSubmit()");
 	Node node = current().getNode();
 	Node parent = null;
 	while((parent=node.getParentNode()) != null)
@@ -318,7 +318,7 @@ class BrowserIteratorImpl implements BrowserIterator
     }
 
 
-    @Override public void clickEmulate()
+    @Override public void emulateClick()
     {
 	InvalidThreadException.checkThread("BrowserImpl.clickEmulate()");
 	Node node = current().getNode();

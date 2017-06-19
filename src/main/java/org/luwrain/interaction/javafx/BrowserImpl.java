@@ -205,6 +205,12 @@ class BrowserImpl extends BrowserBase implements Browser
 	return webEngine.getLocation();
     }
 
+    @Override public Object runSafely(Callable callable)
+    {
+	NullCheck.notNull(callable, "callable");
+	return Utils.callInFxThreadSync(callable);
+    }
+
     @Override public synchronized Object executeScript(String script)
     {
 	NullCheck.notNull(script, "script");
