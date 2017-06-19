@@ -46,11 +46,12 @@ protected WebEngine webEngine = null;
 LinkedHashMap<Node,Integer> domMap = new LinkedHashMap<Node, Integer>();
 
 protected JSObject injectionRes = null;
+protected JSObject window = null;
+    protected long lastModifiedTime;
     private HTMLDocument htmlDoc = null;
 DOMWindowImpl htmlWnd = null;
-    private JSObject window = null;
     private boolean userStops = false;
-	private long lastModifiedTime;
+
 
     protected BrowserBase(String injectedScriptText)
     {
