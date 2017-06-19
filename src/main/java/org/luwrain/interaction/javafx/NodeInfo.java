@@ -22,71 +22,71 @@ import java.awt.Rectangle;
 
 class NodeInfo
 {
-	final Node node;
+    final Node node;
     Integer parent = null;
     Rectangle rect;
     boolean forText;
     int hash;
     long hashTime=0;
 
-    public NodeInfo(Node node,int x,int y,int width,int height,boolean forText)
+    NodeInfo(Node node,int x,int y,int width,int height,boolean forText)
     {
 	this.node = node;
 	this.forText=forText;
 	rect=new Rectangle(x,y,width,height);
     }
-    
-     Node getNode()
+
+    Node getNode()
     {
     	return node;
     }
-    
-    public Integer getParent()
+
+    Integer getParent()
     {
     	return parent;
     }
-    
-    public void setParent(int val)
+
+    void setParent(int val)
     {
     	parent=val;
     }
 
-    public boolean isVisible()
+    boolean isVisible()
     {
 	return rect.width > 0 && rect.height > 0;
     }
-    
-    public void calcHash(String text)
+
+    void calcHash(String text)
     {
 	hash=text.hashCode();
 	hashTime=new java.util.Date().getTime();
     }
 
-    public String descr()
+    String descr()
     {
     	String str=node.getNodeValue();
     	if(str==null) str="null";
-		return node.getNodeName()+ "\tp:"+parent+" "+node.getClass().getSimpleName() + "\t" + str.substring(0,Math.min(160,str.length()))+"'";
+	return node.getNodeName()+ "\tp:"+parent+" "+node.getClass().getSimpleName() + "\t" + str.substring(0,Math.min(160,str.length()))+"'";
 	//return node.getNodeName() + " " + node.getNodeValue();
     }
 
-	public boolean getForText()
-	{
-		return forText;
-	}
+    boolean getForText()
+    {
+	return forText;
+    }
 
-	public Rectangle getRect()
-	{
-		return rect;
-	}
+    Rectangle getRect()
+    {
+	return rect;
+    }
 
-	public long getHashTime()
-	{
-		return hashTime;
-	}
+    long getHashTime()
+    {
+	return hashTime;
+    }
 
-	public int getHash()
-	{
-		return hash;
-	}
+    int getHash()
+    {
+	return hash;
+    }
 }

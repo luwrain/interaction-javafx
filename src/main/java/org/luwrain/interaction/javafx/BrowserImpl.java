@@ -89,14 +89,15 @@ timer.scheduleAtFixedRate(new TimerTask()
         {
 	    Platform.runLater(()->{
 		    {
-			if(luwrainJSobject==null) return;
-			long time=(long)(double)luwrainJSobject.getMember("domLastTime");
-			if(time==lastModifiedTime) return;
-			//System.out.println("modified");
+			if(luwrainJSobject==null)
+return;
+			final long time=(long)(double)luwrainJSobject.getMember("domLastTime");
+			if(time == lastModifiedTime)
+return;
 			// does not call changed event first time page loaded
-			if(lastModifiedTime!=0)
+			if(lastModifiedTime != 0)
 			    events.onPageChanged();
-			lastModifiedTime=time;
+			lastModifiedTime = time;
 		    }});
         }
     }, 0, LAST_MODIFIED_SCAN_INTERVAL);
