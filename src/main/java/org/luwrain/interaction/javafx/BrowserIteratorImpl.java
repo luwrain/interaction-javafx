@@ -43,23 +43,9 @@ class BrowserIteratorImpl implements BrowserIterator
 	this.browser = browser;
     }
 
-    @Override public boolean isParent(BrowserIterator it)
-    {
-	InvalidThreadException.checkThread("BrowserImpl.()");
-	//FIXME:
-	return false;
-    }
-
-    @Override public boolean withoutParent()
-    {
-	InvalidThreadException.checkThread("BrowserImpl.()");
-	//FIXME:
-	return false;
-    }
-
     @Override public BrowserIterator clone()
     {
-	InvalidThreadException.checkThread("BrowserImpl.()");
+	InvalidThreadException.checkThread("BrowserImpl.clone()");
     	final BrowserIteratorImpl result = new BrowserIteratorImpl(browser);
     	result.pos=pos;
     	return result;
@@ -67,32 +53,32 @@ class BrowserIteratorImpl implements BrowserIterator
 
     @Override public boolean isVisible()
     {
-	InvalidThreadException.checkThread("BrowserImpl.()");
+	InvalidThreadException.checkThread("BrowserImpl.isVisible()");
 	return current().isVisible();
     }
 
     @Override public boolean forTEXT()
     {
-	InvalidThreadException.checkThread("BrowserImpl.()");
+	InvalidThreadException.checkThread("BrowserImpl.forTEXT()");
 	return current().getForText();
     }
 
     @Override public int getPos()
     {
-	InvalidThreadException.checkThread("BrowserImpl.()");
+	InvalidThreadException.checkThread("BrowserImpl.getPos()");
 	return pos;
     }
 
-    @Override public boolean setPos(int val)
+    @Override public boolean setPos(int value)
     {
-	InvalidThreadException.checkThread("BrowserImpl.()");
-	pos=val;
+	InvalidThreadException.checkThread("BrowserImpl.setPos()");
+	pos = value;
 	return true;
     }
 
     @Override public String getText()
     {
-	InvalidThreadException.checkThread("BrowserImpl.()");
+	InvalidThreadException.checkThread("BrowserImpl.getText()");
     	final String text;
     	if(current().getNode() instanceof Text)
 	    text = current().getNode().getNodeValue().trim(); else
@@ -117,8 +103,8 @@ class BrowserIteratorImpl implements BrowserIterator
 
     @Override public String getAltText()
     {
-	InvalidThreadException.checkThread("BrowserImpl.()");
-    	String text="";
+	InvalidThreadException.checkThread("BrowserImpl.getAltText()");
+	String text = "";
 	if(current().getNode() instanceof HTMLAnchorElement
 	   ||current().getNode() instanceof HTMLImageElement
 	   ||current().getNode() instanceof HTMLInputElement
@@ -126,15 +112,15 @@ class BrowserIteratorImpl implements BrowserIterator
 	{ // title
 	    if(current().getNode().hasAttributes())
 	    {
-		Node title=current().getNode().getAttributes().getNamedItem("title");
-		if(title!=null)
-		    text="title:"+title.getNodeValue();
-		Node alt=current().getNode().getAttributes().getNamedItem("alt");
-		if(alt!=null)
-		    text=(!text.isEmpty()?" ":"")+"alt:"+alt.getNodeValue();
-		Node placeholder=current().getNode().getAttributes().getNamedItem("placeholder");
-		if(placeholder!=null)
-		    text=(!text.isEmpty()?" ":"")+"alt:"+placeholder.getNodeValue();
+		final Node title = current().getNode().getAttributes().getNamedItem("title");
+		if(title != null)
+		    text = "title:"+title.getNodeValue();
+		final Node alt = current().getNode().getAttributes().getNamedItem("alt");
+		if(alt != null)
+		    text = (!text.isEmpty()?" ":"")+"alt:"+alt.getNodeValue();
+		final Node placeholder = current().getNode().getAttributes().getNamedItem("placeholder");
+		if(placeholder != null)
+		    text = (!text.isEmpty()?" ":"")+"alt:"+placeholder.getNodeValue();
 	    }
 	}
 	return text;
@@ -142,27 +128,26 @@ class BrowserIteratorImpl implements BrowserIterator
 
     @Override public String[] getMultipleText()
     {
-	InvalidThreadException.checkThread("BrowserImpl.()");
+	InvalidThreadException.checkThread("BrowserImpl.getMultipleText()");
     	if(current().getNode() instanceof HTMLSelectElement)
     	{
-	    HTMLSelectElement select=(HTMLSelectElement)current().getNode();
-	    Vector<String> res=new Vector<String>();
-	    for(int i=select.getLength();i>=0;i--)
+	    final HTMLSelectElement select = (HTMLSelectElement)current().getNode();
+	    final LinkedList<String> res = new LinkedList<String>();
+	    for(int i = select.getLength();i >= 0;i--)
 	    {
-		Node option=select.getOptions().item(i);
-		if(option==null) continue; // so strange but happends
+		final Node option = select.getOptions().item(i);
+		if(option == null)
+		    continue; // so strange but happends
 		res.add(option.getTextContent());
 	    }
 	    return res.toArray(new String[res.size()]);
-    	} else
-    	{
-	    return new String[]{getText()};
     	}
+	return new String[]{getText()};
     }
 
     @Override public Rectangle getRect()
     {
-	InvalidThreadException.checkThread("BrowserImpl.()");
+	InvalidThreadException.checkThread("BrowserImpl.getRect()");
     	if(!browser.domMap.containsKey(current().getNode())) 
 	    return null;
     	final int pos = browser.domMap.get(current().getNode());
@@ -173,7 +158,7 @@ class BrowserIteratorImpl implements BrowserIterator
 
     @Override public boolean isEditable()
     {
-	InvalidThreadException.checkThread("BrowserImpl.()");
+	InvalidThreadException.checkThread("BrowserImpl.isEditable()");
 	if(current().getNode() instanceof HTMLInputElement)
 	{
 	    final String inputType = ((HTMLInputElement)current().getNode()).getType();
@@ -196,7 +181,8 @@ class BrowserIteratorImpl implements BrowserIterator
 
     @Override public void setText(String text)
     {
-	InvalidThreadException.checkThread("BrowserImpl.()");
+	NullCheck.notNull(text, "text");
+	InvalidThreadException.checkThread("BrowserImpl.setText()");
 	if(current().getNode() instanceof HTMLInputElement)
 	{
 	    final HTMLInputElement input = ((HTMLInputElement)current().getNode());
@@ -233,7 +219,7 @@ class BrowserIteratorImpl implements BrowserIterator
 
     @Override public String getLink()
     {
-	InvalidThreadException.checkThread("BrowserImpl.()");
+	InvalidThreadException.checkThread("BrowserImpl.getLink()");
 	if(current().getNode() instanceof HTMLAnchorElement)
 	    return getAttributeProperty("href"); else
 	    if(current().getNode() instanceof HTMLImageElement)
@@ -243,239 +229,170 @@ class BrowserIteratorImpl implements BrowserIterator
 
     @Override public String getAttributeProperty(String name)
     {
-	InvalidThreadException.checkThread("BrowserImpl.()");
+	InvalidThreadException.checkThread("BrowserImpl.getAttributeProperty()");
 	if(!current().getNode().hasAttributes()) 
 	    return null;
-	final Node attr=current().getNode().getAttributes().getNamedItem(name);
-	if(attr==null) return null;
+	final Node attr = current().getNode().getAttributes().getNamedItem(name);
+	if(attr == null)
+	    return null;
 	return attr.getNodeValue();
     }
 
     @Override public String getComputedText()
     {
-	InvalidThreadException.checkThread("BrowserImpl.()");
-	final Object res = Utils.callInFxThreadSync(()->{
-		browser.htmlWnd.setMember(GET_NODE_TEXT, current().getNode());
-		if(!browser.domMap.containsKey(current().getNode())) 
-		    return "";
-		try{
-		    return browser.executeScript("(function(){var x=window."+GET_NODE_TEXT+";return x.innerText===undefined?x.nodeValue:x.innerText})()").toString();
-		}
-		catch(Throwable e)
-		{
-		    Log.error(LOG_COMPONENT, "getting calculated text:" + e.getClass().getName() + ":" + e.getMessage());
-		    return "";
-		}
-	    });
-	return res != null?res.toString():"";
+	InvalidThreadException.checkThread("BrowserImpl.getComputedText()");
+	browser.htmlWnd.setMember(GET_NODE_TEXT, current().getNode());
+	if(!browser.domMap.containsKey(current().getNode())) 
+	    return "";
+	try{
+	    return browser.executeScript("(function(){var x=window."+GET_NODE_TEXT+";return x.innerText===undefined?x.nodeValue:x.innerText})()").toString();
+	}
+	catch(Throwable e)
+	{
+	    Log.error(LOG_COMPONENT, "getting calculated text:" + e.getClass().getName() + ":" + e.getMessage());
+	    return "";
+	}
     }
 
-    @Override public String getComputedStyleProperty(final String name)
+    @Override public String getComputedStyleProperty(String name)
     {
-	InvalidThreadException.checkThread("BrowserImpl.()");
-	Callable<String> task=new Callable<String>(){
-	    @Override public String call()
-	    {
-	    	Node n=current().getNode();
-	    	if(n instanceof com.sun.webkit.dom.HTMLDocumentImpl)
-		    return "";
-	    	if(n instanceof Text)
-	    	{ // we can't get style for simple text node, we need get it from parent tag
-		    n=n.getParentNode();
-	    	}
-		CSSStyleDeclaration style = browser.htmlWnd.getComputedStyle((HTMLElement)n,"");
-		String css=style.getPropertyValue(name);
-		return css;
-	    }};
-	if(Platform.isFxApplicationThread()) 
-	    try{
-		return task.call();}
-	    catch(Exception e)
-	    {
-		return null;
-	    }
-	FutureTask<String> query=new FutureTask<String>(task);
-	Platform.runLater(query);
-	try{
-	    return query.get();}
-	catch(Exception e)
-	{
-	    return null;
-	}
-	// FIXME: make better error handling
+	NullCheck.notEmpty(name, "name");
+	InvalidThreadException.checkThread("BrowserImpl.getComputedStyleProperty()");
+	Node n = current().getNode();
+	if(n instanceof com.sun.webkit.dom.HTMLDocumentImpl)
+	    return "";
+	if(n instanceof Text)
+	    n=n.getParentNode(); // we can't get style for simple text node, we need get it from parent tag
+	final CSSStyleDeclaration style = browser.htmlWnd.getComputedStyle((HTMLElement)n,"");
+	return style.getPropertyValue(name);
     }
 
     @Override public String getComputedStyleAll()
     {
-	InvalidThreadException.checkThread("BrowserImpl.()");
-    	try
-    	{
-	    Callable<String> task=new Callable<String>(){ @Override public String call()
-							  {
-							      Node n=current().getNode();
-							      if(n instanceof com.sun.webkit.dom.HTMLDocumentImpl)
-								  return "";
-							      if(n instanceof Text)
-							      { // we can't get style for simple text node, we need get it from parent tag
-								  n=n.getParentNode();
-							      }
-							      CSSStyleDeclaration style = browser.htmlWnd.getComputedStyle((HTMLElement)n, "");
-							      String css=style.getCssText();
-							      return css;
-							  }};
-	    if(Platform.isFxApplicationThread())
-		return task.call();
-	    FutureTask<String> query=new FutureTask<String>(task);
-	    Platform.runLater(query);
-	    return query.get();
-    	} // FIXME: make better error handling
-    	catch(Exception e)
-    	{
-	    //e.printStackTrace();
+	InvalidThreadException.checkThread("BrowserImpl.getComputedStyleAll()");
+	Node n = current().getNode();
+	if(n instanceof com.sun.webkit.dom.HTMLDocumentImpl)
 	    return "";
-    	}
+	if(n instanceof Text)
+	    n = n.getParentNode(); // we can't get style for simple text node, we need get it from parent tag
+	final CSSStyleDeclaration style = browser.htmlWnd.getComputedStyle((HTMLElement)n, "");
+	return style.getCssText();
     }
 
     @Override public void submitEmulate()
     {
-	InvalidThreadException.checkThread("BrowserImpl.()");
-    	Platform.runLater(()->
-			  {
-			      Node node=current().getNode();
-			      Node parent=null;
-			      while((parent=node.getParentNode())!=null)
-			      {
-				  if(node instanceof HTMLInputElement
-				     ||node instanceof HTMLSelectElement)
-				  {
-				      browser.htmlWnd.setMember(GET_NODE_TEXT, node);
-				      try{
-					  browser.executeScript("(function(){var x=window."+GET_NODE_TEXT+";x.form.submit();})()");
-				      }
-				      catch(Exception e)
-				      {
-				      } // can't click - no reaction
-				      return;
-				  } else
-				      if(node instanceof HTMLFormElement)
-				      {
-					  browser.htmlWnd.setMember(GET_NODE_TEXT, node);
-					  try{
-					      browser.executeScript("(function(){var x=window."+GET_NODE_TEXT+";x.submit();})()");
-					  }
-					  catch(Exception e)
-					  {
-					  } // can't click - no reaction
-					  return;
-				      }
-				  node=parent;
-			      }
-			  });
+	InvalidThreadException.checkThread("BrowserImpl.submitEmulate()");
+	Node node = current().getNode();
+	Node parent = null;
+	while((parent=node.getParentNode()) != null)
+	{
+	    if(node instanceof HTMLInputElement
+	       ||node instanceof HTMLSelectElement)
+	    {
+		browser.htmlWnd.setMember(GET_NODE_TEXT, node);
+		try{
+		    browser.executeScript("(function(){var x=window."+GET_NODE_TEXT+";x.form.submit();})()");
+		}
+		catch(Throwable e)
+		{
+		    // If we are unable to emulate a submit, silently doing nothing
+		    Log.debug(LOG_COMPONENT, "unable to emulate a submit:" + e.getClass().getName() + ":" + e.getMessage());
+		}
+		return;
+	    }
+	    if(node instanceof HTMLFormElement)
+	    {
+		browser.htmlWnd.setMember(GET_NODE_TEXT, node);
+		try{
+		    browser.executeScript("(function(){var x=window."+GET_NODE_TEXT+";x.submit();})()");
+		}
+		catch(Throwable e)
+		{
+		    // If we are unable to emulate a submit, silently doing nothing
+		    Log.debug(LOG_COMPONENT, "unable to emulate a submit:" + e.getClass().getName() + ":" + e.getMessage());
+		}
+		return;
+	    }
+	    node = parent;
+	}
     }
+
 
     @Override public void clickEmulate()
     {
-	InvalidThreadException.checkThread("BrowserImpl.()");
-	// click can be done only for non text nodes
-	final Node node=current().getNode();
-	/*
-	  if(node instanceof HTMLInputElement)
-	  {
-	  if(((HTMLInputElement)current().getNode()).getType().equals("submit"))
-	  { // submit button
-	  Platform.runLater(new Runnable() {
-	  @Override public void run()
-	  {
-	  browser.htmlWnd.setMember(GET_NODE_TEXT, node);
-	  try{
-	  browser.executeScript("(function(){var x=window."+GET_NODE_TEXT+";x.form.submit();})()");
-	  }
-	  catch(Exception e)
-	  {
-	  } // can't click - no reaction
-	  }
-	  });
-	  return;
-	  };
-	  }
-	*/
-	Platform.runLater(new Runnable() {
-		@Override public void run()
-		{
-		    Node n=node;
-		    if(n.getNodeType()==Node.TEXT_NODE)
-		    { // text node click sometimes does not work, move to parent
-			n=n.getParentNode();
-		    }
-		    browser.htmlWnd.setMember(GET_NODE_TEXT, n);
-		    try{
-			browser.executeScript("(function(){var x=window."+GET_NODE_TEXT+";x.click();})()");
-		    }
-		    catch(Exception e)
-		    {
-		    } // can't click - no reaction
-		}
-	    });
+	InvalidThreadException.checkThread("BrowserImpl.clickEmulate()");
+	Node node = current().getNode();
+	if(node.getNodeType() == Node.TEXT_NODE)
+	    node = node.getParentNode(); // text node click sometimes does not work, move to parent
+	browser.htmlWnd.setMember(GET_NODE_TEXT, node);
+	try{
+	    browser.executeScript("(function(){var x=window."+GET_NODE_TEXT+";x.click();})()");
+	}
+	catch(Throwable e)
+	{
+	    //If we are unable to emulate a click , silently doing nothing
+	    Log.debug(LOG_COMPONENT, "unable to emulate a click:" + e.getClass().getName() + ":" + e.getMessage());
+	} 
+    }
+
+    @Override public boolean isParent(BrowserIterator it)
+    {
+	NullCheck.notNull(it, "it");
+	InvalidThreadException.checkThread("BrowserImpl.isParent()");
+	final BrowserIterator parent = getParent();
+	if (parent == null)
+	    return false;
+	return pos == parent.getPos();
+    }
+
+    @Override public boolean hasParent()
+    {
+	InvalidThreadException.checkThread("BrowserImpl.hasParent()");
+	return getParent() != null;
     }
 
     @Override public BrowserIterator getParent()
     {
-	InvalidThreadException.checkThread("BrowserImpl.()");
-	if(browser.dom.get(pos).getParent()==null)
+	InvalidThreadException.checkThread("BrowserImpl.getParent()");
+	if(current().getParent() == null)
 	    return null;
-	BrowserIteratorImpl parent=new BrowserIteratorImpl(browser);
-	parent.pos = browser.dom.get(pos).getParent();
+	final BrowserIteratorImpl parent = new BrowserIteratorImpl(browser);
+	parent.pos = browser.dom.get(pos).getParent();//FIXME:
 	return parent;
     }
 
     @Override public String getHtmlTagName()
     {
-	InvalidThreadException.checkThread("BrowserImpl.()");
+	InvalidThreadException.checkThread("BrowserImpl.getHtmlTagName()");
 	return current().getNode().getNodeName();
     }
 
     @Override public Browser getBrowser()
     {
-	InvalidThreadException.checkThread("BrowserImpl.()");
+	InvalidThreadException.checkThread("BrowserImpl.getBrowser()");
 	return browser;
     }
 
     private String getComputedAttributeAll()
     {
-	InvalidThreadException.checkThread("BrowserImpl.()");
+	InvalidThreadException.checkThread("BrowserImpl.getComputedAttributeAll()");
     	if(!current().getNode().hasAttributes()) 
     	    return "";
-    	String res="";
-    	for(int i=current().getNode().getAttributes().getLength()-1;i>=0;i--)
+    	String res = "";
+    	for(int i=current().getNode().getAttributes().getLength()-1;i >= 0;i--)
     	{
-	    Node node = current().getNode().getAttributes().item(i);
-	    res+=node.getNodeName()+"="+node.getNodeValue()+";";
+	    final Node node = current().getNode().getAttributes().item(i);
+	    res += node.getNodeName()+"="+node.getNodeValue()+";";
     	}
     	return res;
     }
 
     private String getHtml()
     {
-	InvalidThreadException.checkThread("BrowserImpl.()");
+	InvalidThreadException.checkThread("BrowserImpl.getHtml()");
     	if(current().getNode() instanceof Text)
 	    return current().getNode().getNodeValue();
-    	String xml="";
-    	/*
-	  try
-	  {
-	  Transformer transformer = TransformerFactory.newInstance().newTransformer();
-	  StreamResult result = new StreamResult(new StringWriter());
-	  DOMSource source = new DOMSource(current().getNode());
-	  transformer.transform(source, result);
-	  xml=result.getWriter().toString();
-	  } catch(TransformerException ex)
-	  {
-	  // FIXME:
-	  ex.printStackTrace();
-	  }
-    	*/    	
-    	xml=getText()+getComputedStyleAll()+getComputedAttributeAll();
-    	//Log.debug("web","Node xml:"+xml);
+    	String xml = getText() + getComputedStyleAll() + getComputedAttributeAll();
     	return xml;
     }
 
