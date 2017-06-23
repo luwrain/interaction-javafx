@@ -43,7 +43,7 @@ protected final String injectedScriptText;
 protected WebView webView = null;
 protected WebEngine webEngine = null;
     Vector<NodeInfo> dom=new Vector<NodeInfo>();
-LinkedHashMap<Node,Integer> domMap = new LinkedHashMap<Node, Integer>();
+Map<Node,Integer> domMap = new HashMap<Node, Integer>();
 
 protected JSObject injectionRes = null;
 protected JSObject window = null;
@@ -127,6 +127,7 @@ void rescanDomImpl()
 		    forText = false;
 		final NodeInfo info=new NodeInfo(n,x,y,width,height,forText);
 		domMap.put(n, i);
+		Log.debug("tag", n.getNodeName());
 		dom.add(info);
 	    }
 	    for(NodeInfo info: dom)

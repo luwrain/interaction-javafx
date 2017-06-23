@@ -221,13 +221,13 @@ class BrowserIteratorImpl implements BrowserIterator
     {
 	InvalidThreadException.checkThread("BrowserImpl.getLink()");
 	if(current().getNode() instanceof HTMLAnchorElement)
-	    return getAttributeProperty("href"); else
+	    return getAttribute("href"); else
 	    if(current().getNode() instanceof HTMLImageElement)
-		return getAttributeProperty("src");
+		return getAttribute("src");
 	return "";
     }
 
-    @Override public String getAttributeProperty(String name)
+    @Override public String getAttribute(String name)
     {
 	InvalidThreadException.checkThread("BrowserImpl.getAttributeProperty()");
 	if(!current().getNode().hasAttributes()) 
@@ -245,7 +245,8 @@ class BrowserIteratorImpl implements BrowserIterator
 	if(!browser.domMap.containsKey(current().getNode())) 
 	    return "";
 	try{
-	    return browser.executeScript("(function(){var x=window."+GET_NODE_TEXT+";return x.innerText===undefined?x.nodeValue:x.innerText})()").toString();
+final Object obj = browser.executeScript("(function(){var x=window."+GET_NODE_TEXT+";return x.innerText===undefined?x.nodeValue:x.innerText})()");
+return obj != null?obj.toString():"";
 	}
 	catch(Throwable e)
 	{
