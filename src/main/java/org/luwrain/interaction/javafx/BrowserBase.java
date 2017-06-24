@@ -35,7 +35,7 @@ import com.sun.webkit.dom.DOMWindowImpl;
 import org.luwrain.core.*;
 import org.luwrain.browser.BrowserEvents;
 
-class BrowserBase
+abstract class BrowserBase
 {
         static final String LOG_COMPONENT = "javafx-browser";
 
@@ -52,12 +52,13 @@ protected JSObject window = null;
 DOMWindowImpl htmlWnd = null;
     private boolean userStops = false;
 
-
     protected BrowserBase(String injectedScriptText)
     {
 	NullCheck.notNull(injectedScriptText, "injectedScriptText");
 	this.injectedScriptText = injectedScriptText;
     }
+
+    public abstract void setVisibility(boolean enabled);
 
     void initImpl(BrowserEvents events)
     {
@@ -198,10 +199,11 @@ void rescanDomImpl()
 
     private void onKeyReleased(KeyEvent event)
     {
+	NullCheck.notNull(event, "event");
 	switch(event.getCode())
 	{
 	case ESCAPE:
-	    //	    interaction.setCurrentBrowserVisibility(false);
+	    setVisibility(false);
 	    break;
 	default:break;
 	}
