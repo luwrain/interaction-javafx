@@ -40,7 +40,7 @@ import org.luwrain.browser.*;
 
 class BrowserImpl extends BrowserBase implements Browser
 {
-    static private final String RESCAN_RESOURCE_PATH = "org/luwrain/interaction/javafx/rescan.js";
+    static private final String RESCAN_RESOURCE_PATH = "org/luwrain/interaction/javafx/injection.js";
     static final int LAST_MODIFIED_SCAN_INTERVAL = 100; // lastModifiedTime rescan interval in milliseconds
     static final String LUWRAIN_NODE_TEXT="luwrain_node_text"; // javascript window's property names for using in executeScrypt
 
