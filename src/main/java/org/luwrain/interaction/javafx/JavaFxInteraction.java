@@ -85,11 +85,9 @@ public class JavaFxInteraction implements Interaction
 		{
 		    // undecorated full visible screen size
 		    Rectangle2D screenSize=Screen.getPrimary().getVisualBounds();
-		    Log.debug("javafx", "Undecorated mode, visible screen size: "+screenSize.getWidth()+"x"+screenSize.getHeight());
 		    frame.setUndecoratedSizeAndShow(screenSize.getWidth(),screenSize.getHeight());
 		} else
 		{
-		    Log.debug("javafx", "Typical window mode, size:"+wndWidth+"x"+wndHeight);
 		    frame.setSizeAndShow(wndWidth,wndHeight);
 		}
 		return true;
@@ -133,7 +131,6 @@ public class JavaFxInteraction implements Interaction
 
     @Override public boolean setDesirableFontSize(int size)
     {
-	Log.debug("javafx", "trying to change font size to " + size);
 	final Font oldFont = frame.getInteractionFont();
 	final Font oldFont2 = frame.getInteractionFont2();
 	final Font probeFont = createFont(size);
@@ -141,11 +138,9 @@ public class JavaFxInteraction implements Interaction
 	frame.setInteractionFont(probeFont,probeFont2);
 	if (!frame.initTable())
 	{
-	    Log.debug("javafx", "table reinitialization with new font size failed, rolling back to previous settings");
 	    frame.setInteractionFont(oldFont, oldFont2);
 	    return false;
 	}
-	Log.debug("javafx", "the new size of the font for the table is OK, saving new settings");
 	currentFontSize = size;
 	return true;
     }
@@ -227,14 +222,12 @@ int y)
     private Font createFont(int desirableFontSize)
     {
 	final Font res = Font.font(fontName,desirableFontSize);
-	Log.debug("javafx", "tried to create font with name \'" + fontName + "\', and actually got the font with name \'" + res.getName() + "\'");
 	return res;
     }
 
     private Font createFont2(int desirableFontSize)
     {
 	final Font res = Font.font(fontName, javafx.scene.text.FontWeight.BOLD, desirableFontSize);
-	Log.debug("javafx", "tried to create the second font with name \'" + fontName + "\', and actually got the font with name \'" + res.getName() + "\'");
 	return res;
     }
 

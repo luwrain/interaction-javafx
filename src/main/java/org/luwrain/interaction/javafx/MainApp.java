@@ -150,8 +150,6 @@ public class MainApp extends Application
 	}
 	width -= (marginLeft + marginRight);
 	height -= (marginTop + marginBottom);
-	Log.debug("javafx", "table area size is " + width+ "x" + height);
-	Log.debug("javafx", "table cell bounds are " + bounds.getWidth() + "x" + bounds.getHeight());
 	final int width_=(int)Math.floor(width/bounds.getWidth());
 	final int height_=(int)Math.floor(height/bounds.getHeight());
 	if (width_ < MIN_TABLE_WIDTH || height_ < MIN_TABLE_HEIGHT)
@@ -161,7 +159,6 @@ public class MainApp extends Application
 	}
 	tableWidth = width_;
 	tableHeight = height_;
-	Log.debug("javafx", "initializing the table of size " + tableWidth + "x" + tableHeight);
 	synchronized(tableSync)
 	{
 	    table = new char[tableWidth][];
