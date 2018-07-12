@@ -202,7 +202,7 @@ final class BrowserImpl extends BrowserBase implements Browser
     @Override public BrowserIterator createIterator()
     {
 	InvalidThreadException.checkThread("BrowserImpl.createIterator()");
-	return new IteratorImpl(this, domScanRes);
+	return new IteratorImpl(this);
     }
 
     @Override public int numElements()

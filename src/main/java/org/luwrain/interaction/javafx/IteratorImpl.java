@@ -176,14 +176,12 @@ prepare("BrowserImpl.isEditable()");
 	    {
 	    case "button":
 	    case "inage":
-	    case "button":
 	    case "submit":
 		return false;
 	    default:
 	    // all other input types are editable
 	    return true;
 	    }
-	    return;
 	}
 	    if(nodeInfo.getNode() instanceof HTMLSelectElement)
 		return true;
@@ -275,7 +273,7 @@ return obj != null?obj.toString():"";
 prepare("BrowserImpl.getComputedStyleProperty()");
 	if(nodeInfo.getNode() instanceof com.sun.webkit.dom.HTMLDocumentImpl)
 	    return "";
-	final NodeInfo node = findNonTextNode(nodeInfo);
+	final Node node = findNonTextNode(nodeInfo);
 	final CSSStyleDeclaration style = scanRes.window.getComputedStyle((HTMLElement)node, "");
 	return style.getPropertyValue(name);
     }
@@ -328,11 +326,16 @@ scanRes.window.setMember(GET_NODE_TEXT, node);
 	}
     }
 
+    @Override public void emulateClick()
+    {
+	prepare("IteratorImpl.emulateClick()");
+	final Node node = findNonTextNode(nodeInfo);
+	try {
 executeScriptWithNode(node, "(function(){var x=window.LUWRAIN_OBJ; x.click();})()");
 	}
 	catch(Throwable e)
 	{
-	    Log.debug(LOG_COMPONENT, "unable to emulate a click:" + e.getClass().getName() + ":" + e.getMessage());
+	    Log.debug(LOG_COMPONENT, "unable to emulate click:" + e.getClass().getName() + ":" + e.getMessage());
 	} 
     }
 
@@ -349,7 +352,7 @@ prepare("BrowserImpl.isParent()");
     @Override public boolean hasParent()
     {
 prepare("BrowserImpl.hasParent()");
-return nodeINfo.hasParent();
+return nodeInfo.hasParent();
     }
 
     @Override public BrowserIterator getParent()
