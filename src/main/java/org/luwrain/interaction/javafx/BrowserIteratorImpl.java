@@ -148,12 +148,15 @@ class BrowserIteratorImpl implements BrowserIterator
     @Override public Rectangle getRect()
     {
 	InvalidThreadException.checkThread("BrowserImpl.getRect()");
+	/*
     	if(!browser.domMap.containsKey(current().getNode())) 
 	    return null;
     	final int pos = browser.domMap.get(current().getNode());
     	if(browser.dom.size()<=pos)
 	    return null;
     	return browser.dom.get(pos).getRect();
+	*/
+	return null;
     }
 
     @Override public boolean isEditable()
@@ -241,6 +244,7 @@ class BrowserIteratorImpl implements BrowserIterator
     @Override public String getComputedText()
     {
 	InvalidThreadException.checkThread("BrowserImpl.getComputedText()");
+	/*
 	browser.htmlWnd.setMember(GET_NODE_TEXT, current().getNode());
 	if(!browser.domMap.containsKey(current().getNode())) 
 	    return "";
@@ -253,12 +257,15 @@ return obj != null?obj.toString():"";
 	    Log.error(LOG_COMPONENT, "getting calculated text:" + e.getClass().getName() + ":" + e.getMessage());
 	    return "";
 	}
+	*/
+	return "FIXME";
     }
 
     @Override public String getComputedStyleProperty(String name)
     {
 	NullCheck.notEmpty(name, "name");
 	InvalidThreadException.checkThread("BrowserImpl.getComputedStyleProperty()");
+	/*
 	Node n = current().getNode();
 	if(n instanceof com.sun.webkit.dom.HTMLDocumentImpl)
 	    return "";
@@ -266,11 +273,14 @@ return obj != null?obj.toString():"";
 	    n=n.getParentNode(); // we can't get style for simple text node, we need get it from parent tag
 	final CSSStyleDeclaration style = browser.htmlWnd.getComputedStyle((HTMLElement)n,"");
 	return style.getPropertyValue(name);
+	*/
+	return "FIXME";
     }
 
     @Override public String getComputedStyleAll()
     {
 	InvalidThreadException.checkThread("BrowserImpl.getComputedStyleAll()");
+	/*
 	Node n = current().getNode();
 	if(n instanceof com.sun.webkit.dom.HTMLDocumentImpl)
 	    return "";
@@ -278,6 +288,8 @@ return obj != null?obj.toString():"";
 	    n = n.getParentNode(); // we can't get style for simple text node, we need get it from parent tag
 	final CSSStyleDeclaration style = browser.htmlWnd.getComputedStyle((HTMLElement)n, "");
 	return style.getCssText();
+	*/
+	return "FIXME";
     }
 
     @Override public void emulateSubmit()
@@ -290,7 +302,7 @@ return obj != null?obj.toString():"";
 	    if(node instanceof HTMLInputElement
 	       ||node instanceof HTMLSelectElement)
 	    {
-		browser.htmlWnd.setMember(GET_NODE_TEXT, node);
+		//FIXME:		browser.htmlWnd.setMember(GET_NODE_TEXT, node);
 		try{
 		    browser.executeScript("(function(){var x=window."+GET_NODE_TEXT+";x.form.submit();})()");
 		}
@@ -303,7 +315,7 @@ return obj != null?obj.toString():"";
 	    }
 	    if(node instanceof HTMLFormElement)
 	    {
-		browser.htmlWnd.setMember(GET_NODE_TEXT, node);
+		//FIXME:		browser.htmlWnd.setMember(GET_NODE_TEXT, node);
 		try{
 		    browser.executeScript("(function(){var x=window."+GET_NODE_TEXT+";x.submit();})()");
 		}
@@ -325,7 +337,7 @@ return obj != null?obj.toString():"";
 	Node node = current().getNode();
 	if(node.getNodeType() == Node.TEXT_NODE)
 	    node = node.getParentNode(); // text node click sometimes does not work, move to parent
-	browser.htmlWnd.setMember(GET_NODE_TEXT, node);
+	//FIXME:	browser.htmlWnd.setMember(GET_NODE_TEXT, node);
 	try{
 	    browser.executeScript("(function(){var x=window."+GET_NODE_TEXT+";x.click();})()");
 	}
@@ -355,11 +367,14 @@ return obj != null?obj.toString():"";
     @Override public BrowserIterator getParent()
     {
 	InvalidThreadException.checkThread("BrowserImpl.getParent()");
+	/*
 	if(current().getParent() == null)
 	    return null;
 	final BrowserIteratorImpl parent = new BrowserIteratorImpl(browser);
 	parent.pos = browser.dom.get(pos).getParent();//FIXME:
 	return parent;
+	*/
+	return null;
     }
 
     @Override public String getHtmlTagName()
@@ -399,6 +414,9 @@ return obj != null?obj.toString():"";
 
     private NodeInfo current()
     {
+	/*
 	return browser.dom.get(pos);
+	*/
+	return null;
     }
 }

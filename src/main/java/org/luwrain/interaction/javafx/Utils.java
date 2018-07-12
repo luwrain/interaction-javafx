@@ -31,6 +31,12 @@ class Utils
 {
     static private final String LOG_COMPONENT = JavaFxInteraction.LOG_COMPONENT;
 
+    static void ensureFxThread()
+    {
+		if(!Platform.isFxApplicationThread())
+		    throw new RuntimeException("Execution in non-jfx thread");
+    }
+
     static Object callInFxThreadSync(Callable callable)
     {
 	NullCheck.notNull(callable, "callable");

@@ -56,37 +56,14 @@ class BrowserImpl extends BrowserBase implements Browser
     @Override public void init(BrowserEvents events)
     {
 	NullCheck.notNull(events, "events");
-	Log.debug(LOG_COMPONENT, "initializing new browser instance");
 	final boolean emptyList = interaction.browsers.isEmpty();
 	interaction.browsers.add(this);
 	Utils.runInFxThreadSync(()->{
-		initImpl(events);
+		super.init(events);
 		interaction.addWebViewControl(webView);
 		if(emptyList) 
 		    interaction.setCurrentBrowser(BrowserImpl.this);
 	    });
-	/*
-	// start changes detection
-	final Timer timer = new Timer();
-	timer.scheduleAtFixedRate(new TimerTask()
-	    {
-		@Override public void run()
-		{
-		    Platform.runLater(()->{
-			    {
-				if(injectionRes == null)
-				    return;
-				final long time=(long)(double)injectionRes.getMember("domLastTime");
-				if(time == lastModifiedTime)
-				    return;
-				// does not call changed event first time page loaded
-				if(lastModifiedTime != 0)
-				    events.onPageChanged();
-				lastModifiedTime = time;
-			    }});
-		}
-	    }, 0, LAST_MODIFIED_SCAN_INTERVAL);
-	*/
     }
 
     private boolean initialized()
@@ -101,7 +78,7 @@ class BrowserImpl extends BrowserBase implements Browser
 			      // check if injected object success
 			      if(injectionRes == null || "_luwrain_".equals(injectionRes.getMember("name")))
 				  return;
-			      window.setMember(LUWRAIN_NODE_TEXT, injectionRes);
+			      this.jsWindow.setMember(LUWRAIN_NODE_TEXT, injectionRes);
 			      webEngine.executeScript(LUWRAIN_NODE_TEXT+".doUpdate();");
 			  });
     }
@@ -110,7 +87,7 @@ class BrowserImpl extends BrowserBase implements Browser
     {
 	if (!initialized())
 	    return;
-	Utils.runInFxThreadSync(()->rescanDomImpl());
+	Utils.runInFxThreadSync(()->super.rescanDom());
     }
 
     @Override public void setWatchNodes(Iterable<Integer> indexes)
@@ -231,12 +208,14 @@ class BrowserImpl extends BrowserBase implements Browser
 
     @Override public int numElements()
     {
-	return domMap.size();
+	if (domScanRes == null)
+	    return 0;
+	return domScanRes.domMap.size();
     }
 
     @Override public long getLastTimeChanged()
     {
-	return lastModifiedTime;
+	return 0;
     }
 
     static String readTextResource(String path)

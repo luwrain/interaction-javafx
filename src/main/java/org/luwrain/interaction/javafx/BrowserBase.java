@@ -42,14 +42,11 @@ abstract class BrowserBase
     protected final String injectedScript;
     protected WebView webView = null;
     protected WebEngine webEngine = null;
-    protected Vector<NodeInfo> dom = new Vector();
-    protected Map<Node,Integer> domMap = new HashMap();
+    protected DomScanResult domScanRes = null;
 
     protected JSObject injectionRes = null;
-    protected JSObject window = null;
-    protected long lastModifiedTime;
-    private HTMLDocument htmlDoc = null;
-    protected DOMWindowImpl htmlWnd = null;
+    protected JSObject jsWindow = null;
+
     private boolean userStops = false;
 
     protected BrowserBase(String injectedScript)
@@ -60,9 +57,10 @@ abstract class BrowserBase
 
     public abstract void setVisibility(boolean enabled);
 
-    void initImpl(BrowserEvents events)
+    protected void init(BrowserEvents events)
     {
 	NullCheck.notNull(events, "events");
+	Utils.ensureFxThread();
 	try {
 	    this.webView = new WebView();
 	    this.webEngine = webView.getEngine();
@@ -74,7 +72,6 @@ abstract class BrowserBase
 	    webEngine.setConfirmHandler((param)->events.onConfirm(param));
 	    webEngine.setOnError((event)->events.onError(event.getMessage()));
 	    webView.setVisible(false);
-	    Log.debug(LOG_COMPONENT, "WebEngine object initialized");
 	}
 	catch(Throwable e)
 	{
@@ -84,20 +81,22 @@ abstract class BrowserBase
 	}
     }
 
-void rescanDomImpl()
+protected void rescanDom()
     {
+	Utils.ensureFxThread();
 	try {
-	    if(injectionRes == null || "_luwrain_".equals(injectionRes.getMember("name")))
+	    if(injectionRes == null || injectionRes.getMember("name").equals("_luwrain_"))
 		return;
-	    htmlDoc = (HTMLDocument)webEngine.getDocument();
-	    if(htmlDoc == null)
+final HTMLDocument webDoc = (HTMLDocument)webEngine.getDocument();
+	    if(webDoc == null)
+	    {
+		Log.warning(LOG_COMPONENT, "no web document");
 		return;
-	    htmlWnd = (DOMWindowImpl)((DocumentView)htmlDoc).getDefaultView();
-	    dom = new Vector<NodeInfo>();
-	    domMap = new LinkedHashMap<Node, Integer>();
-	    lastModifiedTime=jsLong(injectionRes.getMember("domLastTime"));
+	    }
+final DOMWindowImpl window = (DOMWindowImpl)((DocumentView)webDoc).getDefaultView();
+this.domScanRes = new DomScanResult(window);
 	    final JSObject js = (JSObject)injectionRes.getMember("dom");
-	    Object o;
+	    Object o = null;
 	    for(int i=0;!(o=js.getSlot(i)).getClass().equals(String.class);i++)
 	    {
 		final JSObject rect=(JSObject)((JSObject)o).getMember("r");
@@ -126,19 +125,17 @@ void rescanDomImpl()
 		final boolean ignore = checkNodeForIgnoreChildren(n);
 		if(ignore) 
 		    forText = false;
-		final NodeInfo info=new NodeInfo(n,x,y,width,height,forText);
-		domMap.put(n, i);
-		Log.debug("tag", n.getNodeName());
-		dom.add(info);
+		final NodeInfo info = new NodeInfo(n, x, y, width, height, forText);
+		domScanRes.domMap.put(n, i);
+		domScanRes.dom.add(info);
 	    }
-	    for(NodeInfo info: dom)
+	    for(NodeInfo info: domScanRes.dom)
 	    {
 		final Node parent = info.getNode().getParentNode();
-		if(domMap.containsKey(parent))
-		    info.setParent(domMap.get(parent));
+		if(domScanRes.domMap.containsKey(parent))
+		    info.setParent(domScanRes.domMap.get(parent));
 	    }
-	    window = (JSObject)webEngine.executeScript("window");
-	    Log.debug(LOG_COMPONENT, "DOM rescan finished with " + dom.size() + " items (thread \'" + Thread.currentThread().getName() + "\')");
+	    	    this.jsWindow = (JSObject)webEngine.executeScript("window");
 	}
 	catch(Throwable e)
 	{
