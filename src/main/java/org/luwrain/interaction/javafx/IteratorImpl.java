@@ -34,7 +34,7 @@ final class IteratorImpl implements BrowserIterator
     static final String GET_NODE_TEXT="get_node_text"; // javascript window's property names for using in executeScrypt
 
     private final BrowserBase browser;
-        private int pos;
+    private int pos;
 
     //Set by prepare() function
     private DomScanResult scanRes = null;
@@ -55,12 +55,12 @@ final class IteratorImpl implements BrowserIterator
 	this(browser, 0);
     }
 
-        @Override public int getPos()
+    @Override public int getPos()
     {
 	return pos;
     }
 
-        @Override public boolean setPos(int value)
+    @Override public boolean setPos(int value)
     {
 	InvalidThreadException.checkThread("BrowserImpl.setPos()");
 	if (value < 0 || value >= scanRes.dom.size())
@@ -71,59 +71,59 @@ final class IteratorImpl implements BrowserIterator
 
     @Override public BrowserIterator clone()
     {
-return new IteratorImpl(browser, pos);
+	return new IteratorImpl(browser, pos);
     }
 
     @Override public boolean isVisible()
     {
-prepare("BrowserImpl.isVisible()");
+	prepare("BrowserImpl.isVisible()");
 	return nodeInfo.isVisible();
     }
 
     @Override public boolean forTEXT()
     {
-prepare("BrowserImpl.forTEXT()");
+	prepare("BrowserImpl.forTEXT()");
 	return nodeInfo.getForText();
     }
 
     @Override public String getText()
     {
-prepare("BrowserImpl.getText()");
+	prepare("BrowserImpl.getText()");
     	if(nodeInfo.getNode() instanceof Text)
 	{
 	    final String text = nodeInfo.getNode().getNodeValue().trim();
 	    return text != null?text:"";
 	}
-	    if(nodeInfo.getNode() instanceof HTMLInputElement)
-	    {
-		final HTMLInputElement input=((HTMLInputElement)nodeInfo.getNode());
-		final String text;
-		if(input.getType().equals("checkbox") ||
-		   input.getType().equals("radio"))
-		    text = input.getChecked()?"on":"off"; else
-		    text = input.getValue();
-		return text != null?text:"";
-	    }
-		if(nodeInfo.getNode() instanceof HTMLSelectElement)
-		{
-		    final HTMLSelectElement select = (HTMLSelectElement)nodeInfo.getNode();
-		    final int index = select.getSelectedIndex();
-		    final String text = select.getOptions().item(index).getTextContent();
-		    // TODO: make multiselect support
-		    return text != null?text:"";
-		}
-		    final String text = getComputedText();
+	if(nodeInfo.getNode() instanceof HTMLInputElement)
+	{
+	    final HTMLInputElement input=((HTMLInputElement)nodeInfo.getNode());
+	    final String text;
+	    if(input.getType().equals("checkbox") ||
+	       input.getType().equals("radio"))
+		text = input.getChecked()?"on":"off"; else
+		text = input.getValue();
+	    return text != null?text:"";
+	}
+	if(nodeInfo.getNode() instanceof HTMLSelectElement)
+	{
+	    final HTMLSelectElement select = (HTMLSelectElement)nodeInfo.getNode();
+	    final int index = select.getSelectedIndex();
+	    final String text = select.getOptions().item(index).getTextContent();
+	    // TODO: make multiselect support
+	    return text != null?text:"";
+	}
+	final String text = getComputedText();
 	return text != null?text:"";
     }
 
     @Override public String getAltText()
     {
-prepare("BrowserImpl.getAltText()");
+	prepare("BrowserImpl.getAltText()");
 	String text = "";
 	if(nodeInfo.getNode() instanceof HTMLAnchorElement ||
-nodeInfo.getNode() instanceof HTMLImageElement ||
-nodeInfo.getNode() instanceof HTMLInputElement ||
-nodeInfo.getNode() instanceof HTMLTextAreaElement)
+	   nodeInfo.getNode() instanceof HTMLImageElement ||
+	   nodeInfo.getNode() instanceof HTMLInputElement ||
+	   nodeInfo.getNode() instanceof HTMLTextAreaElement)
 	{ // title
 	    if(nodeInfo.getNode().hasAttributes())
 	    {
@@ -143,7 +143,7 @@ nodeInfo.getNode() instanceof HTMLTextAreaElement)
 
     @Override public String[] getMultipleText()
     {
-prepare("BrowserImpl.getMultipleText()");
+	prepare("BrowserImpl.getMultipleText()");
     	if(nodeInfo.getNode() instanceof HTMLSelectElement)
     	{
 	    final HTMLSelectElement select = (HTMLSelectElement)nodeInfo.getNode();
@@ -162,13 +162,13 @@ prepare("BrowserImpl.getMultipleText()");
 
     @Override public Rectangle getRect()
     {
-prepare("BrowserImpl.getRect()");
-return nodeInfo.getRect();
+	prepare("BrowserImpl.getRect()");
+	return nodeInfo.getRect();
     }
 
     @Override public boolean isEditable()
     {
-prepare("BrowserImpl.isEditable()");
+	prepare("BrowserImpl.isEditable()");
 	if(nodeInfo.getNode() instanceof HTMLInputElement)
 	{
 	    final String inputType = ((HTMLInputElement)nodeInfo.getNode()).getType();
@@ -179,21 +179,21 @@ prepare("BrowserImpl.isEditable()");
 	    case "submit":
 		return false;
 	    default:
-	    // all other input types are editable
-	    return true;
+		// all other input types are editable
+		return true;
 	    }
 	}
-	    if(nodeInfo.getNode() instanceof HTMLSelectElement)
-		return true;
-		if(nodeInfo.getNode() instanceof HTMLTextAreaElement)
-		    return true; 
+	if(nodeInfo.getNode() instanceof HTMLSelectElement)
+	    return true;
+	if(nodeInfo.getNode() instanceof HTMLTextAreaElement)
+	    return true; 
 	return false;
     }
 
     @Override public void setText(String text)
     {
 	NullCheck.notNull(text, "text");
-prepare("BrowserImpl.setText()");
+	prepare("BrowserImpl.setText()");
 	if(nodeInfo.getNode() instanceof HTMLInputElement)
 	{
 	    final HTMLInputElement input = ((HTMLInputElement)nodeInfo.getNode());
@@ -203,27 +203,27 @@ prepare("BrowserImpl.setText()");
 		input.setChecked(text.isEmpty()||text.equals("0")||text.equals("off")?false:true);
 		return;
 	    }
-		input.setValue(text);
-		return;
+	    input.setValue(text);
+	    return;
 	} //HTMLInputElement
-		    if(nodeInfo.getNode() instanceof HTMLSelectElement)
+	if(nodeInfo.getNode() instanceof HTMLSelectElement)
+	{
+	    final HTMLSelectElement select=(HTMLSelectElement)nodeInfo.getNode();
+	    for(int i = select.getLength();i>=0;i--)
 	    {
-		final HTMLSelectElement select=(HTMLSelectElement)nodeInfo.getNode();
-		for(int i = select.getLength();i>=0;i--)
+		Node option=select.getOptions().item(i);
+		if(option == null)
+		    continue; // very strange, but happens
+		// FIXME: make method to work with select option by index not by text value (not unique)
+		if(option.getTextContent().equals(text))
 		{
-		    Node option=select.getOptions().item(i);
-		    if(option == null)
-			continue; // very strange, but happens
-		    // FIXME: make method to work with select option by index not by text value (not unique)
-		    if(option.getTextContent().equals(text))
-		    {
-			select.setSelectedIndex(i);
-			return;
-		    }
+		    select.setSelectedIndex(i);
+		    return;
 		}
-		return;
-	    } //HTMLSelectElement
-	    	if(nodeInfo.getNode() instanceof HTMLTextAreaElement)
+	    }
+	    return;
+	} //HTMLSelectElement
+	if(nodeInfo.getNode() instanceof HTMLTextAreaElement)
 	{
 	    ((HTMLTextAreaElement)nodeInfo.getNode()).setTextContent(text);
 	    return;
@@ -232,7 +232,7 @@ prepare("BrowserImpl.setText()");
 
     @Override public String getLink()
     {
-prepare("BrowserImpl.getLink()");
+	prepare("BrowserImpl.getLink()");
 	if(nodeInfo.getNode() instanceof HTMLAnchorElement)
 	    return getAttribute("href"); else
 	    if(nodeInfo.getNode() instanceof HTMLImageElement)
@@ -242,7 +242,7 @@ prepare("BrowserImpl.getLink()");
 
     @Override public String getAttribute(String name)
     {
-prepare("BrowserImpl.getAttributeProperty()");
+	prepare("BrowserImpl.getAttributeProperty()");
 	if(!nodeInfo.getNode().hasAttributes()) 
 	    return null;
 	final Node attr = nodeInfo.getNode().getAttributes().getNamedItem(name);
@@ -254,11 +254,11 @@ prepare("BrowserImpl.getAttributeProperty()");
     @Override public String getComputedText()
     {
 	prepare("BrowserImpl.getComputedText()");
-		if(!scanRes.domMap.containsKey(nodeInfo.getNode())) 
+	if(!scanRes.domMap.containsKey(nodeInfo.getNode())) 
 	    return "";
 	try{
 	    final Object obj = executeScriptWithNode(nodeInfo.getNode(), "(function(){var x=window.LUWRAIN_OBJ;return x.innerText===undefined?x.nodeValue:x.innerText})()");
-return obj != null?obj.toString():"";
+	    return obj != null?obj.toString():"";
 	}
 	catch(Throwable e)
 	{
@@ -270,7 +270,7 @@ return obj != null?obj.toString():"";
     @Override public String getComputedStyleProperty(String name)
     {
 	NullCheck.notEmpty(name, "name");
-prepare("BrowserImpl.getComputedStyleProperty()");
+	prepare("BrowserImpl.getComputedStyleProperty()");
 	if(nodeInfo.getNode() instanceof com.sun.webkit.dom.HTMLDocumentImpl)
 	    return "";
 	final Node node = findNonTextNode(nodeInfo);
@@ -280,7 +280,7 @@ prepare("BrowserImpl.getComputedStyleProperty()");
 
     @Override public String getComputedStyleAll()
     {
-prepare("BrowserImpl.getComputedStyleAll()");
+	prepare("BrowserImpl.getComputedStyleAll()");
 	if(nodeInfo.getNode() instanceof com.sun.webkit.dom.HTMLDocumentImpl)
 	    return "";
 	final Node node = findNonTextNode(nodeInfo);
@@ -300,7 +300,7 @@ prepare("BrowserImpl.getComputedStyleAll()");
 	    if(node instanceof HTMLInputElement
 	       ||node instanceof HTMLSelectElement)
 	    {
-scanRes.window.setMember(GET_NODE_TEXT, node);
+		scanRes.window.setMember(GET_NODE_TEXT, node);
 		try{
 		    browser.executeScript("(function(){var x=window."+GET_NODE_TEXT+";x.form.submit();})()");
 		}
@@ -312,7 +312,7 @@ scanRes.window.setMember(GET_NODE_TEXT, node);
 	    }
 	    if(node instanceof HTMLFormElement)
 	    {
-scanRes.window.setMember(GET_NODE_TEXT, node);
+		scanRes.window.setMember(GET_NODE_TEXT, node);
 		try{
 		    browser.executeScript("(function(){var x=window."+GET_NODE_TEXT+";x.submit();})()");
 		}
@@ -331,7 +331,7 @@ scanRes.window.setMember(GET_NODE_TEXT, node);
 	prepare("IteratorImpl.emulateClick()");
 	final Node node = findNonTextNode(nodeInfo);
 	try {
-executeScriptWithNode(node, "(function(){var x=window.LUWRAIN_OBJ; x.click();})()");
+	    executeScriptWithNode(node, "(function(){var x=window.LUWRAIN_OBJ; x.click();})()");
 	}
 	catch(Throwable e)
 	{
@@ -342,7 +342,7 @@ executeScriptWithNode(node, "(function(){var x=window.LUWRAIN_OBJ; x.click();})(
     @Override public boolean isParent(BrowserIterator it)
     {
 	NullCheck.notNull(it, "it");
-prepare("BrowserImpl.isParent()");
+	prepare("BrowserImpl.isParent()");
 	final BrowserIterator parent = getParent();
 	if (parent == null)
 	    return false;
@@ -351,8 +351,8 @@ prepare("BrowserImpl.isParent()");
 
     @Override public boolean hasParent()
     {
-prepare("BrowserImpl.hasParent()");
-return nodeInfo.hasParent();
+	prepare("BrowserImpl.hasParent()");
+	return nodeInfo.hasParent();
     }
 
     @Override public BrowserIterator getParent()
@@ -360,54 +360,39 @@ return nodeInfo.hasParent();
 	prepare("BrowserImpl.getParent()");
 	if(!nodeInfo.hasParent())
 	    return null;
-return new IteratorImpl(browser, nodeInfo.getParent());
+	return new IteratorImpl(browser, nodeInfo.getParent());
     }
 
     @Override public String getHtmlTagName()
     {
-prepare("BrowserImpl.getHtmlTagName()");
+	prepare("BrowserImpl.getHtmlTagName()");
 	return nodeInfo.getNode().getNodeName();
     }
 
     @Override public Browser getBrowser()
     {
-	InvalidThreadException.checkThread("BrowserImpl.getBrowser()");
 	return (BrowserImpl)browser;
-    }
-
-    private String getComputedAttributeAll()
-    {
-	InvalidThreadException.checkThread("BrowserImpl.getComputedAttributeAll()");
-    	if(!nodeInfo.getNode().hasAttributes()) 
-    	    return "";
-    	String res = "";
-    	for(int i = nodeInfo.getNode().getAttributes().getLength() - 1;i >= 0;i--)
-    	{
-	    final Node node = nodeInfo.getNode().getAttributes().item(i);
-	    res += node.getNodeName()+"="+node.getNodeValue()+";";
-    	}
-    	return res;
     }
 
     private Node findNonTextNode(NodeInfo info)
     {
 	NullCheck.notNull(info, "info");
-		Node node = info.getNode();
-		while (node != null && node.getNodeType() == Node.TEXT_NODE)
+	Node node = info.getNode();
+	while (node != null && node.getNodeType() == Node.TEXT_NODE)
 	    node = node.getParentNode(); // text node click sometimes does not work, move to parent
-		return node;
+	return node;
     }
 
     private Object executeScriptWithNode(Node node, String scriptText)
     {
-		NullCheck.notNull(node, "node");
+	NullCheck.notNull(node, "node");
 	NullCheck.notNull(scriptText, "scriptText");
 	if (scriptText.isEmpty())
 	    return null;
 	final String tmpObjName = "luwrain_tmp_obj";
 	scanRes.window.setMember(tmpObjName, node);
 	return browser.executeScript(scriptText.replaceAll("LUWRAIN_OBJ", tmpObjName));
-	}
+    }
 
     private void prepare(String funcName)
     {
