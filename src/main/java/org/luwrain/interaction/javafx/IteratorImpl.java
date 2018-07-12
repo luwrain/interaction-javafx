@@ -91,12 +91,12 @@ prepare("BrowserImpl.forTEXT()");
 prepare("BrowserImpl.getText()");
     	if(nodeInfo.getNode() instanceof Text)
 	{
-	    final String text = current().getNode().getNodeValue().trim();
+	    final String text = nodeInfo.getNode().getNodeValue().trim();
 	    return text != null?text:"";
 	}
 	    if(nodeInfo.getNode() instanceof HTMLInputElement)
 	    {
-		final HTMLInputElement input=((HTMLInputElement)current().getNode());
+		final HTMLInputElement input=((HTMLInputElement)nodeInfo.getNode());
 		final String text;
 		if(input.getType().equals("checkbox") ||
 		   input.getType().equals("radio"))
@@ -197,8 +197,8 @@ prepare("BrowserImpl.setText()");
 	if(nodeInfo.getNode() instanceof HTMLInputElement)
 	{
 	    final HTMLInputElement input = ((HTMLInputElement)nodeInfo.getNode());
-	    if(input.getType().equals("checkbox")
-	       ||input.getType().equals("radio"))
+	    if(input.getType().equals("checkbox") ||
+	       input.getType().equals("radio"))
 	    {
 		input.setChecked(text.isEmpty()||text.equals("0")||text.equals("off")?false:true);
 		return;
@@ -208,7 +208,7 @@ prepare("BrowserImpl.setText()");
 	} //HTMLInputElement
 		    if(nodeInfo.getNode() instanceof HTMLSelectElement)
 	    {
-		final HTMLSelectElement select=(HTMLSelectElement)current().getNode();
+		final HTMLSelectElement select=(HTMLSelectElement)nodeInfo.getNode();
 		for(int i = select.getLength();i>=0;i--)
 		{
 		    Node option=select.getOptions().item(i);
@@ -225,7 +225,7 @@ prepare("BrowserImpl.setText()");
 	    } //HTMLSelectElement
 	    	if(nodeInfo.getNode() instanceof HTMLTextAreaElement)
 	{
-	    ((HTMLTextAreaElement)current().getNode()).setTextContent(text);
+	    ((HTMLTextAreaElement)nodeInfo.getNode()).setTextContent(text);
 	    return;
 	} //HTMLTextAreaElement
     }
@@ -293,7 +293,7 @@ prepare("BrowserImpl.getComputedStyleAll()");
     @Override public void emulateSubmit()
     {
 	InvalidThreadException.checkThread("BrowserImpl.emulateSubmit()");
-	Node node = current().getNode();
+	Node node = nodeInfo.getNode();
 	Node parent = null;
 	while((parent=node.getParentNode()) != null)
 	{
@@ -378,24 +378,15 @@ prepare("BrowserImpl.getHtmlTagName()");
     private String getComputedAttributeAll()
     {
 	InvalidThreadException.checkThread("BrowserImpl.getComputedAttributeAll()");
-    	if(!current().getNode().hasAttributes()) 
+    	if(!nodeInfo.getNode().hasAttributes()) 
     	    return "";
     	String res = "";
-    	for(int i=current().getNode().getAttributes().getLength()-1;i >= 0;i--)
+    	for(int i = nodeInfo.getNode().getAttributes().getLength() - 1;i >= 0;i--)
     	{
-	    final Node node = current().getNode().getAttributes().item(i);
+	    final Node node = nodeInfo.getNode().getAttributes().item(i);
 	    res += node.getNodeName()+"="+node.getNodeValue()+";";
     	}
     	return res;
-    }
-
-    private String getHtml()
-    {
-	InvalidThreadException.checkThread("BrowserImpl.getHtml()");
-    	if(current().getNode() instanceof Text)
-	    return current().getNode().getNodeValue();
-    	String xml = getText() + getComputedStyleAll() + getComputedAttributeAll();
-    	return xml;
     }
 
     private Node findNonTextNode(NodeInfo info)
@@ -429,10 +420,5 @@ prepare("BrowserImpl.getHtmlTagName()");
 	if (pos >= dom.size())
 	    throw new RuntimeException(funcName + ": the internal index points outside of the DOM, it means there could be rescanDom() calls and thsi iterator is no longer actual");
 	this.nodeInfo = dom.get(pos);
-    }
-
-    private NodeInfo current()
-    {
-	return scanRes.dom.get(pos);
     }
 }
