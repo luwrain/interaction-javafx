@@ -38,7 +38,7 @@ import com.sun.webkit.dom.DOMWindowImpl;
 import org.luwrain.core.*;
 import org.luwrain.browser.*;
 
-class BrowserImpl extends BrowserBase implements Browser
+final class BrowserImpl extends BrowserBase implements Browser
 {
     static private final String RESCAN_RESOURCE_PATH = "org/luwrain/interaction/javafx/injection.js";
     static final int LAST_MODIFIED_SCAN_INTERVAL = 100; // lastModifiedTime rescan interval in milliseconds
@@ -196,14 +196,13 @@ class BrowserImpl extends BrowserBase implements Browser
 	NullCheck.notNull(script, "script");
 	if(script.trim().isEmpty() || webEngine == null)
 	    return null;
-	final Callable<Object> task = ()->webEngine.executeScript(script);
-	return Utils.callInFxThreadSync(task);
+	return Utils.callInFxThreadSync(()->super.executeScript(script));
     }
 
     @Override public BrowserIterator createIterator()
     {
 	InvalidThreadException.checkThread("BrowserImpl.createIterator()");
-	return new IteratorImpl(this);
+	return new IteratorImpl(this, domScanRes);
     }
 
     @Override public int numElements()

@@ -34,7 +34,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.web.WebView;
 
-public class JavaFxInteraction implements Interaction
+public final class JavaFxInteraction implements Interaction
 {
     static final String LOG_COMPONENT = "javafx";
 

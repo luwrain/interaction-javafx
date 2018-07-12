@@ -17,7 +17,6 @@
 
 package org.luwrain.interaction.javafx;
 
-import java.awt.Rectangle;
 import java.util.*;
 
 import javafx.beans.value.ObservableValue;
@@ -79,6 +78,19 @@ abstract class BrowserBase
 	    this.webView = null;
 	    this.webEngine = null;
 	}
+    }
+
+    DomScanResult getDomScanResult()
+    {
+	return this.domScanRes;
+    }
+
+Object executeScript(String script)
+    {
+	NullCheck.notNull(script, "script");
+	if(script.trim().isEmpty() || webEngine == null)
+	    return null;
+	return webEngine.executeScript(script);
     }
 
 protected void rescanDom()

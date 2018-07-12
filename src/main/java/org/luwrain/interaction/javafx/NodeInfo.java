@@ -49,6 +49,11 @@ boolean forText)
     	return node;
     }
 
+    boolean hasParent()
+    {
+	return parent != null;
+    }
+
     Integer getParent()
     {
     	return parent;

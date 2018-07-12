@@ -19,7 +19,7 @@ package org.luwrain.interaction.javafx;
 
 import javafx.application.Platform;
 
-public class InvalidThreadException extends RuntimeException
+public final class InvalidThreadException extends RuntimeException
 {
     InvalidThreadException(String message) 
     {
