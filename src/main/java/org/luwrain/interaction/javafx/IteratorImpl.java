@@ -29,7 +29,7 @@ import javafx.application.Platform;
 import org.luwrain.core.*;
 import org.luwrain.browser.*;
 
-class BrowserIteratorImpl implements BrowserIterator
+final class IteratorImpl implements BrowserIterator
 {
     static private final String LOG_COMPONENT = JavaFxInteraction.LOG_COMPONENT;
     static final String GET_NODE_TEXT="get_node_text"; // javascript window's property names for using in executeScrypt
@@ -37,7 +37,7 @@ class BrowserIteratorImpl implements BrowserIterator
     private final BrowserImpl browser;
     private int pos = 0;
 
-    BrowserIteratorImpl(BrowserImpl browser)
+    IteratorImpl(BrowserImpl browser)
     {
 	NullCheck.notNull(browser, "browser");
 	this.browser = browser;
@@ -46,7 +46,7 @@ class BrowserIteratorImpl implements BrowserIterator
     @Override public BrowserIterator clone()
     {
 	InvalidThreadException.checkThread("BrowserImpl.clone()");
-    	final BrowserIteratorImpl result = new BrowserIteratorImpl(browser);
+    	final IteratorImpl result = new IteratorImpl(browser);
     	result.pos=pos;
     	return result;
     }
