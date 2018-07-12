@@ -37,35 +37,35 @@ import org.luwrain.browser.BrowserEvents;
 
 abstract class BrowserBase
 {
-        static final String LOG_COMPONENT = "javafx-browser";
+    static final String LOG_COMPONENT = "browser";
 
-protected final String injectedScriptText;
-protected WebView webView = null;
-protected WebEngine webEngine = null;
-    Vector<NodeInfo> dom=new Vector<NodeInfo>();
-Map<Node,Integer> domMap = new HashMap<Node, Integer>();
+    protected final String injectedScript;
+    protected WebView webView = null;
+    protected WebEngine webEngine = null;
+    protected Vector<NodeInfo> dom = new Vector();
+    protected Map<Node,Integer> domMap = new HashMap();
 
-protected JSObject injectionRes = null;
-protected JSObject window = null;
+    protected JSObject injectionRes = null;
+    protected JSObject window = null;
     protected long lastModifiedTime;
     private HTMLDocument htmlDoc = null;
-DOMWindowImpl htmlWnd = null;
+    protected DOMWindowImpl htmlWnd = null;
     private boolean userStops = false;
 
-    protected BrowserBase(String injectedScriptText)
+    protected BrowserBase(String injectedScript)
     {
-	NullCheck.notNull(injectedScriptText, "injectedScriptText");
-	this.injectedScriptText = injectedScriptText;
+	NullCheck.notNull(injectedScript, "injectedScript");
+	this.injectedScript = injectedScript;
     }
 
     public abstract void setVisibility(boolean enabled);
 
     void initImpl(BrowserEvents events)
     {
+	NullCheck.notNull(events, "events");
 	try {
-	    NullCheck.notNull(events, "events");
-	    webView = new WebView();
-	    webEngine = webView.getEngine();
+	    this.webView = new WebView();
+	    this.webEngine = webView.getEngine();
 	    webView.setOnKeyReleased((event)->onKeyReleased(event));
 	    webEngine.getLoadWorker().stateProperty().addListener((ov,oldState,newState)->onStateChanged(events, ov, oldState, newState));
 	    webEngine.getLoadWorker().progressProperty().addListener((ov,o,n)->events.onProgress(n));
@@ -79,8 +79,8 @@ DOMWindowImpl htmlWnd = null;
 	catch(Throwable e)
 	{
 	    Log.error(LOG_COMPONENT, "unable to initialize WebEngine and WebView:" + e.getClass().getName() + ":" + e.getMessage());
-	    webView = null;
-	    webEngine = null;
+	    this.webView = null;
+	    this.webEngine = null;
 	}
     }
 
@@ -149,7 +149,6 @@ void rescanDomImpl()
     private void onStateChanged(BrowserEvents events, ObservableValue<? extends State> ov,
 			       State oldState, State newState)
     {
-	Log.debug(LOG_COMPONENT, "new state notification:" + oldState.toString() + " -> " + newState.toString() + " (thread \'" + Thread.currentThread() + "\')");
 	if(newState == State.CANCELLED)
 	{ // if canceled not by user, so that is a file downloads
 	    if(!userStops)
@@ -188,7 +187,7 @@ void rescanDomImpl()
 		case SUCCEEDED:
 			JSObject window=(JSObject)webEngine.executeScript("window");
 			window.setMember("console",new MyConsole());
-	    	injectionRes = (JSObject)webEngine.executeScript(injectedScriptText);
+	    	injectionRes = (JSObject)webEngine.executeScript(injectedScript);
 	    	// FIXME: check that luwrain object exists
     	break;
 		default:
@@ -223,7 +222,7 @@ void rescanDomImpl()
 
 	static public long jsLong(Object o)
 	{
-		if(o==null) 
+		if(o == null) 
 return 0;
 		if(o instanceof Double) 
 return (long)(double)o;
