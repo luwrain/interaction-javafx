@@ -292,37 +292,34 @@ final class IteratorImpl implements BrowserIterator
 
     @Override public void emulateSubmit()
     {
-	InvalidThreadException.checkThread("BrowserImpl.emulateSubmit()");
-	Node node = nodeInfo.getNode();
-	Node parent = null;
-	while((parent=node.getParentNode()) != null)
+	prepare("BrowserImpl.emulateSubmit()");
+	Node node = findNonTextNode(nodeInfo);
+	while(node != null)
 	{
-	    if(node instanceof HTMLInputElement
-	       ||node instanceof HTMLSelectElement)
+	    if(node instanceof HTMLInputElement ||
+	       node instanceof HTMLSelectElement)
 	    {
-		scanRes.window.setMember(GET_NODE_TEXT, node);
 		try{
-		    browser.executeScript("(function(){var x=window."+GET_NODE_TEXT+";x.form.submit();})()");
+		    executeScriptWithNode(node, "(function(){var x=window.LUWRAIN_OBJ;x.form.submit();})()");
 		}
 		catch(Throwable e)
 		{
-		    Log.debug(LOG_COMPONENT, "unable to emulate a submit:" + e.getClass().getName() + ":" + e.getMessage());
+		    Log.debug(LOG_COMPONENT, "unable to emulate submit:" + e.getClass().getName() + ":" + e.getMessage());
 		}
 		return;
 	    }
 	    if(node instanceof HTMLFormElement)
 	    {
-		scanRes.window.setMember(GET_NODE_TEXT, node);
 		try{
-		    browser.executeScript("(function(){var x=window."+GET_NODE_TEXT+";x.submit();})()");
+		    executeScriptWithNode(node, "(function(){var x=window.LUWRAIN_OBJ;x.submit();})()");
 		}
 		catch(Throwable e)
 		{
-		    Log.debug(LOG_COMPONENT, "unable to emulate a submit:" + e.getClass().getName() + ":" + e.getMessage());
+		    Log.debug(LOG_COMPONENT, "unable to emulate submit:" + e.getClass().getName() + ":" + e.getMessage());
 		}
 		return;
 	    }
-	    node = parent;
+	    node = node.getParentNode();
 	}
     }
 
