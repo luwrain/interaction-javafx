@@ -30,8 +30,7 @@ import org.luwrain.browser.*;
 
 final class IteratorImpl implements BrowserIterator
 {
-    static private final String LOG_COMPONENT = JavaFxInteraction.LOG_COMPONENT;
-    static final String GET_NODE_TEXT="get_node_text"; // javascript window's property names for using in executeScrypt
+    static private final String LOG_COMPONENT = BrowserBase.LOG_COMPONENT;
 
     private final BrowserBase browser;
     private int pos;
