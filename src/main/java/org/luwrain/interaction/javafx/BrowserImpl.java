@@ -114,14 +114,14 @@ final class BrowserImpl extends BrowserBase implements Browser
 	    return;
 	if(enable)
 	{
-	    interaction.disablePaint();
+	    interaction.blockPaint();
 	    Utils.runInFxThreadSync(()->{
 		    webView.setVisible(true);
 		    webView.requestFocus();
 		});
 	    return;
 	}
-	interaction.enablePaint();
+	interaction.unblockPaint();
 	Utils.runInFxThreadSync(()->webView.setVisible(false));
     }
 

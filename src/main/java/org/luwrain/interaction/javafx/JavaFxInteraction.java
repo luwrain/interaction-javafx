@@ -47,8 +47,9 @@ public final class JavaFxInteraction implements Interaction
     private String fontName = "Monospaced";
     private MainApp app = null;
 
-    private final Vector<BrowserImpl> browsers = new Vector();
+    private final List<BrowserImpl> browsers = new Vector();
     private BrowserImpl currentBrowser = null;
+    private boolean blockingPaint = false;
 
     @Override public boolean init(final InteractionParams params,final OperatingSystem os)
     {
@@ -182,7 +183,8 @@ public final class JavaFxInteraction implements Interaction
     @Override public void endDrawSession()
     {
 	drawingInProgress = false;
-	Platform.runLater(()->app.paint());
+	if (!blockingPaint)
+	    Platform.runLater(()->app.paint());
     }
 
     @Override public void setHotPoint(final int x,final int y)
@@ -264,14 +266,15 @@ browsers.remove(this);
 return true;
     }
 
-    void disablePaint()
+    void  blockPaint()
     {
-	app.doPaint=false;
+	this.blockingPaint = true;
     }
 
-    void enablePaint()
+    void unblockPaint()
     {
+	this.blockingPaint = false;
 	app.primary.requestFocus();
-	app.doPaint=true;
+
     }
 }
