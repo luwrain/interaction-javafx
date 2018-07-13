@@ -49,7 +49,7 @@ public final class JavaFxInteraction implements Interaction
 
     private final List<BrowserImpl> browsers = new Vector();
     private BrowserImpl currentBrowser = null;
-    private boolean blockingPaint = false;
+    private boolean graphicalMode = false;
 
     @Override public boolean init(final InteractionParams params,final OperatingSystem os)
     {
@@ -79,9 +79,18 @@ public final class JavaFxInteraction implements Interaction
 			      Utils.InteractionParamColorToFx(params.splitterColor));
 		app.setMargin(params.marginLeft,params.marginTop,params.marginRight,params.marginBottom);
 		this.keyboard = os.getCustomKeyboardHandler("javafx");
-		app.primary.addEventHandler(KeyEvent.KEY_PRESSED, (event)->keyboard.onKeyPressed(event));
-		app.primary.addEventHandler(KeyEvent.KEY_RELEASED, (event)->keyboard.onKeyReleased(event));
-		app.primary.addEventHandler(KeyEvent.KEY_TYPED, (event)->keyboard.onKeyTyped(event));
+		app.primary.addEventHandler(KeyEvent.KEY_PRESSED, (event)->{
+			if (!graphicalMode)
+			    keyboard.onKeyPressed(event);
+		    });
+		app.primary.addEventHandler(KeyEvent.KEY_RELEASED, (event)->{
+			if (!graphicalMode)
+			    keyboard.onKeyReleased(event);
+		    });
+		app.primary.addEventHandler(KeyEvent.KEY_TYPED, (event)->{
+			if (!graphicalMode)
+			    keyboard.onKeyTyped(event);
+		    });
 		if(wndWidth < 0 || wndHeight < 0)
 		{
 		    final Rectangle2D screenSize = Screen.getPrimary().getVisualBounds();
@@ -188,7 +197,7 @@ public final class JavaFxInteraction implements Interaction
     @Override public void endDrawSession()
     {
 	drawingInProgress = false;
-	if (!blockingPaint)
+	if (!graphicalMode)
 	    Utils.runInFxThreadAsync(()->app.paint());
     }
 
@@ -271,14 +280,14 @@ browsers.remove(this);
 return true;
     }
 
-    void  blockPaint()
+    void  enableGraphicalMode()
     {
-	this.blockingPaint = true;
+	this.graphicalMode = true;
     }
 
-    void unblockPaint()
+    void disableGraphicalMode()
     {
-	this.blockingPaint = false;
+	this.graphicalMode = false;
 	app.primary.requestFocus();
     }
 }
