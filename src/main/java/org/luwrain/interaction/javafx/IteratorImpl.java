@@ -61,7 +61,7 @@ final class IteratorImpl implements BrowserIterator
 
     @Override public boolean setPos(int value)
     {
-	InvalidThreadException.checkThread("BrowserImpl.setPos()");
+	prepare("BrowserImpl.setPos()");
 	if (value < 0 || value >= scanRes.dom.size())
 	    throw new IndexOutOfBoundsException("value (" + value + ") must be non-negative and less than " + scanRes.dom.size());
 	this.pos = value;

@@ -103,12 +103,14 @@ Object executeScript(String script)
 	    final JSObject window = (JSObject)webEngine.executeScript("window");
 	    window.setMember("console",new MyConsole());
 	    this.injectionRes = (JSObject)webEngine.executeScript(injectedScript);
-	    if (injectionRes == null)
+	    if (injectionRes != null)
+		Log.debug(LOG_COMPONENT, "injection executed successfully"); else
 		Log.warning(LOG_COMPONENT, "the injection result is null after running the injection script");
 	}
 	catch(Throwable e)
 	{
 	    Log.error(LOG_COMPONENT, "unable to run a browser injection:" + e.getClass().getName() + ":" + e.getMessage());
+	    e.printStackTrace();
 	}
     }
 
@@ -167,15 +169,24 @@ this.domScanRes = new DomScanResult(window);
 		    info.setParent(domScanRes.domMap.get(parent));
 	    }
 	    	    this.jsWindow = (JSObject)webEngine.executeScript("window");
+		    Log.debug(LOG_COMPONENT, "DOM rescanning completed");
 	}
 	catch(Throwable e)
 	{
 	    Log.error(LOG_COMPONENT, "unable to rescan DOM:" + e.getClass().getName() + ":" + e.getMessage());
+	    e.printStackTrace();
 	}
     }
 
     private void onStateChanged(BrowserEvents events, ObservableValue<? extends State> ov, State oldState, State newState)
     {
+	NullCheck.notNull(events, "events");
+	if (oldState == null || newState == null)
+	{
+	    Log.warning(LOG_COMPONENT, "oldState or newState is null in BrowserBase.onStateChanged()");
+	    return;
+	}
+	Log.debug(LOG_COMPONENT, "New state: " + newState.toString() + ", previous was " + oldState.toString());
 	final BrowserEvents.State state;
 	switch(newState)
 	{

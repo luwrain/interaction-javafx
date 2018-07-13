@@ -209,7 +209,7 @@ final class BrowserImpl extends BrowserBase implements Browser
     {
 	if (domScanRes == null)
 	    return 0;
-	return domScanRes.domMap.size();
+	return domScanRes.dom.size();
     }
 
     @Override public long getLastTimeChanged()
