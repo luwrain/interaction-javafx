@@ -46,8 +46,6 @@ abstract class BrowserBase
     protected JSObject injectionRes = null;
     protected JSObject jsWindow = null;
 
-    private boolean userStops = false;
-
     protected BrowserBase(String injectedScript)
     {
 	NullCheck.notNull(injectedScript, "injectedScript");
@@ -93,9 +91,30 @@ Object executeScript(String script)
 	return webEngine.executeScript(script);
     }
 
+    private void resetInjectionRes()
+    {
+	InvalidThreadException.checkThread("BrowserBase.resetInjectionRes()");
+	this.injectionRes = null;
+    }
+
+    private void runInjection()
+    {
+	try {
+	    final JSObject window = (JSObject)webEngine.executeScript("window");
+	    window.setMember("console",new MyConsole());
+	    this.injectionRes = (JSObject)webEngine.executeScript(injectedScript);
+	    if (injectionRes == null)
+		Log.warning(LOG_COMPONENT, "the injection result is null after running the injection script");
+	}
+	catch(Throwable e)
+	{
+	    Log.error(LOG_COMPONENT, "unable to run a browser injection:" + e.getClass().getName() + ":" + e.getMessage());
+	}
+    }
+
 protected void rescanDom()
     {
-	Utils.ensureFxThread();
+	InvalidThreadException.checkThread("BrowserBase.rescanDom()"); 
 	try {
 	    if(injectionRes == null || injectionRes.getMember("name").equals("_luwrain_"))
 		return;
@@ -155,25 +174,20 @@ this.domScanRes = new DomScanResult(window);
 	}
     }
 
-    private void onStateChanged(BrowserEvents events, ObservableValue<? extends State> ov,
-			       State oldState, State newState)
+    private void onStateChanged(BrowserEvents events, ObservableValue<? extends State> ov, State oldState, State newState)
     {
-	if(newState == State.CANCELLED)
-	{ // if canceled not by user, so that is a file downloads
-	    if(!userStops)
-	    { // if it not by user
-		if(events.onDownloadStart(webEngine.getLocation())) 
-		    return;
-	    }
-	}
 	final BrowserEvents.State state;
 	switch(newState)
 	{
 	case CANCELLED:
+	    //It could be a start of downloading, if cancelling was initiated not by a user
+	    //FIXME:if(events.onDownloadStart(webEngine.getLocation())) 
 	    state = BrowserEvents.State.CANCELLED;
+	    resetInjectionRes();
 	    break;
 	case FAILED:	
 	    state = BrowserEvents.State.FAILED;
+	    resetInjectionRes();
 	    break;
 	case READY:		
 	    state = BrowserEvents.State.READY;
@@ -184,23 +198,12 @@ this.domScanRes = new DomScanResult(window);
 	case SCHEDULED:	
 	    state = BrowserEvents.State.SCHEDULED;
 	    break;
-	case SUCCEEDED:	
+	case SUCCEEDED:
+	    runInjection();
 	    state = BrowserEvents.State.SUCCEEDED;
 	    break;
 	default:
 	    state = BrowserEvents.State.CANCELLED;
-	}
-	switch(newState)
-	{
-		//case READY:
-		case SUCCEEDED:
-			JSObject window=(JSObject)webEngine.executeScript("window");
-			window.setMember("console",new MyConsole());
-	    	injectionRes = (JSObject)webEngine.executeScript(injectedScript);
-	    	// FIXME: check that luwrain object exists
-    	break;
-		default:
-		    injectionRes = null;
 	}
 	events.onChangeState(state);
     }

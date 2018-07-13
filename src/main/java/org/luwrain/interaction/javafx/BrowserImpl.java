@@ -159,7 +159,7 @@ final class BrowserImpl extends BrowserBase implements Browser
 	    Utils.runInFxThreadSync(()->webEngine.load(url));
     }
 
-    @Override public synchronized void loadByText(String text)
+    @Override public void loadByText(String text)
     {
 	NullCheck.notNull(text, "text");
 	if (initialized())
@@ -171,7 +171,7 @@ final class BrowserImpl extends BrowserBase implements Browser
 	Utils.runInFxThreadSync(()->webEngine.getLoadWorker().cancel());
     }
 
-    @Override public synchronized String getTitle()
+    @Override public String getTitle()
     {
 	if(webEngine == null)
 	    return "";
