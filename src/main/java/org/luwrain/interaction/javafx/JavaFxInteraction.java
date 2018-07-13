@@ -45,10 +45,7 @@ public final class JavaFxInteraction implements Interaction
     private boolean drawingInProgress = false;
     private int currentFontSize = 14;
     private String fontName = "Monospaced";
-
     private MainApp app = null;
-    //    private final ThreadControl threadControl = new ThreadControl
-    final Thread threadfx = new Thread(new ThreadControl());
 
     final Vector<BrowserImpl> browsers = new Vector();
     private BrowserImpl currentBrowser = null;
@@ -58,7 +55,16 @@ public final class JavaFxInteraction implements Interaction
 	NullCheck.notNull(params, "params");
 	if (params.fontName != null && !params.fontName.trim().isEmpty())
 	    fontName = params.fontName;
-	threadfx.start();
+	/*
+	 * We have some sort of a hack here, since we are running a JavaFX
+	 * application not from the main thread. The following line creates the
+	 * thread, which javaFX will consider as its main thread, but the current function 
+	 * will continue immediately once JavaFX calls MainApp.start()
+	 * (see its last line). If there could be more elegant solution, we would
+	 * be happy to use it, but now it's the best what we know about it, and
+	 * it works.
+	 */
+	new Thread(new ThreadControl()).start();
 	this.app = ThreadControl.waitAppStart();
 	Callable<Boolean> task=new Callable<Boolean>()
 	{
@@ -74,22 +80,19 @@ public final class JavaFxInteraction implements Interaction
 				Utils.InteractionParamColorToFx(params.bkgColor),
 				Utils.InteractionParamColorToFx(params.splitterColor));
 		app.setMargin(params.marginLeft,params.marginTop,params.marginRight,params.marginBottom);
-		//frame.primary.requestFocus();
-		// FIXME: make better OS abstraction, but now we have only two OS types, windows like and other, like *nix
 		keyboard = os.getCustomKeyboardHandler("javafx");
 		app.primary.addEventHandler(KeyEvent.KEY_PRESSED, (event)->keyboard.onKeyPressed(event));
 		app.primary.addEventHandler(KeyEvent.KEY_RELEASED, (event)->keyboard.onKeyReleased(event));
 		app.primary.addEventHandler(KeyEvent.KEY_TYPED, (event)->keyboard.onKeyTyped(event));
-		if(wndWidth<0||wndHeight<0)
+		if(wndWidth < 0 || wndHeight < 0)
 		{
-		    // undecorated full visible screen size
-		    Rectangle2D screenSize=Screen.getPrimary().getVisualBounds();
+		    final Rectangle2D screenSize = Screen.getPrimary().getVisualBounds();
 		    app.setUndecoratedSizeAndShow(screenSize.getWidth(),screenSize.getHeight());
 		} else
 		{
-		    app.setSizeAndShow(wndWidth,wndHeight);
+		    app.setSizeAndShow(wndWidth, wndHeight);
 		}
-		return true;
+		return new Boolean(app.initTable());
 	    }
 	};
 	FutureTask<Boolean> query=new FutureTask<Boolean>(task){};
@@ -98,17 +101,20 @@ public final class JavaFxInteraction implements Interaction
 	try
 	{
 	    res=query.get();
-	} catch(InterruptedException|ExecutionException e)
+	}
+	catch(InterruptedException|ExecutionException e)
 	{
 	    e.printStackTrace();
 	}
 	if(!res) 
 	    return false;
-	if(!app.initTable())
+	/*
+		if(!app.initTable())
 	{
-	    Log.fatal("javafx","error occurred on table initialization");
+	    Log.fatal(LOG_COMPONENT, "error occurred on table initialization");
 	    return false;
 	}
+	*/
 	return true;
     }
 
