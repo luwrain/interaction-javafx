@@ -19,38 +19,39 @@ package org.luwrain.interaction.javafx;
 
 import javafx.application.Application;
 
-class AppThread implements Runnable
+final class ThreadControl implements Runnable
 {
-    static final Object sync=new Object();
-    static boolean ready = false;
+    static final Object syncObj = new Object();
+    static volatile MainApp appObj = null;
 
-    static void waitJavaFx()
+    static MainApp waitAppStart()
     {
-	synchronized(sync)
-	{
+	synchronized(syncObj) {
 	    try {
-		while(!ready && !Thread.currentThread().interrupted()) 
-		    sync.wait();
+		while(appObj == null && !Thread.currentThread().interrupted()) 
+		    syncObj.wait();
 	    } 
 	    catch(InterruptedException e)
 	    {
 		Thread.currentThread().interrupt();
 	    }
 	}
+	return appObj;
     }
 
-    static void notifyJavaFx()
+    static void appStarted(MainApp obj)
     {
-	synchronized(sync)
-	{
-	    ready = true;
-	    sync.notify();
+	if (obj == null)
+	    return;
+	synchronized(syncObj) {
+	    appObj = obj;
+	    syncObj.notify();
 	}
     }
 
     @Override public void run()
     {
 	MainApp.launch(MainApp.class);
-	System.exit(2);
+	System.exit(0);
     }
 } //MainJavafxThread

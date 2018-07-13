@@ -29,12 +29,10 @@ import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.text.*;
 
-public class MainApp extends Application
+public final class MainApp extends Application
 {
     static private final int MIN_TABLE_WIDTH = 16;
     static private final int MIN_TABLE_HEIGHT = 8;
-
-    static private MainApp that = null;
 
     StackPane root;
     boolean doPaint=true;
@@ -71,36 +69,9 @@ public class MainApp extends Application
     private final Object vertSync = new Object();
     private final Object horizSync = new Object();
 
-    // make canvas resizable
-    static private class ResizableCanvas extends Canvas
-    {
-	ResizableCanvas()
-	{
-	    super(1024,768);
-	}
-	@Override public boolean isResizable() 
-	{
-	    return true;
-	}
-	@Override public double prefWidth(double height) 
-	{
-	    return getWidth();
-	}
-	@Override public double prefHeight(double width) 
-	{
-	    return getHeight();
-	}
-    }
-
-    public MainApp()
-    {
-	that=this;
-    }
-
     @Override public void start(final Stage primary) throws Exception
     {
 	NullCheck.notNull(primary, "primary");
-	AppThread.notifyJavaFx();
 	this.primary=primary;
 	primary.setResizable(true);
 	root=new StackPane();
@@ -112,6 +83,7 @@ public class MainApp extends Application
         canvas.heightProperty().bind(root.heightProperty());
         gc = canvas.getGraphicsContext2D();
         root.setBackground(new Background(new BackgroundFill(Color.BLACK, CornerRadii.EMPTY, Insets.EMPTY)));
+		ThreadControl.appStarted(this);
     }
 
     @SuppressWarnings("deprecation") 
@@ -417,8 +389,27 @@ public class MainApp extends Application
 	}
     }
 
-    static MainApp getClassObject()
+    //Making a resizable canvas
+    static private final class ResizableCanvas extends Canvas
     {
-	return that;
+	ResizableCanvas()
+	{
+	    super(1024, 768);
+	}
+
+	@Override public boolean isResizable() 
+	{
+	    return true;
+	}
+
+	@Override public double prefWidth(double height) 
+	{
+	    return getWidth();
+	}
+
+	@Override public double prefHeight(double width) 
+	{
+	    return getHeight();
+	}
     }
 }

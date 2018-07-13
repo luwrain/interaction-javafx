@@ -47,7 +47,8 @@ public final class JavaFxInteraction implements Interaction
     private String fontName = "Monospaced";
 
     private MainApp app = null;
-    final Thread threadfx = new Thread(new AppThread());
+    //    private final ThreadControl threadControl = new ThreadControl
+    final Thread threadfx = new Thread(new ThreadControl());
 
     final Vector<BrowserImpl> browsers = new Vector();
     private BrowserImpl currentBrowser = null;
@@ -58,9 +59,7 @@ public final class JavaFxInteraction implements Interaction
 	if (params.fontName != null && !params.fontName.trim().isEmpty())
 	    fontName = params.fontName;
 	threadfx.start();
-	// wait for thread starts and finished javafx init
-	AppThread.waitJavaFx();
-	this.app = MainApp.getClassObject();
+	this.app = ThreadControl.waitAppStart();
 	Callable<Boolean> task=new Callable<Boolean>()
 	{
 	    @Override public Boolean call() throws Exception
