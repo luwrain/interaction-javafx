@@ -22,7 +22,7 @@ import java.awt.Rectangle;
 
 import org.luwrain.core.*;
 
-class NodeInfo
+final class NodeInfo
 {
     static private final String LOG_COMPONENT = BrowserBase.LOG_COMPONENT;
 
@@ -41,7 +41,6 @@ boolean forText)
 	this.node = node;
 	this.forText=forText;
 	rect=new Rectangle(x,y,width,height);
-	Log.debug(LOG_COMPONENT, "node " + node.toString() + "(x:" + x + ",y:" + y + ",w:" + width + ",h:" + height + ")");
     }
 
     Node getNode()

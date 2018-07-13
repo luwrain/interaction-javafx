@@ -20,11 +20,6 @@ package org.luwrain.interaction.javafx;
 import java.util.*;
 import java.util.concurrent.*;
 
-import org.luwrain.core.*;
-import org.luwrain.base.*;
-//import org.luwrain.util.*;
-import org.luwrain.browser.*;
-
 import javafx.stage.Screen;
 import javafx.application.Platform;
 import javafx.event.EventHandler;
@@ -33,6 +28,11 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.web.WebView;
+
+import org.luwrain.core.*;
+import org.luwrain.base.*;
+import org.luwrain.browser.*;
+
 
 public final class JavaFxInteraction implements Interaction
 {
@@ -46,10 +46,10 @@ public final class JavaFxInteraction implements Interaction
     private int currentFontSize = 14;
     private String fontName = "Monospaced";
 
-    private MainApp frame;
+    private MainApp app = null;
     final Thread threadfx = new Thread(new AppThread());
 
-    final Vector<BrowserImpl> browsers = new Vector<BrowserImpl>();
+    final Vector<BrowserImpl> browsers = new Vector();
     private BrowserImpl currentBrowser = null;
 
     @Override public boolean init(final InteractionParams params,final OperatingSystem os)
@@ -60,7 +60,7 @@ public final class JavaFxInteraction implements Interaction
 	threadfx.start();
 	// wait for thread starts and finished javafx init
 	AppThread.waitJavaFx();
-	frame = MainApp.getClassObject();
+	this.app = MainApp.getClassObject();
 	Callable<Boolean> task=new Callable<Boolean>()
 	{
 	    @Override public Boolean call() throws Exception
@@ -68,27 +68,27 @@ public final class JavaFxInteraction implements Interaction
 		currentFontSize = params.initialFontSize;
 		int wndWidth = params.wndWidth;
 		int wndHeight = params.wndHeight;
-		frame.setInteractionFont(createFont(currentFontSize),createFont2(currentFontSize));
-		frame.setColors(
+		app.setInteractionFont(createFont(currentFontSize),createFont2(currentFontSize));
+		app.setColors(
 				Utils.InteractionParamColorToFx(params.fontColor),
 				Utils.InteractionParamColorToFx(params.font2Color),
 				Utils.InteractionParamColorToFx(params.bkgColor),
 				Utils.InteractionParamColorToFx(params.splitterColor));
-		frame.setMargin(params.marginLeft,params.marginTop,params.marginRight,params.marginBottom);
+		app.setMargin(params.marginLeft,params.marginTop,params.marginRight,params.marginBottom);
 		//frame.primary.requestFocus();
 		// FIXME: make better OS abstraction, but now we have only two OS types, windows like and other, like *nix
 		keyboard = os.getCustomKeyboardHandler("javafx");
-		frame.primary.addEventHandler(KeyEvent.KEY_PRESSED, (event)->keyboard.onKeyPressed(event));
-		frame.primary.addEventHandler(KeyEvent.KEY_RELEASED, (event)->keyboard.onKeyReleased(event));
-		frame.primary.addEventHandler(KeyEvent.KEY_TYPED, (event)->keyboard.onKeyTyped(event));
+		app.primary.addEventHandler(KeyEvent.KEY_PRESSED, (event)->keyboard.onKeyPressed(event));
+		app.primary.addEventHandler(KeyEvent.KEY_RELEASED, (event)->keyboard.onKeyReleased(event));
+		app.primary.addEventHandler(KeyEvent.KEY_TYPED, (event)->keyboard.onKeyTyped(event));
 		if(wndWidth<0||wndHeight<0)
 		{
 		    // undecorated full visible screen size
 		    Rectangle2D screenSize=Screen.getPrimary().getVisualBounds();
-		    frame.setUndecoratedSizeAndShow(screenSize.getWidth(),screenSize.getHeight());
+		    app.setUndecoratedSizeAndShow(screenSize.getWidth(),screenSize.getHeight());
 		} else
 		{
-		    frame.setSizeAndShow(wndWidth,wndHeight);
+		    app.setSizeAndShow(wndWidth,wndHeight);
 		}
 		return true;
 	    }
@@ -105,7 +105,7 @@ public final class JavaFxInteraction implements Interaction
 	}
 	if(!res) 
 	    return false;
-	if(!frame.initTable())
+	if(!app.initTable())
 	{
 	    Log.fatal("javafx","error occurred on table initialization");
 	    return false;
@@ -131,14 +131,14 @@ public final class JavaFxInteraction implements Interaction
 
     @Override public boolean setDesirableFontSize(int size)
     {
-	final Font oldFont = frame.getInteractionFont();
-	final Font oldFont2 = frame.getInteractionFont2();
+	final Font oldFont = app.getInteractionFont();
+	final Font oldFont2 = app.getInteractionFont2();
 	final Font probeFont = createFont(size);
 	final Font probeFont2 = createFont2(size);
-	frame.setInteractionFont(probeFont,probeFont2);
-	if (!frame.initTable())
+	app.setInteractionFont(probeFont,probeFont2);
+	if (!app.initTable())
 	{
-	    frame.setInteractionFont(oldFont, oldFont2);
+	    app.setInteractionFont(oldFont, oldFont2);
 	    return false;
 	}
 	currentFontSize = size;
@@ -152,12 +152,12 @@ public final class JavaFxInteraction implements Interaction
 
     @Override public int getWidthInCharacters()
     {
-	return frame.getTableWidth();
+	return app.getTableWidth();
     }
 
     @Override public int getHeightInCharacters()
     {
-	return frame.getTableHeight();
+	return app.getTableHeight();
     }
 
     @Override public void startDrawSession()
@@ -167,7 +167,7 @@ public final class JavaFxInteraction implements Interaction
 
     @Override public void clearRect(int left,int top,int right,int bottom)
     {
-	frame.clearRect(left, top, right, bottom);
+	app.clearRect(left, top, right, bottom);
     }
 
     @Override public void drawText(int x, int y,
@@ -181,20 +181,20 @@ public final class JavaFxInteraction implements Interaction
 				   String text, boolean withFont2)
     {
 	NullCheck.notNull(text, "text");
-	frame.putString(x, y, TextUtils.replaceIsoControlChars(text), withFont2);
+	app.putString(x, y, TextUtils.replaceIsoControlChars(text), withFont2);
     }
 
     @Override public void endDrawSession()
     {
 	drawingInProgress = false;
-	Platform.runLater(()->frame.paint());
+	Platform.runLater(()->app.paint());
     }
 
     @Override public void setHotPoint(final int x,final int y)
     {
-	frame.setHotPoint(x, y);
+	app.setHotPoint(x, y);
 	if(!drawingInProgress) 
-	    Platform.runLater(()->frame.paint());
+	    Platform.runLater(()->app.paint());
     }
 
     @Override public void drawVerticalLine(int top, int bottom,
@@ -203,9 +203,9 @@ int x)
 	if(top > bottom)
 	{
 	    Log.warning("javafx","very odd vertical line: the top is greater than the bottom, "+top+">"+bottom);
-	    frame.drawVerticalLine(bottom, top, x);
+	    app.drawVerticalLine(bottom, top, x);
 	} else
-	    frame.drawVerticalLine(top, bottom, x);
+	    app.drawVerticalLine(top, bottom, x);
     }
 
     @Override public void drawHorizontalLine(int left, int right,
@@ -214,9 +214,9 @@ int y)
 	if(left > right)
 	{
 	    Log.warning("javafx","very odd horizontal line: the left is greater than the right, "+left+">"+right);
-	    frame.drawHorizontalLine(right, left, y);
+	    app.drawHorizontalLine(right, left, y);
 	} else
-	    frame.drawHorizontalLine(left, right, y);
+	    app.drawHorizontalLine(left, right, y);
     }
 
     private Font createFont(int desirableFontSize)
@@ -264,17 +264,17 @@ currentBrowser.setVisibility(enable);
 
     void addWebViewControl(WebView webView)
     {
-	frame.root.getChildren().add(webView);
+	app.root.getChildren().add(webView);
     }
 
     void disablePaint()
     {
-	frame.doPaint=false;
+	app.doPaint=false;
     }
 
     void enablePaint()
     {
-	frame.primary.requestFocus();
-	frame.doPaint=true;
+	app.primary.requestFocus();
+	app.doPaint=true;
     }
 }
