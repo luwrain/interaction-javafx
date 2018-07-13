@@ -129,18 +129,23 @@ public final class JavaFxInteraction implements Interaction
 
     @Override public boolean setDesirableFontSize(int size)
     {
-	final Font oldFont = app.getInteractionFont();
-	final Font oldFont2 = app.getInteractionFont2();
-	final Font probeFont = createFont(size);
-	final Font probeFont2 = createFont2(size);
-	app.setInteractionFont(probeFont,probeFont2);
-	if (!app.initTable())
-	{
-	    app.setInteractionFont(oldFont, oldFont2);
+	final Object res = Utils.callInFxThreadSync(()->{
+		final Font oldFont = app.getInteractionFont();
+		final Font oldFont2 = app.getInteractionFont2();
+		final Font probeFont = createFont(size);
+		final Font probeFont2 = createFont2(size);
+		app.setInteractionFont(probeFont,probeFont2);
+		if (!app.initTable())
+		{
+		    app.setInteractionFont(oldFont, oldFont2);
+		    return new Boolean(false);
+		}
+		currentFontSize = size;
+		return new Boolean(true);
+	    });
+	if (res == null  || !(res instanceof Boolean))
 	    return false;
-	}
-	currentFontSize = size;
-	return true;
+	return ((Boolean)res).booleanValue();
     }
 
     @Override public int getFontSize()
@@ -184,14 +189,14 @@ public final class JavaFxInteraction implements Interaction
     {
 	drawingInProgress = false;
 	if (!blockingPaint)
-	    Platform.runLater(()->app.paint());
+	    Utils.runInFxThreadAsync(()->app.paint());
     }
 
     @Override public void setHotPoint(final int x,final int y)
     {
 	app.setHotPoint(x, y);
 	if(!drawingInProgress) 
-	    Platform.runLater(()->app.paint());
+	    Utils.runInFxThreadAsync(()->app.paint());
     }
 
     @Override public void drawVerticalLine(int top, int bottom,
@@ -199,7 +204,7 @@ int x)
     {
 	if(top > bottom)
 	{
-	    Log.warning("javafx","very odd vertical line: the top is greater than the bottom, "+top+">"+bottom);
+	    Log.warning(LOG_COMPONENT,"very odd vertical line: the top is greater than the bottom, "+top+">"+bottom);
 	    app.drawVerticalLine(bottom, top, x);
 	} else
 	    app.drawVerticalLine(top, bottom, x);
@@ -210,7 +215,7 @@ int y)
     {
 	if(left > right)
 	{
-	    Log.warning("javafx","very odd horizontal line: the left is greater than the right, "+left+">"+right);
+	    Log.warning(LOG_COMPONENT,"very odd horizontal line: the left is greater than the right, "+left+">"+right);
 	    app.drawHorizontalLine(right, left, y);
 	} else
 	    app.drawHorizontalLine(left, right, y);
@@ -275,6 +280,5 @@ return true;
     {
 	this.blockingPaint = false;
 	app.primary.requestFocus();
-
     }
 }

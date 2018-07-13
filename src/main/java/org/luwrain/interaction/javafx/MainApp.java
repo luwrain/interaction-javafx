@@ -104,7 +104,7 @@ public final class MainApp extends Application
 
     synchronized boolean initTable()
     {
-	//FIXME: check the thread
+	InvalidThreadException.checkThread("MainApp.initTable()");
 	double width = canvasWidth;
 	double height = canvasHeight;
 	if (width < marginLeft + marginRight)
