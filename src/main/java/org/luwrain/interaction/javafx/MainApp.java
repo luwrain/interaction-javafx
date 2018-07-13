@@ -104,6 +104,7 @@ public final class MainApp extends Application
 
     synchronized boolean initTable()
     {
+	//FIXME: check the thread
 	double width = canvasWidth;
 	double height = canvasHeight;
 	if (width < marginLeft + marginRight)
@@ -324,27 +325,27 @@ public final class MainApp extends Application
 
     synchronized void drawVerticalLine(int top,int bottom,int x)
     {
-	    if (vertLines == null) return;
-	    if (x >= vertLines.length)
-	    {
-		Log.warning(LOG_COMPONENT, "unable to draw vertical line at column " + x + ", max vertical line is allowed at " + (vertLines.length - 1));
-		return;
-	    }
-	    if (vertLines[x] != null)
-		vertLines[x].cover(top, bottom);
+	if (vertLines == null) return;
+	if (x >= vertLines.length)
+	{
+	    Log.warning(LOG_COMPONENT, "unable to draw vertical line at column " + x + ", max vertical line is allowed at " + (vertLines.length - 1));
+	    return;
+	}
+	if (vertLines[x] != null)
+	    vertLines[x].cover(top, bottom);
     }
 
     synchronized void drawHorizontalLine(int left,int right,int y)
     {
-	    if (horizLines == null)
-		return;
-	    if (y >= horizLines.length)
-	    {
-		Log.warning(LOG_COMPONENT, "unable to draw horizontal line at row " + y + ", max horizontal line is allowed at " + (horizLines.length - 1));
-		return;
-	    }
-	    if (horizLines[y] != null)
-		horizLines[y].cover(left, right);
+	if (horizLines == null)
+	    return;
+	if (y >= horizLines.length)
+	{
+	    Log.warning(LOG_COMPONENT, "unable to draw horizontal line at row " + y + ", max horizontal line is allowed at " + (horizLines.length - 1));
+	    return;
+	}
+	if (horizLines[y] != null)
+	    horizLines[y].cover(left, right);
     }
 
     //Making a resizable canvas
