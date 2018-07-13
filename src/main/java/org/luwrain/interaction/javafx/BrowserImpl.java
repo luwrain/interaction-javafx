@@ -56,13 +56,9 @@ final class BrowserImpl extends BrowserBase implements Browser
     @Override public void init(BrowserEvents events)
     {
 	NullCheck.notNull(events, "events");
-	final boolean emptyList = interaction.browsers.isEmpty();
-	interaction.browsers.add(this);
 	Utils.runInFxThreadSync(()->{
 		super.init(events);
-		interaction.addWebViewControl(webView);
-		if(emptyList) 
-		    interaction.setCurrentBrowser(BrowserImpl.this);
+		interaction.registerBrowser(this, webView);
 	    });
     }
 
@@ -109,23 +105,7 @@ final class BrowserImpl extends BrowserBase implements Browser
 
     @Override public void close()
     {
-	final int pos = interaction.browsers.indexOf(this);
-	final boolean success = interaction.browsers.remove(this);
-	if(!success) 
-	    Log.warning(LOG_COMPONENT,"Can't found WebPage to remove it from WebEngineInteraction");
-	setVisibility(false);
-	if(pos!=-1)
-	{
-	    if(pos < interaction.browsers.size())
-	    {
-		interaction.setCurrentBrowser(interaction.browsers.get(pos));
-	    }
-	} else
-	{
-	    if(interaction.browsers.isEmpty()) 
-		interaction.setCurrentBrowser(null); else 
-	    	interaction.setCurrentBrowser(interaction.browsers.lastElement());
-	}
+	Utils.runInFxThreadSync(()->interaction.closeBrowser(this));
     }
 
     @Override public void setVisibility(boolean enable)

@@ -47,7 +47,7 @@ public final class JavaFxInteraction implements Interaction
     private String fontName = "Monospaced";
     private MainApp app = null;
 
-    final Vector<BrowserImpl> browsers = new Vector();
+    private final Vector<BrowserImpl> browsers = new Vector();
     private BrowserImpl currentBrowser = null;
 
     @Override public boolean init(final InteractionParams params,final OperatingSystem os)
@@ -66,21 +66,18 @@ public final class JavaFxInteraction implements Interaction
 	 */
 	new Thread(new ThreadControl()).start();
 	this.app = ThreadControl.waitAppStart();
-	Callable<Boolean> task=new Callable<Boolean>()
-	{
-	    @Override public Boolean call() throws Exception
-	    {
-		currentFontSize = params.initialFontSize;
+	final FutureTask<Boolean> task = new FutureTask(()->{
+		this.currentFontSize = params.initialFontSize;
 		int wndWidth = params.wndWidth;
 		int wndHeight = params.wndHeight;
 		app.setInteractionFont(createFont(currentFontSize),createFont2(currentFontSize));
 		app.setColors(
-				Utils.InteractionParamColorToFx(params.fontColor),
-				Utils.InteractionParamColorToFx(params.font2Color),
-				Utils.InteractionParamColorToFx(params.bkgColor),
-				Utils.InteractionParamColorToFx(params.splitterColor));
+			      Utils.InteractionParamColorToFx(params.fontColor),
+			      Utils.InteractionParamColorToFx(params.font2Color),
+			      Utils.InteractionParamColorToFx(params.bkgColor),
+			      Utils.InteractionParamColorToFx(params.splitterColor));
 		app.setMargin(params.marginLeft,params.marginTop,params.marginRight,params.marginBottom);
-		keyboard = os.getCustomKeyboardHandler("javafx");
+		this.keyboard = os.getCustomKeyboardHandler("javafx");
 		app.primary.addEventHandler(KeyEvent.KEY_PRESSED, (event)->keyboard.onKeyPressed(event));
 		app.primary.addEventHandler(KeyEvent.KEY_RELEASED, (event)->keyboard.onKeyReleased(event));
 		app.primary.addEventHandler(KeyEvent.KEY_TYPED, (event)->keyboard.onKeyTyped(event));
@@ -93,28 +90,23 @@ public final class JavaFxInteraction implements Interaction
 		    app.setSizeAndShow(wndWidth, wndHeight);
 		}
 		return new Boolean(app.initTable());
-	    }
-	};
-	FutureTask<Boolean> query=new FutureTask<Boolean>(task){};
-	Platform.runLater(query);
-	boolean res=false;
+	    });
+	Platform.runLater(task);
+	final Boolean res;
 	try
 	{
-	    res=query.get();
+	    res = task.get();
 	}
-	catch(InterruptedException|ExecutionException e)
+	catch(InterruptedException | ExecutionException e)
 	{
-	    e.printStackTrace();
-	}
-	if(!res) 
-	    return false;
-	/*
-		if(!app.initTable())
-	{
-	    Log.fatal(LOG_COMPONENT, "error occurred on table initialization");
+	    Log.error(LOG_COMPONENT, "the interaction procedure failed:" + e.getClass().getName() + ":" + e.getMessage());
 	    return false;
 	}
-	*/
+	if(res == null || !res.booleanValue())
+	{
+	    Log.error(LOG_COMPONENT, "the interaction procedure failed (there can be more detailed log message)");
+	    return false;
+	}
 	return true;
     }
 
@@ -175,15 +167,13 @@ public final class JavaFxInteraction implements Interaction
 	app.clearRect(left, top, right, bottom);
     }
 
-    @Override public void drawText(int x, int y,
-				   String text)
+    @Override public void drawText(int x, int y, String text)
     {
 	NullCheck.notNull(text, "text");
     	drawText(x, y, TextUtils.replaceIsoControlChars(text), false);
     }
 
-    @Override public void drawText(int x, int y,
-				   String text, boolean withFont2)
+    @Override public void drawText(int x, int y, String text, boolean withFont2)
     {
 	NullCheck.notNull(text, "text");
 	app.putString(x, y, TextUtils.replaceIsoControlChars(text), withFont2);
@@ -241,13 +231,8 @@ int y)
 	return new BrowserImpl(this);
     }
 
-    BrowserImpl getCurrentBrowser()
-    {
-	return currentBrowser;
-    }
-
     // change current page to curPage, if it null, change previous current page to not visible 
-    void setCurrentBrowser(BrowserImpl newCurrentBrowser, boolean visibility)
+    private void setCurrentBrowser(BrowserImpl newCurrentBrowser, boolean visibility)
     {
 	if(currentBrowser != null)
 	    currentBrowser.setVisibility(false);
@@ -256,20 +241,27 @@ int y)
 	    currentBrowser.setVisibility(visibility);
     }
 
-    void setCurrentBrowser(BrowserImpl newCurrentBrowser)
+    void registerBrowser(BrowserImpl browser, WebView webView)
     {
-setCurrentBrowser(newCurrentBrowser, false);
-    }
-
-    void setCurrentBrowserVisibility(boolean enable)
-    {
-	if(currentBrowser != null)
-currentBrowser.setVisibility(enable);
-    }
-
-    void addWebViewControl(WebView webView)
-    {
+	NullCheck.notNull(browser, "browser");
+	NullCheck.notNull(webView, "webView");
+	InvalidThreadException.checkThread("JavaFxInteraction.registerBrowser()");
+	final boolean wasEmpty = browsers.isEmpty();
+	browsers.add(browser);
 	app.root.getChildren().add(webView);
+	if(wasEmpty) 
+	    setCurrentBrowser(browser, false);
+    }
+
+boolean closeBrowser(BrowserImpl browser)
+    {
+	NullCheck.notNull(browser, "browser");
+	final int pos = browsers.indexOf(browser);
+	if (pos < 0)
+	    return false;
+browsers.remove(this);
+//FIXME:choosing another current browser
+return true;
     }
 
     void disablePaint()
