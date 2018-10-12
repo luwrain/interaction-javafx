@@ -27,6 +27,7 @@ import javafx.geometry.Rectangle2D;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
+import javafx.embed.swing.SwingNode;
 import javafx.scene.web.WebView;
 
 import org.luwrain.core.*;
@@ -279,6 +280,20 @@ browsers.remove(this);
 //FIXME:choosing another current browser
 return true;
     }
+
+        void registerSwingNode(SwingNode swingNode)
+    {
+	NullCheck.notNull(swingNode, "swingNode");
+	InvalidThreadException.checkThread("JavaFxInteraction.registerBrowser()");
+	app.root.getChildren().add(swingNode);
+    }
+
+void closeSwingNode(SwingNode swingNode)
+    {
+	NullCheck.notNull(swingNode, "swingNode");
+		app.root.getChildren().remove(swingNode);
+    }
+
 
     void  enableGraphicalMode()
     {

@@ -33,7 +33,7 @@ import org.luwrain.core.*;
 final class PdfPreview
 {
     static final String LOG_COMPONENT = "browser";
-    
+
     private final JavaFxInteraction interaction;
     private SwingNode node = null;
 
@@ -43,13 +43,14 @@ final class PdfPreview
 	this.interaction = interaction;
     }
 
-void init()
+    void init()
     {
 	Utils.ensureFxThread();
 	try {
 	    this.node = new SwingNode();
-this.node.setOnKeyReleased((event)->onKeyReleased(event));
+	    this.node.setOnKeyReleased((event)->onKeyReleased(event));
 	    this.node.setVisible(false);
+	    interaction.registerSwingNode(this.node);
 	    this.node.requestFocus();
 	}
 	catch(Throwable e)
@@ -59,12 +60,12 @@ this.node.setOnKeyReleased((event)->onKeyReleased(event));
 	}
     }
 
-void close()
+    void close()
     {
-	//	Utils.runInFxThreadSync(()->interaction.closeBrowser(this));
+	Utils.runInFxThreadSync(()->interaction.closeSwingNode(this.node));
     }
 
-        private void onKeyReleased(KeyEvent event)
+    private void onKeyReleased(KeyEvent event)
     {
 	NullCheck.notNull(event, "event");
 	switch(event.getCode())
