@@ -75,8 +75,7 @@ public final class MainApp extends Application
         this.canvas = new ResizableCanvas();
         this.root.getChildren().add(canvas);
         stage.setScene(new Scene(root));
-        this.canvas.widthProperty().bind(root.widthProperty());
-        this.canvas.heightProperty().bind(root.heightProperty());
+	this.canvas.bindWidthAndHeight(root);
         this.gc = canvas.getGraphicsContext2D();
         this.root.setBackground(new Background(new BackgroundFill(Color.BLACK, CornerRadii.EMPTY, Insets.EMPTY)));
 	ThreadControl.appStarted(this);
@@ -346,29 +345,5 @@ public final class MainApp extends Application
 	}
 	if (horizLines[y] != null)
 	    horizLines[y].cover(left, right);
-    }
-
-    //Making a resizable canvas
-    static private final class ResizableCanvas extends Canvas
-    {
-	ResizableCanvas()
-	{
-	    super(1024, 768);
-	}
-
-	@Override public boolean isResizable() 
-	{
-	    return true;
-	}
-
-	@Override public double prefWidth(double height) 
-	{
-	    return getWidth();
-	}
-
-	@Override public double prefHeight(double width) 
-	{
-	    return getHeight();
-	}
     }
 }

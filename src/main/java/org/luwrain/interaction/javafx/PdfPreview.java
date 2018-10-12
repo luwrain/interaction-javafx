@@ -22,6 +22,8 @@ import java.io.*;
 import java.util.*;
 import java.util.concurrent.*;
 
+import java.awt.image.BufferedImage;
+import javafx.scene.image.Image;
 import javafx.embed.swing.*;
 import javafx.application.Platform;
 import javafx.beans.value.ObservableValue;
