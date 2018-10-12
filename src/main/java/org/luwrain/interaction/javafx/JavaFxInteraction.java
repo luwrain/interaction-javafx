@@ -79,15 +79,15 @@ public final class JavaFxInteraction implements Interaction
 			      Utils.InteractionParamColorToFx(params.splitterColor));
 		app.setMargin(params.marginLeft,params.marginTop,params.marginRight,params.marginBottom);
 		this.keyboard = os.getCustomKeyboardHandler("javafx");
-		app.primary.addEventHandler(KeyEvent.KEY_PRESSED, (event)->{
+		app.stage.addEventHandler(KeyEvent.KEY_PRESSED, (event)->{
 			if (!graphicalMode)
 			    keyboard.onKeyPressed(event);
 		    });
-		app.primary.addEventHandler(KeyEvent.KEY_RELEASED, (event)->{
+		app.stage.addEventHandler(KeyEvent.KEY_RELEASED, (event)->{
 			if (!graphicalMode)
 			    keyboard.onKeyReleased(event);
 		    });
-		app.primary.addEventHandler(KeyEvent.KEY_TYPED, (event)->{
+		app.stage.addEventHandler(KeyEvent.KEY_TYPED, (event)->{
 			if (!graphicalMode)
 			    keyboard.onKeyTyped(event);
 		    });
@@ -288,6 +288,6 @@ return true;
     void disableGraphicalMode()
     {
 	this.graphicalMode = false;
-	app.primary.requestFocus();
+	app.stage.requestFocus();
     }
 }

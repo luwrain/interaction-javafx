@@ -36,14 +36,14 @@ public final class MainApp extends Application
     static private final int MIN_TABLE_WIDTH = 16;
     static private final int MIN_TABLE_HEIGHT = 8;
 
-    StackPane root;
-    Stage primary;
+    StackPane root = null;
+    Stage stage = null;
 
-    private ResizableCanvas canvas;
-    private GraphicsContext gc;
-    private Bounds bounds;
-    private Font font;
-    private     Font font2;
+    private ResizableCanvas canvas = null;
+    private GraphicsContext gc = null;
+    private Bounds bounds = null;
+    private Font font = null;
+    private     Font font2 = null;
     private Color fontColor = Color.GREY;
     private Color font2Color = Color.WHITE;
     private Color bkgColor = Color.BLACK;
@@ -65,20 +65,20 @@ public final class MainApp extends Application
     private OnScreenLineTracker[] vertLines;
     private OnScreenLineTracker[] horizLines;
 
-    @Override public void start(final Stage primary) throws Exception
+    @Override public void start(final Stage stage) throws Exception
     {
-	NullCheck.notNull(primary, "primary");
-	this.primary=primary;
-	primary.setResizable(true);
-	root=new StackPane();
-	root.resize(1024, 768);
-        canvas = new ResizableCanvas();
-        root.getChildren().add(canvas);
-        primary.setScene(new Scene(root));
-        canvas.widthProperty().bind(root.widthProperty());
-        canvas.heightProperty().bind(root.heightProperty());
-        gc = canvas.getGraphicsContext2D();
-        root.setBackground(new Background(new BackgroundFill(Color.BLACK, CornerRadii.EMPTY, Insets.EMPTY)));
+	NullCheck.notNull(stage, "stage");
+	this.stage = stage;
+	stage.setResizable(true);
+	this.root=new StackPane();
+	this.root.resize(1024, 768);
+        this.canvas = new ResizableCanvas();
+        this.root.getChildren().add(canvas);
+        stage.setScene(new Scene(root));
+        this.canvas.widthProperty().bind(root.widthProperty());
+        this.canvas.heightProperty().bind(root.heightProperty());
+        this.gc = canvas.getGraphicsContext2D();
+        this.root.setBackground(new Background(new BackgroundFill(Color.BLACK, CornerRadii.EMPTY, Insets.EMPTY)));
 	ThreadControl.appStarted(this);
     }
 
@@ -184,24 +184,24 @@ public final class MainApp extends Application
 
     void setSizeAndShow(int width,int height)
     {
-    	canvasWidth=width;
-    	canvasHeight=height;
-    	root.resize(width,height);
-    	primary.sizeToScene();
-    	primary.show();
+    	this.canvasWidth=width;
+    	this.canvasHeight=height;
+    	this.root.resize(width,height);
+    	this.stage.sizeToScene();
+    	this.stage.show();
     }
 
     void setUndecoratedSizeAndShow(double width,double height)
     {
-    	canvasWidth=width;
-    	canvasHeight=height;
-    	root.resize(width,height);
+    	this.canvasWidth=width;
+    	this.canvasHeight=height;
+    	this.root.resize(width,height);
     	//canvas.resize(width, height);
-    	primary.initStyle(StageStyle.UNDECORATED); // WARN: can't change style after first window show
-    	primary.setWidth(width);
-    	primary.setHeight(height);
-    	primary.setResizable(false);
-    	primary.show();
+    	this.stage.initStyle(StageStyle.UNDECORATED); // WARN: can't change style after first window show
+    	this.stage.setWidth(width);
+    	this.stage.setHeight(height);
+    	this.stage.setResizable(false);
+    	this.stage.show();
     }
 
     void setHotPoint(int x, int y)
@@ -262,7 +262,7 @@ public final class MainApp extends Application
 	gc.setTextBaseline(VPos.TOP);
 	// canvas is transparent, so background color was filled rect before
 	gc.setFill(bkgColor);
-	gc.fillRect(0,0,primary.getWidth()-1,primary.getHeight()-1);
+	gc.fillRect(0, 0, this.stage.getWidth() - 1, this.stage.getHeight()-1);
 	gc.setFont(font);
 	gc.setFill(fontColor);
 	char[] chars=new char[tableWidth];
