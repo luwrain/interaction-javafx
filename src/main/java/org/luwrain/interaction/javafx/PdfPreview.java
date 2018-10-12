@@ -28,22 +28,34 @@ import javafx.beans.value.ObservableValue;
 import javafx.concurrent.Worker.State;
 import javafx.scene.input.KeyEvent;
 
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.rendering.PDFRenderer;
+
 import org.luwrain.core.*;
 
-final class PdfPreview
+final class PdfPreview implements org.luwrain.interaction.graphical.Pdf
 {
     static final String LOG_COMPONENT = "browser";
 
     private final JavaFxInteraction interaction;
     private SwingNode node = null;
+    private final org.luwrain.interaction.graphical.Pdf.Listener listener;
 
-    PdfPreview(JavaFxInteraction interaction)
+        private final PDDocument doc;
+    private final PDFRenderer rend;
+
+
+    PdfPreview(JavaFxInteraction interaction, org.luwrain.interaction.graphical.Pdf.Listener listener, File file) throws Exception
     {
 	NullCheck.notNull(interaction, "interaction");
+	NullCheck.notNull(listener, "listener");
 	this.interaction = interaction;
+	this.listener = listener;
+	this.doc = PDDocument.load(file);
+	this.rend = new PDFRenderer(doc);
     }
 
-    void init()
+    @Override public boolean init()
     {
 	Utils.ensureFxThread();
 	try {
@@ -58,11 +70,27 @@ final class PdfPreview
 	    Log.error(LOG_COMPONENT, "unable to initialize the PDF preview:" + e.getClass().getName() + ":" + e.getMessage());
 	    this.node = null;
 	}
+	return true;
     }
 
-    void close()
+    @Override public void close()
     {
 	Utils.runInFxThreadSync(()->interaction.closeSwingNode(this.node));
+    }
+
+    @Override public boolean showPage(int index)
+    {
+	return false;
+    }
+
+    @Override public int getPageCount()
+    {
+	return 0;
+    }
+
+    @Override public int getCurrentPageNum()
+    {
+	return 0;
     }
 
     private void onKeyReleased(KeyEvent event)

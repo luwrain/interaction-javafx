@@ -19,6 +19,7 @@ package org.luwrain.interaction.javafx;
 
 import java.util.*;
 import java.util.concurrent.*;
+import java.io.*;
 
 import javafx.stage.Screen;
 import javafx.application.Platform;
@@ -246,6 +247,13 @@ int y)
     @Override public Browser createBrowser()
     {
 	return new BrowserImpl(this);
+    }
+
+    @Override public org.luwrain.interaction.graphical.Pdf createPdfPreview(org.luwrain.interaction.graphical.Pdf.Listener listener, File file)
+    {
+	NullCheck.notNull(listener, "listener");
+	NullCheck.notNull(file, "file");
+	return null;
     }
 
     // change current page to curPage, if it null, change previous current page to not visible 
