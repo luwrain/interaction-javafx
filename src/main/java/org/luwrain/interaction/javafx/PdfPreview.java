@@ -24,6 +24,7 @@ import java.util.concurrent.*;
 
 import java.awt.image.BufferedImage;
 import javafx.scene.image.Image;
+import javafx.scene.canvas.GraphicsContext;
 import javafx.embed.swing.*;
 import javafx.application.Platform;
 import javafx.beans.value.ObservableValue;
@@ -34,18 +35,19 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.rendering.PDFRenderer;
 
 import org.luwrain.core.*;
+import org.luwrain.core.events.*;
 
 final class PdfPreview implements org.luwrain.interaction.graphical.Pdf
 {
-    static final String LOG_COMPONENT = "browser";
+    static final String LOG_COMPONENT = "pdf";
 
     private final JavaFxInteraction interaction;
-    private SwingNode node = null;
+    private ResizableCanvas canvas = null;
     private final org.luwrain.interaction.graphical.Pdf.Listener listener;
 
         private final PDDocument doc;
     private final PDFRenderer rend;
-
+    private Image image = null;
 
     PdfPreview(JavaFxInteraction interaction, org.luwrain.interaction.graphical.Pdf.Listener listener, File file) throws Exception
     {
@@ -54,30 +56,40 @@ final class PdfPreview implements org.luwrain.interaction.graphical.Pdf
 	this.interaction = interaction;
 	this.listener = listener;
 	this.doc = PDDocument.load(file);
+	Log.debug(LOG_COMPONENT, "PDF file " + file.getAbsolutePath() + " loaded");
 	this.rend = new PDFRenderer(doc);
+	Log.debug(LOG_COMPONENT, "PDF renderer created");
     }
 
     @Override public boolean init()
     {
-	Utils.ensureFxThread();
+	Utils.runInFxThreadSync(()->{
 	try {
-	    this.node = new SwingNode();
-	    this.node.setOnKeyReleased((event)->onKeyReleased(event));
-	    this.node.setVisible(false);
-	    interaction.registerSwingNode(this.node);
-	    this.node.requestFocus();
+	    this.image = makeImage(1, 3);
+	    this.canvas = new ResizableCanvas();
+	    this.canvas.setOnKeyReleased((event)->onKeyReleased(event));
+	    this.canvas.setVisible(false);
+	    interaction.registerCanvas(this.canvas);
+	    canvas.setVisible(true);
+	    interaction.enableGraphicalMode();
+	    this.canvas.requestFocus();
+	    draw();
 	}
 	catch(Throwable e)
 	{
 	    Log.error(LOG_COMPONENT, "unable to initialize the PDF preview:" + e.getClass().getName() + ":" + e.getMessage());
-	    this.node = null;
+	    this.canvas = null;
 	}
+	    });
 	return true;
     }
 
     @Override public void close()
     {
-	Utils.runInFxThreadSync(()->interaction.closeSwingNode(this.node));
+	Utils.runInFxThreadSync(()->{
+		interaction.closeCanvas(this.canvas);
+		interaction.disableGraphicalMode();
+	    });
     }
 
     @Override public boolean showPage(int index)
@@ -95,13 +107,40 @@ final class PdfPreview implements org.luwrain.interaction.graphical.Pdf
 	return 0;
     }
 
+    private void draw()
+    {
+		InvalidThreadException.checkThread("PdfPreview.draw()");
+		NullCheck.notNull(canvas, "canvas");
+		NullCheck.notNull(image, "image");
+
+final GraphicsContext gc = canvas.getGraphicsContext2D();
+gc.drawImage(image, 0, 0);
+
+    }
+
+    private Image makeImage(int pageNum, float scale)
+    {
+	InvalidThreadException.checkThread("PdfPreview.makeImage");
+	        final BufferedImage pageImage;
+        try {
+            pageImage = rend.renderImage(pageNum, scale);
+	    Log.debug(LOG_COMPONENT, "image rendered");
+        }
+	catch (IOException e)
+	{
+	    Log.error(LOG_COMPONENT, "unable to render a PDf page:" + e.getClass().getName() + ":" + e.getMessage());
+	    return null;
+        }
+return SwingFXUtils.toFXImage(pageImage, null);
+    }
+
     private void onKeyReleased(KeyEvent event)
     {
 	NullCheck.notNull(event, "event");
 	switch(event.getCode())
 	{
 	case ESCAPE:
-	    //	    setVisibility(false);
+	    listener.onInputEvent(new KeyboardEvent(KeyboardEvent.Special.ESCAPE));
 	    break;
 	default:break;
 	}

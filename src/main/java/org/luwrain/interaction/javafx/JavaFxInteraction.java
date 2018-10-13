@@ -35,7 +35,6 @@ import org.luwrain.core.*;
 import org.luwrain.base.*;
 import org.luwrain.browser.*;
 
-
 public final class JavaFxInteraction implements Interaction
 {
     static final String LOG_COMPONENT = "javafx";
@@ -249,11 +248,13 @@ int y)
 	return new BrowserImpl(this);
     }
 
-    @Override public org.luwrain.interaction.graphical.Pdf createPdfPreview(org.luwrain.interaction.graphical.Pdf.Listener listener, File file)
+    @Override public org.luwrain.interaction.graphical.Pdf createPdfPreview(org.luwrain.interaction.graphical.Pdf.Listener listener, File file) throws Exception
     {
 	NullCheck.notNull(listener, "listener");
 	NullCheck.notNull(file, "file");
-	return null;
+	final PdfPreview preview = new PdfPreview(this, listener, file);
+preview.init();
+return preview;
     }
 
     // change current page to curPage, if it null, change previous current page to not visible 
@@ -289,19 +290,19 @@ browsers.remove(this);
 return true;
     }
 
-        void registerSwingNode(SwingNode swingNode)
+        void registerCanvas(ResizableCanvas canvas)
     {
-	NullCheck.notNull(swingNode, "swingNode");
+	NullCheck.notNull(canvas, "canvas");
 	InvalidThreadException.checkThread("JavaFxInteraction.registerBrowser()");
-	app.root.getChildren().add(swingNode);
+	app.root.getChildren().add(canvas);
+	canvas.bindWidthAndHeight(app.root);
     }
 
-void closeSwingNode(SwingNode swingNode)
+void closeCanvas(ResizableCanvas canvas)
     {
-	NullCheck.notNull(swingNode, "swingNode");
-		app.root.getChildren().remove(swingNode);
+	NullCheck.notNull(canvas, "canvas");
+		app.root.getChildren().remove(canvas);
     }
-
 
     void  enableGraphicalMode()
     {
