@@ -23,9 +23,10 @@ import java.util.*;
 import java.util.concurrent.*;
 
 import java.awt.image.BufferedImage;
+import javafx.scene.paint.Color;
 import javafx.scene.image.Image;
 import javafx.scene.canvas.GraphicsContext;
-import javafx.embed.swing.*;
+import javafx.embed.swing.SwingFXUtils;
 import javafx.application.Platform;
 import javafx.beans.value.ObservableValue;
 import javafx.concurrent.Worker.State;
@@ -49,6 +50,9 @@ final class PdfPreview implements org.luwrain.interaction.graphical.Pdf
     private final PDFRenderer rend;
     private Image image = null;
 
+    private int pageNum = 0;
+    private float scale = 1;
+
     PdfPreview(JavaFxInteraction interaction, org.luwrain.interaction.graphical.Pdf.Listener listener, File file) throws Exception
     {
 	NullCheck.notNull(interaction, "interaction");
@@ -65,7 +69,6 @@ final class PdfPreview implements org.luwrain.interaction.graphical.Pdf
     {
 	Utils.runInFxThreadSync(()->{
 	try {
-	    this.image = makeImage(1, 3);
 	    this.canvas = new ResizableCanvas();
 	    this.canvas.setOnKeyReleased((event)->onKeyReleased(event));
 	    this.canvas.setVisible(false);
@@ -73,7 +76,7 @@ final class PdfPreview implements org.luwrain.interaction.graphical.Pdf
 	    canvas.setVisible(true);
 	    interaction.enableGraphicalMode();
 	    this.canvas.requestFocus();
-	    draw();
+	    drawInitial();
 	}
 	catch(Throwable e)
 	{
@@ -82,6 +85,16 @@ final class PdfPreview implements org.luwrain.interaction.graphical.Pdf
 	}
 	    });
 	return true;
+    }
+
+    private void drawInitial()
+    {
+	Log.debug(LOG_COMPONENT, "canvas " + String.format("%.2f", canvas.getWidth()) + "x" + String.format("%.2f", canvas.getHeight()));
+	this.image = makeImage(pageNum, 1);
+	this.scale = (float)matchingScale(image.getWidth(), image.getHeight(), canvas.getWidth(), canvas.getHeight());
+	Log.debug(LOG_COMPONENT, "initial scale is " + String.format("%.2f", scale));
+	this.image = makeImage(pageNum, scale);
+	draw();
     }
 
     @Override public void close()
@@ -94,29 +107,45 @@ final class PdfPreview implements org.luwrain.interaction.graphical.Pdf
 
     @Override public boolean showPage(int index)
     {
+	if (index < 0 || index >= getPageCount())
+	    return false;
+	Utils.runInFxThreadSync(()->{
+	this.pageNum = index;
+	drawInitial();
+	    });
 	return false;
     }
 
     @Override public int getPageCount()
     {
-	return 0;
+	return doc.getNumberOfPages();
     }
 
     @Override public int getCurrentPageNum()
     {
-	return 0;
+	return pageNum;
     }
 
     private void draw()
     {
-		InvalidThreadException.checkThread("PdfPreview.draw()");
-		NullCheck.notNull(canvas, "canvas");
-		NullCheck.notNull(image, "image");
-
-final GraphicsContext gc = canvas.getGraphicsContext2D();
-gc.drawImage(image, 0, 0);
-
+	InvalidThreadException.checkThread("PdfPreview.draw()");
+	if (image == null || canvas == null)
+	    return;
+	final double imageWidth = image.getWidth();
+	final double imageHeight = image.getHeight();
+	final double screenWidth = canvas.getWidth();
+	final double screenHeight = canvas.getHeight();
+	final Fragment horizFrag = calcFragment(imageWidth, screenWidth);
+	final Fragment vertFrag = calcFragment(imageHeight, screenHeight);
+	final GraphicsContext gc = canvas.getGraphicsContext2D();
+	gc.setFill(Color.BLACK);
+	gc.fillRect(0, 0, screenWidth, screenHeight);
+	gc.drawImage(image,
+		     horizFrag.from, vertFrag.from, horizFrag.size, vertFrag.size,
+		     horizFrag.to, vertFrag.to, horizFrag.size, vertFrag.size);
     }
+
+    
 
     private Image makeImage(int pageNum, float scale)
     {
@@ -124,14 +153,15 @@ gc.drawImage(image, 0, 0);
 	        final BufferedImage pageImage;
         try {
             pageImage = rend.renderImage(pageNum, scale);
-	    Log.debug(LOG_COMPONENT, "image rendered");
         }
 	catch (IOException e)
 	{
 	    Log.error(LOG_COMPONENT, "unable to render a PDf page:" + e.getClass().getName() + ":" + e.getMessage());
 	    return null;
         }
-return SwingFXUtils.toFXImage(pageImage, null);
+final Image image = SwingFXUtils.toFXImage(pageImage, null);
+Log.debug(LOG_COMPONENT, "image " + String.format("%.2f", image.getWidth()) + "x" + String.format("%.2f", image.getHeight()));
+return image;
     }
 
     private void onKeyReleased(KeyEvent event)
@@ -142,7 +172,68 @@ return SwingFXUtils.toFXImage(pageImage, null);
 	case ESCAPE:
 	    listener.onInputEvent(new KeyboardEvent(KeyboardEvent.Special.ESCAPE));
 	    break;
+	case PAGE_DOWN:
+	    listener.onInputEvent(new KeyboardEvent(KeyboardEvent.Special.PAGE_DOWN));
+	    	    break;
+	case PAGE_UP:
+	    	    listener.onInputEvent(new KeyboardEvent(KeyboardEvent.Special.PAGE_UP));
+		    	    break;
+	case HOME:
+	    	    listener.onInputEvent(new KeyboardEvent(KeyboardEvent.Special.HOME));
+		    	    break;
+	case END:
+	    	    listener.onInputEvent(new KeyboardEvent(KeyboardEvent.Special.END));
+		    	    break;
+	case DOWN:
+	    	    listener.onInputEvent(new KeyboardEvent(KeyboardEvent.Special.ARROW_DOWN));
+		    	    break;
+	case UP:
+	    	    listener.onInputEvent(new KeyboardEvent(KeyboardEvent.Special.ARROW_UP));
+		    	    break;
+	case LEFT:
+	    	    listener.onInputEvent(new KeyboardEvent(KeyboardEvent.Special.ARROW_LEFT));
+		    	    break;
+	case RIGHT:
+	    	    listener.onInputEvent(new KeyboardEvent(KeyboardEvent.Special.ARROW_RIGHT));
+		    	    break;
+	case EQUALS:
+	    	    listener.onInputEvent(new KeyboardEvent('='));
+		    	    break;
+	case MINUS:
+	    	    listener.onInputEvent(new KeyboardEvent('-'));
+		    	    break;
+	case ENTER:
+	    	    listener.onInputEvent(new KeyboardEvent(KeyboardEvent.Special.ENTER));
+		    	    break;
 	default:break;
 	}
+    }
+
+    static private final class Fragment
+    {
+	final double from;
+	final double to;
+	final double size;
+
+	Fragment(double from, double to, double size)
+	{
+	    this.from = from;
+	    this.to = to;
+	    this.size = size;
+	}
+    }
+
+    Fragment calcFragment(double imageSize, double screenSize)
+    {
+	if (imageSize < screenSize)
+	    return new Fragment(0, (screenSize / 2) - (imageSize / 2), imageSize);
+	return new Fragment(0, 0, screenSize);
+    }
+
+    static double matchingScale(double imageWidth, double imageHeight, double screenWidth, double screenHeight)
+    {
+	final double horizScale = screenWidth / imageWidth;
+	final double vertScale = screenHeight / imageHeight;
+	return Math.min(horizScale, vertScale);
     }
 }
