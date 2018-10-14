@@ -52,6 +52,8 @@ final class PdfPreview implements org.luwrain.interaction.graphical.Pdf
 
     private int pageNum = 0;
     private float scale = 1;
+    private double offsetX = 0;
+    private double offsetY = 0;
 
     PdfPreview(JavaFxInteraction interaction, org.luwrain.interaction.graphical.Pdf.Listener listener, File file) throws Exception
     {
@@ -89,6 +91,8 @@ final class PdfPreview implements org.luwrain.interaction.graphical.Pdf
 
     private void drawInitial()
     {
+	this.offsetX = 0;
+	this.offsetY = 0;
 	Log.debug(LOG_COMPONENT, "canvas " + String.format("%.2f", canvas.getWidth()) + "x" + String.format("%.2f", canvas.getHeight()));
 	this.image = makeImage(pageNum, 1);
 	this.scale = (float)matchingScale(image.getWidth(), image.getHeight(), canvas.getWidth(), canvas.getHeight());
@@ -126,6 +130,53 @@ final class PdfPreview implements org.luwrain.interaction.graphical.Pdf
 	return pageNum;
     }
 
+    @Override public double getOffsetX()
+    {
+	return offsetX;
+    }
+
+        @Override public double getOffsetY()
+    {
+	return offsetY;
+    }
+
+        @Override public boolean setOffsetX(double value)
+    {
+	if (value < 0)
+	throw new IllegalArgumentException("value may not be negative");
+	if (canvas == null || image == null)
+	    return false;
+	if (image.getWidth() - value < canvas.getWidth())
+	    return false;
+			Utils.runInFxThreadSync(()->{
+				this.offsetX = value;
+				draw();
+			    });
+			    return true;
+    }
+
+            @Override public boolean setOffsetY(double value)
+    {
+	return false;
+    }
+
+
+    @Override public float getScale()
+    {
+	return scale;
+    }
+
+    @Override public void setScale(float value)
+    {
+	if (value < 0.5)
+	    throw new IllegalArgumentException("Too small scale");
+	Utils.runInFxThreadSync(()->{
+		this.scale = value;
+		this.image = makeImage(pageNum, scale);
+		draw();
+	    });
+    }
+    
     private void draw()
     {
 	InvalidThreadException.checkThread("PdfPreview.draw()");
@@ -135,8 +186,8 @@ final class PdfPreview implements org.luwrain.interaction.graphical.Pdf
 	final double imageHeight = image.getHeight();
 	final double screenWidth = canvas.getWidth();
 	final double screenHeight = canvas.getHeight();
-	final Fragment horizFrag = calcFragment(imageWidth, screenWidth);
-	final Fragment vertFrag = calcFragment(imageHeight, screenHeight);
+	final Fragment horizFrag = calcFragment(imageWidth, screenWidth, offsetX);
+	final Fragment vertFrag = calcFragment(imageHeight, screenHeight, offsetY);
 	final GraphicsContext gc = canvas.getGraphicsContext2D();
 	gc.setFill(Color.BLACK);
 	gc.fillRect(0, 0, screenWidth, screenHeight);
@@ -223,11 +274,11 @@ return image;
 	}
     }
 
-    Fragment calcFragment(double imageSize, double screenSize)
+    Fragment calcFragment(double imageSize, double screenSize, double offset)
     {
 	if (imageSize < screenSize)
 	    return new Fragment(0, (screenSize / 2) - (imageSize / 2), imageSize);
-	return new Fragment(0, 0, screenSize);
+	return new Fragment(offset, 0, Math.min(screenSize, imageSize - offset));
     }
 
     static double matchingScale(double imageWidth, double imageHeight, double screenWidth, double screenHeight)
