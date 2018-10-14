@@ -143,7 +143,7 @@ final class PdfPreview implements org.luwrain.interaction.graphical.Pdf
         @Override public boolean setOffsetX(double value)
     {
 	if (value < 0)
-	throw new IllegalArgumentException("value may not be negative");
+	    return false;
 	if (canvas == null || image == null)
 	    return false;
 	if (image.getWidth() - value < canvas.getWidth())
@@ -157,9 +157,18 @@ final class PdfPreview implements org.luwrain.interaction.graphical.Pdf
 
             @Override public boolean setOffsetY(double value)
     {
-	return false;
+		if (value < 0)
+	    return false;
+	if (canvas == null || image == null)
+	    return false;
+	if (image.getHeight() - value < canvas.getHeight())
+	    return false;
+			Utils.runInFxThreadSync(()->{
+				this.offsetY = value;
+				draw();
+			    });
+			    return true;
     }
-
 
     @Override public float getScale()
     {
