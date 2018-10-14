@@ -72,7 +72,7 @@ final class PdfPreview implements org.luwrain.interaction.graphical.Pdf
 	Utils.runInFxThreadSync(()->{
 	try {
 	    this.canvas = new ResizableCanvas();
-	    this.canvas.setOnKeyReleased((event)->onKeyReleased(event));
+	    this.canvas.setOnKeyPressed((event)->onKey(event));
 	    this.canvas.setVisible(false);
 	    interaction.registerCanvas(this.canvas);
 	    canvas.setVisible(true);
@@ -224,7 +224,7 @@ Log.debug(LOG_COMPONENT, "image " + String.format("%.2f", image.getWidth()) + "x
 return image;
     }
 
-    private void onKeyReleased(KeyEvent event)
+    private void onKey(KeyEvent event)
     {
 	NullCheck.notNull(event, "event");
 	switch(event.getCode())
