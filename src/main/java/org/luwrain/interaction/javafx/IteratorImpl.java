@@ -192,7 +192,7 @@ final class IteratorImpl implements BrowserIterator
     @Override public void setText(String text)
     {
 	NullCheck.notNull(text, "text");
-	prepare("BrowserImpl.setText()");
+	prepare("IteratorImpl.setText()");
 	if(nodeInfo.getNode() instanceof HTMLInputElement)
 	{
 	    final HTMLInputElement input = ((HTMLInputElement)nodeInfo.getNode());
@@ -227,6 +227,43 @@ final class IteratorImpl implements BrowserIterator
 	    ((HTMLTextAreaElement)nodeInfo.getNode()).setTextContent(text);
 	    return;
 	} //HTMLTextAreaElement
+    }
+
+    @Override public String getClassName()
+    {
+	prepare("IteratorImpl.getClassName()");
+	final String res = nodeInfo.getNode().getClass().getName();
+	final int dotPos = res.lastIndexOf(".");
+	if (dotPos >= 0 && dotPos + 1 < res.length())
+	    return res.substring(dotPos + 1);
+	return res;
+    }
+
+    @Override public boolean isInput()
+    {
+		prepare("IteratorImpl.isInput()");
+		return nodeInfo.getNode() instanceof HTMLInputElement;
+    }
+
+    @Override public String getInputType()
+    {
+	prepare("IteratorImpl.getInputType()");
+	if (!(nodeInfo.getNode() instanceof HTMLInputElement))
+	    return "";
+	    final HTMLInputElement input = ((HTMLInputElement)nodeInfo.getNode());
+	    final String res = input.getType();
+	    return res != null?res:"";
+    }
+
+        @Override public boolean setInputText(String text)
+    {
+	NullCheck.notNull(text, "text");
+	prepare("IteratorImpl.setInputText()");
+	if(!(nodeInfo.getNode() instanceof HTMLInputElement))
+	    return false;
+	    	    final HTMLInputElement input = ((HTMLInputElement)nodeInfo.getNode());
+    input.setValue(text);
+    return true;
     }
 
     @Override public String getLink()
