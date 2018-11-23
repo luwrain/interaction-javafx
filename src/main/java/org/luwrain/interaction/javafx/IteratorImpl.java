@@ -270,15 +270,15 @@ final class IteratorImpl implements BrowserIterator
     {
 	prepare("BrowserImpl.getLink()");
 	if(nodeInfo.getNode() instanceof HTMLAnchorElement)
-	    return getAttribute("href"); else
+	    return getAttr("href"); else
 	    if(nodeInfo.getNode() instanceof HTMLImageElement)
-		return getAttribute("src");
+		return getAttr("src");
 	return "";
     }
 
-    @Override public String getAttribute(String name)
+    @Override public String getAttr(String name)
     {
-	prepare("BrowserImpl.getAttributeProperty()");
+	prepare("IteratorImpl.getAttr()");
 	if(!nodeInfo.getNode().hasAttributes()) 
 	    return null;
 	final Node attr = nodeInfo.getNode().getAttributes().getNamedItem(name);
@@ -286,6 +286,28 @@ final class IteratorImpl implements BrowserIterator
 	    return null;
 	return attr.getNodeValue();
     }
+
+    @Override public Map<String, String> getAttrs()
+    {
+	prepare("BrowserImpl.getAttrs()");
+	if(!nodeInfo.getNode().hasAttributes()) 
+	    return new HashMap();
+	final NamedNodeMap attrs = nodeInfo.getNode().getAttributes();
+	final HashMap<String, String> res = new HashMap();
+	for(int i = 0;i < attrs.getLength();i++)
+	{
+	    final Node node = attrs.item(i);
+	    if (node == null)
+		continue;
+	    final String name = node.getNodeName();
+	    if (name == null || name.isEmpty())
+		continue;
+	    final String value = node.getNodeValue();
+	    res.put(name, value != null?value:"");
+	}
+	return res;
+    }
+
 
     @Override public String getComputedText()
     {
@@ -396,7 +418,7 @@ final class IteratorImpl implements BrowserIterator
 	return new IteratorImpl(browser, nodeInfo.getParent());
     }
 
-    @Override public String getHtmlTagName()
+    @Override public String getTagName()
     {
 	prepare("BrowserImpl.getHtmlTagName()");
 	return nodeInfo.getNode().getNodeName();
