@@ -27,20 +27,15 @@ final class NodeInfo
     static private final String LOG_COMPONENT = BrowserBase.LOG_COMPONENT;
 
     final Node node;
-    Integer parent = null;
-    Rectangle rect;
-    boolean forText;
-    int hash;
-    long hashTime=0;
+    private int parentIndex = -1;
+    private final Rectangle rect;
 
     NodeInfo(Node node,
-int x, int y, int width, int height,
-boolean forText)
+int x, int y, int width, int height)
     {
 	NullCheck.notNull(node, "node");
 	this.node = node;
-	this.forText=forText;
-	rect=new Rectangle(x,y,width,height);
+	this.rect=new Rectangle(x,y,width,height);
     }
 
     Node getNode()
@@ -50,55 +45,23 @@ boolean forText)
 
     boolean hasParent()
     {
-	return parent != null;
+	return parentIndex >= 0;
     }
 
-    Integer getParent()
+    int getParentIndex()
     {
-    	return parent;
+    	return parentIndex;
     }
 
-    void setParent(int val)
+    void setParentIndex(int value)
     {
-    	parent=val;
-    }
-
-    boolean isVisible()
-    {
-	return rect.width > 0 && rect.height > 0;
-    }
-
-    void calcHash(String text)
-    {
-	hash=text.hashCode();
-	hashTime=new java.util.Date().getTime();
-    }
-
-    String descr()
-    {
-    	String str=node.getNodeValue();
-    	if(str==null) str="null";
-	return node.getNodeName()+ "\tp:"+parent+" "+node.getClass().getSimpleName() + "\t" + str.substring(0,Math.min(160,str.length()))+"'";
-	//return node.getNodeName() + " " + node.getNodeValue();
-    }
-
-    boolean getForText()
-    {
-	return forText;
+	if (value < 0)
+	    throw new IllegalArgumentException("value (" + value + ") may not be negative");
+	parentIndex = value;
     }
 
     Rectangle getRect()
     {
 	return rect;
-    }
-
-    long getHashTime()
-    {
-	return hashTime;
-    }
-
-    int getHash()
-    {
-	return hash;
     }
 }

@@ -145,20 +145,7 @@ this.domScanRes = new DomScanResult(window);
 		    width=(int)jsLong(rect.getMember("width"));
 		    height=(int)jsLong(rect.getMember("height"));
 		}
-		boolean forText = !n.hasChildNodes();
-		// make decision about TEXT nodes by class
-		if(n instanceof HTMLAnchorElement
-		   ||n instanceof HTMLButtonElement
-		   ||n instanceof HTMLInputElement
-		   //||n.getClass() == com.sun.webkit.dom.HTMLPreElementImpl.class
-		   ||n instanceof HTMLSelectElement
-		   ||n instanceof HTMLTextAreaElement
-		   ||n instanceof HTMLSelectElement)
-		    forText = true;
-		final boolean ignore = checkNodeForIgnoreChildren(n);
-		if(ignore) 
-		    forText = false;
-		final NodeInfo info = new NodeInfo(n, x, y, width, height, forText);
+		final NodeInfo info = new NodeInfo(n, x, y, width, height);
 		domScanRes.domMap.put(n, i);
 		domScanRes.dom.add(info);
 	    }
@@ -166,7 +153,7 @@ this.domScanRes = new DomScanResult(window);
 	    {
 		final Node parent = info.getNode().getParentNode();
 		if(domScanRes.domMap.containsKey(parent))
-		    info.setParent(domScanRes.domMap.get(parent));
+		    info.setParentIndex(domScanRes.domMap.get(parent).intValue());
 	    }
 	    	    this.jsWindow = (JSObject)webEngine.executeScript("window");
 		    Log.debug(LOG_COMPONENT, "DOM rescanning completed");
@@ -229,18 +216,6 @@ this.domScanRes = new DomScanResult(window);
 	    break;
 	default:break;
 	}
-    }
-
-    private boolean checkNodeForIgnoreChildren(Node node)
-    {
-    	if(node == null) 
-	    return false;
-    	final Node parent = node.getParentNode();
-    	if(parent == null) 
-	    return false;
-    	if(parent instanceof HTMLAnchorElement)
-	    return true;
-    	return checkNodeForIgnoreChildren(parent);
     }
 
 	static public long jsLong(Object o)

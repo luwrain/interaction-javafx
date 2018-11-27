@@ -73,18 +73,6 @@ final class IteratorImpl implements BrowserIterator
 	return new IteratorImpl(browser, pos);
     }
 
-    @Override public boolean isVisible()
-    {
-	prepare("BrowserImpl.isVisible()");
-	return nodeInfo.isVisible();
-    }
-
-    @Override public boolean forTEXT()
-    {
-	prepare("BrowserImpl.forTEXT()");
-	return nodeInfo.getForText();
-    }
-
     @Override public String getText()
     {
 	prepare("BrowserImpl.getText()");
@@ -232,11 +220,19 @@ final class IteratorImpl implements BrowserIterator
     @Override public String getClassName()
     {
 	prepare("IteratorImpl.getClassName()");
-	final String res = nodeInfo.getNode().getClass().getName();
-	final int dotPos = res.lastIndexOf(".");
-	if (dotPos >= 0 && dotPos + 1 < res.length())
-	    return res.substring(dotPos + 1);
-	return res;
+	String className = nodeInfo.getNode().getClass().getName();
+	final int dotPos = className.lastIndexOf(".");
+	if (dotPos >= 0 && dotPos + 1 < className.length())
+	    className = className.substring(dotPos + 1);
+	if (className == null)
+	    className = "";
+	if (className.toLowerCase().startsWith("html"))
+	    className = className.substring(4);
+	if (className.toLowerCase().endsWith("impl"))
+	    className = className.substring(0, className.length() - 4);
+	if (className.toLowerCase().endsWith("element"))
+	    className = className.substring(0, className.length() - 7);
+	return className;
     }
 
     @Override public boolean isInput()
@@ -415,13 +411,14 @@ final class IteratorImpl implements BrowserIterator
 	prepare("BrowserImpl.getParent()");
 	if(!nodeInfo.hasParent())
 	    return null;
-	return new IteratorImpl(browser, nodeInfo.getParent());
+	return new IteratorImpl(browser, nodeInfo.getParentIndex());
     }
 
     @Override public String getTagName()
     {
-	prepare("BrowserImpl.getHtmlTagName()");
-	return nodeInfo.getNode().getNodeName();
+	prepare("IteratorImpl.getTagName()");
+final String res = nodeInfo.getNode().getNodeName();
+return res != null?res:"";
     }
 
     @Override public Browser getBrowser()
