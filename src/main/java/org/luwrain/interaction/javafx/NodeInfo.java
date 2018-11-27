@@ -24,14 +24,12 @@ import org.luwrain.core.*;
 
 final class NodeInfo
 {
-    static private final String LOG_COMPONENT = BrowserBase.LOG_COMPONENT;
-
-    final Node node;
+    private final Node node;
     private int parentIndex = -1;
     private final Rectangle rect;
 
     NodeInfo(Node node,
-int x, int y, int width, int height)
+	     int x, int y, int width, int height)
     {
 	NullCheck.notNull(node, "node");
 	this.node = node;

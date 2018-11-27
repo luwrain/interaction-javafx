@@ -17,12 +17,12 @@
 
 package org.luwrain.interaction.javafx;
 
-public class OnScreenLine
+final class OnScreenLine
 {
-    public int pos1 = 0;
-    public int pos2 = 0;
+    final int pos1;
+    final int pos2;
 
-    public OnScreenLine(int pos1, int pos2)
+    OnScreenLine(int pos1, int pos2)
     {
 	this.pos1 = pos1;
 	this.pos2 = pos2;

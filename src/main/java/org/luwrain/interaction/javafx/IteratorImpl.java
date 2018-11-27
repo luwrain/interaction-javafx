@@ -36,7 +36,7 @@ final class IteratorImpl implements BrowserIterator
     private int pos;
 
     //Set by prepare() function
-    private DomScanResult scanRes = null;
+    private BrowserImpl.DomScanResult scanRes = null;
     private List<NodeInfo> dom = null;
     private NodeInfo nodeInfo = null;
 
@@ -75,7 +75,7 @@ final class IteratorImpl implements BrowserIterator
 
     @Override public String getText()
     {
-	prepare("BrowserImpl.getText()");
+	prepare("IteratorImpl.getText()");
     	if(nodeInfo.getNode() instanceof Text)
 	{
 	    final String text = nodeInfo.getNode().getNodeValue().trim();
@@ -99,8 +99,7 @@ final class IteratorImpl implements BrowserIterator
 	    // TODO: make multiselect support
 	    return text != null?text:"";
 	}
-	final String text = getComputedText();
-	return text != null?text:"";
+	return "";
     }
 
     @Override public String getAltText()
@@ -307,7 +306,7 @@ final class IteratorImpl implements BrowserIterator
 
     @Override public String getComputedText()
     {
-	prepare("BrowserImpl.getComputedText()");
+	prepare("IteratorImpl.getComputedText()");
 	if(!scanRes.domMap.containsKey(nodeInfo.getNode())) 
 	    return "";
 	try{

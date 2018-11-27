@@ -36,7 +36,20 @@ import org.luwrain.browser.BrowserEvents;
 
 abstract class BrowserBase
 {
-    static final String LOG_COMPONENT = "browser";
+    static final String LOG_COMPONENT = "web";
+
+    static final class DomScanResult
+    {
+	final DOMWindowImpl window;
+	final List<NodeInfo> dom = new Vector();
+	final Map<Node, Integer> domMap = new HashMap();
+
+	DomScanResult(DOMWindowImpl window)
+	{
+	    NullCheck.notNull(window, "window");
+	    this.window = window;
+	}
+    }
 
     protected final String injectedScript;
     protected WebView webView = null;
