@@ -116,8 +116,7 @@ Object executeScript(String script)
 	    final JSObject window = (JSObject)webEngine.executeScript("window");
 	    window.setMember("console",new MyConsole());
 	    this.injectionRes = (JSObject)webEngine.executeScript(injectedScript);
-	    if (injectionRes != null)
-		Log.debug(LOG_COMPONENT, "injection executed successfully"); else
+	    if (injectionRes == null)
 		Log.warning(LOG_COMPONENT, "the injection result is null after running the injection script");
 	}
 	catch(Throwable e)
@@ -133,7 +132,7 @@ protected void rescanDom()
 	try {
 	    if(injectionRes == null || injectionRes.getMember("name").equals("_luwrain_"))
 		return;
-final HTMLDocument webDoc = (HTMLDocument)webEngine.getDocument();
+	    final HTMLDocument webDoc = (HTMLDocument)webEngine.getDocument();
 	    if(webDoc == null)
 	    {
 		Log.warning(LOG_COMPONENT, "no web document");
@@ -186,7 +185,6 @@ this.domScanRes = new DomScanResult(window);
 	    Log.warning(LOG_COMPONENT, "oldState or newState is null in BrowserBase.onStateChanged()");
 	    return;
 	}
-	Log.debug(LOG_COMPONENT, "New state: " + newState.toString() + ", previous was " + oldState.toString());
 	final BrowserEvents.State state;
 	switch(newState)
 	{
@@ -200,9 +198,8 @@ this.domScanRes = new DomScanResult(window);
 	    state = BrowserEvents.State.FAILED;
 	    resetInjectionRes();
 	    break;
-	case READY:		
-	    state = BrowserEvents.State.READY;
-	    break;
+	case READY:
+	    return;
 	case RUNNING:	
 	    state = BrowserEvents.State.RUNNING;
 	    break;

@@ -67,40 +67,11 @@ final class BrowserImpl extends BrowserBase implements Browser
 	return webEngine != null && webView != null;
     }
 
-    @Override public void doFastUpdate()
-    {
-    	Platform.runLater(()->
-			  {
-			      // check if injected object success
-			      if(injectionRes == null || "_luwrain_".equals(injectionRes.getMember("name")))
-				  return;
-			      this.jsWindow.setMember(LUWRAIN_NODE_TEXT, injectionRes);
-			      webEngine.executeScript(LUWRAIN_NODE_TEXT+".doUpdate();");
-			  });
-    }
-
     @Override public void rescanDom()
     {
 	if (!initialized())
 	    return;
 	Utils.runInFxThreadSync(()->super.rescanDom());
-    }
-
-    @Override public void setWatchNodes(Iterable<Integer> indexes)
-    {
-	Platform.runLater(()->{
-		// check if injected object success
-		if(injectionRes == null || "_luwrain_".equals(injectionRes.getMember("name")))
-		    return;
-		// fill javascript array
-		final JSObject js = (JSObject)injectionRes.getMember("dom");
-		JSObject watchArray=(JSObject)webEngine.executeScript("[]"); // FIXME: found correct method to create js array
-		int j=0;
-		for(int i:indexes)
-		    watchArray.setSlot(j++,i);
-		// set watch member
-		injectionRes.setMember("watch",watchArray);
-	    });
     }
 
     @Override public void close()
@@ -144,6 +115,21 @@ final class BrowserImpl extends BrowserBase implements Browser
 	NullCheck.notNull(text, "text");
 	if (initialized())
 	    Utils.runInFxThreadSync(()->webEngine.loadContent(text));
+    }
+
+    @Override public boolean goHistoryPrev()
+    {
+	if (!initialized())
+	    return false;
+	final Object res = Utils.callInFxThreadSync(()->{
+		if (webEngine.getHistory().getCurrentIndex() <= 0)
+		    return new Boolean(false);
+		webEngine.getHistory().go(-1);
+		return new Boolean(true);
+	    });
+	    if (res == null || !(res instanceof Boolean))
+		return false;
+	    return ((Boolean)res).booleanValue();
     }
 
     @Override public void stop()
@@ -190,11 +176,6 @@ final class BrowserImpl extends BrowserBase implements Browser
 	if (domScanRes == null)
 	    return 0;
 	return domScanRes.dom.size();
-    }
-
-    @Override public long getLastTimeChanged()
-    {
-	return 0;
     }
 
     static String readTextResource(String path)
