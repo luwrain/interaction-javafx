@@ -78,7 +78,7 @@ final class IteratorImpl implements BrowserIterator
 	prepare("IteratorImpl.getText()");
     	if(nodeInfo.getNode() instanceof Text)
 	{
-	    final String text = nodeInfo.getNode().getNodeValue().trim();
+	    final String text = nodeInfo.getNode().getNodeValue();
 	    return text != null?text:"";
 	}
 	if(nodeInfo.getNode() instanceof HTMLInputElement)
