@@ -127,6 +127,7 @@ final class IteratorImpl implements BrowserIterator
 	return text;
     }
 
+    /*
     @Override public String[] getMultipleText()
     {
 	prepare("BrowserImpl.getMultipleText()");
@@ -145,6 +146,7 @@ final class IteratorImpl implements BrowserIterator
     	}
 	return new String[]{getText()};
     }
+    */
 
     @Override public Rectangle getRect()
     {
@@ -152,6 +154,7 @@ final class IteratorImpl implements BrowserIterator
 	return nodeInfo.getRect();
     }
 
+    /*
     @Override public boolean isEditable()
     {
 	prepare("BrowserImpl.isEditable()");
@@ -175,6 +178,7 @@ final class IteratorImpl implements BrowserIterator
 	    return true; 
 	return false;
     }
+    */
 
     @Override public void setText(String text)
     {
@@ -261,6 +265,7 @@ final class IteratorImpl implements BrowserIterator
     return true;
     }
 
+    /*
     @Override public String getLink()
     {
 	prepare("BrowserImpl.getLink()");
@@ -270,6 +275,7 @@ final class IteratorImpl implements BrowserIterator
 		return getAttr("src");
 	return "";
     }
+    */
 
     @Override public String getAttr(String name)
     {
@@ -304,6 +310,7 @@ final class IteratorImpl implements BrowserIterator
     }
 
 
+    /*
     @Override public String getComputedText()
     {
 	prepare("IteratorImpl.getComputedText()");
@@ -319,28 +326,31 @@ final class IteratorImpl implements BrowserIterator
 	    return "";
 	}
     }
+    */
 
-    @Override public String getComputedStyleProperty(String name)
+    @Override public String getComputedStyle(String name)
     {
 	NullCheck.notEmpty(name, "name");
-	prepare("BrowserImpl.getComputedStyleProperty()");
+	prepare("IteratorImpl.getComputedStyleProperty()");
 	if(nodeInfo.getNode() instanceof com.sun.webkit.dom.HTMLDocumentImpl)
 	    return "";
 	final Node node = findNonTextNode(nodeInfo);
 	final CSSStyleDeclaration style = scanRes.window.getComputedStyle((HTMLElement)node, "");
-	return style.getPropertyValue(name);
+final String res = style.getPropertyValue(name);
+return res != null?res:"";
     }
 
-    @Override public String getComputedStyleAll()
+    @Override public String getAllComputedStyles()
     {
-	prepare("BrowserImpl.getComputedStyleAll()");
+	prepare("IteratorImpl.getComputedStyleAll()");
 	if(nodeInfo.getNode() instanceof com.sun.webkit.dom.HTMLDocumentImpl)
 	    return "";
 	final Node node = findNonTextNode(nodeInfo);
 	if (node == null)
 	    return "";
 	final CSSStyleDeclaration style = scanRes.window.getComputedStyle((HTMLElement)node, "");
-	return style.getCssText();
+final String res = style.getCssText();
+return res != null?res:"";
     }
 
     @Override public void emulateSubmit()
@@ -389,6 +399,7 @@ final class IteratorImpl implements BrowserIterator
 	} 
     }
 
+    /*
     @Override public boolean isParent(BrowserIterator it)
     {
 	NullCheck.notNull(it, "it");
@@ -398,6 +409,7 @@ final class IteratorImpl implements BrowserIterator
 	    return false;
 	return it.getPos() == parent.getPos();
     }
+    */
 
     @Override public boolean hasParent()
     {
