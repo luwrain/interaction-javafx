@@ -25,28 +25,24 @@ new function ()
 	 * @param node target node */
 	this.nodewalk = function(node, lvl)
 	{
-		var res=[];
+		var res = [];
 		if(node)
 		{
 			node=node.firstChild;
 			while(node!= null)
 			{
-				//if(node.nodeType!=3 || node.nodeValue.trim()!=='')
-				{
-					res[res.length]=node;
-				}
-				res=res.concat(this.nodewalk(node,lvl+1));
-				node=node.nextSibling;
+			    res.push(node);
+				res = res.concat(this.nodewalk(node, lvl + 1));
+				node = node.nextSibling;
 			}
 		}
-		//alert('nodewalk:'+node+" - "+res.length);
 		return res;
 	};
 	/** scan full document structure and return planar array of node info as object:{n:node,r:rectangle or null,h:content_hash or null} */
-	this.scanDOM=function()
+	this.scanDOM = function()
 	{
-		this.countVisibleLast=0;
-		var lst=this.nodewalk(document,0);
+		this.countVisibleLast = 0;
+		var lst = this.nodewalk(document,0);
 		var res=[];
 		for(var i=0;i<lst.length;i++)
 		{
@@ -74,7 +70,6 @@ new function ()
 				this.countVisibleLast++;
 			res.push(n);
 		};
-		//console.log('this.countVisibleLast='+this.countVisibleLast);
 		return res;
 	};
 	/** set nodes indexes list to observe modification text or position 
