@@ -1,4 +1,4 @@
-/* $LUWRAIN object with helper's methods and variables */
+
 new function ()
 {
 	this.name='$LUWRAIN';
@@ -23,17 +23,15 @@ new function ()
 	
 	/** recursive method to return nodes' array about children of specified node
 	 * @param node target node */
-	this.nodewalk=function(node,lvl)
+	this.nodewalk = function(node, lvl)
 	{
-		//var str=node.nodeValue;if(str==null||str===undefined) str='';str=''+str;
-		//console.log(Array(lvl).join('.')+' '+node+' "'+str.replace(/\s+/g,' ')+'"');
 		var res=[];
 		if(node)
 		{
 			node=node.firstChild;
 			while(node!= null)
 			{
-				if(node.nodeType!=3||node.nodeValue.trim()!=='')
+				//if(node.nodeType!=3 || node.nodeValue.trim()!=='')
 				{
 					res[res.length]=node;
 				}
@@ -191,5 +189,3 @@ new function ()
 	this.onTimeout();
 	//setTimeout(function(that){that.onTimeout();},1000,this);
 };
-// make luwrain helper object
-//new ClassLuwrain();
