@@ -331,10 +331,12 @@ final class IteratorImpl implements BrowserIterator
     @Override public String getComputedStyle(String name)
     {
 	NullCheck.notEmpty(name, "name");
-	prepare("IteratorImpl.getComputedStyleProperty()");
+	prepare("IteratorImpl.getComputedStyle()");
 	if(nodeInfo.getNode() instanceof com.sun.webkit.dom.HTMLDocumentImpl)
 	    return "";
 	final Node node = findNonTextNode(nodeInfo);
+	if (node == null || !(node instanceof HTMLElement))
+	    return "";
 	final CSSStyleDeclaration style = scanRes.window.getComputedStyle((HTMLElement)node, "");
 final String res = style.getPropertyValue(name);
 return res != null?res:"";
@@ -342,11 +344,11 @@ return res != null?res:"";
 
     @Override public String getAllComputedStyles()
     {
-	prepare("IteratorImpl.getComputedStyleAll()");
+	prepare("IteratorImpl.getAllComputedStyles()");
 	if(nodeInfo.getNode() instanceof com.sun.webkit.dom.HTMLDocumentImpl)
 	    return "";
 	final Node node = findNonTextNode(nodeInfo);
-	if (node == null)
+	if (node == null || !(node instanceof HTMLElement))
 	    return "";
 	final CSSStyleDeclaration style = scanRes.window.getComputedStyle((HTMLElement)node, "");
 final String res = style.getCssText();
@@ -398,18 +400,6 @@ return res != null?res:"";
 	    Log.debug(LOG_COMPONENT, "unable to emulate click:" + e.getClass().getName() + ":" + e.getMessage());
 	} 
     }
-
-    /*
-    @Override public boolean isParent(BrowserIterator it)
-    {
-	NullCheck.notNull(it, "it");
-	prepare("BrowserImpl.isParent()");
-	final BrowserIterator parent = getParent();
-	if (parent == null)
-	    return false;
-	return it.getPos() == parent.getPos();
-    }
-    */
 
     @Override public boolean hasParent()
     {

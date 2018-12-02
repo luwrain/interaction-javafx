@@ -11,7 +11,7 @@
   </target>
   <target name="compile" depends="clean">
     <mkdir dir="build"/>
-    <javac srcdir="src/main/java" destdir="build" source="1.8" target="1.8">
+    <javac srcdir="src/main/java" destdir="build" source="1.8" target="1.8" debug="true" debuglevel="lines,vars,source">
       <classpath refid="classpath"/>
     </javac>
   </target>
