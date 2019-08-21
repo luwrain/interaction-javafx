@@ -34,6 +34,7 @@ import javafx.scene.web.WebView;
 import org.luwrain.core.*;
 import org.luwrain.base.*;
 import org.luwrain.browser.*;
+import org.luwrain.util.*;
 
 public final class JavaFxInteraction implements Interaction
 {
