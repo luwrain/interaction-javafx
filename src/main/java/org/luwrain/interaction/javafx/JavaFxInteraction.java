@@ -39,9 +39,7 @@ import org.luwrain.util.*;
 public final class JavaFxInteraction implements Interaction
 {
     static final String LOG_COMPONENT = "javafx";
-
     static private final int MIN_FONT_SIZE = 4;
-    static private final String FRAME_TITLE = "LUWRAIN";
 
     private org.luwrain.interaction.KeyboardHandler keyboard;
     private boolean drawingInProgress = false;

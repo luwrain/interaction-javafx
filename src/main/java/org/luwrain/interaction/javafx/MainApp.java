@@ -17,8 +17,7 @@
 
 package org.luwrain.interaction.javafx;
 
-import org.luwrain.core.Log;
-import org.luwrain.core.NullCheck;
+import java.io.*;
 
 import javafx.application.Application;
 import javafx.geometry.*;
@@ -28,6 +27,8 @@ import javafx.scene.canvas.*;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.text.*;
+
+import org.luwrain.core.*;
 
 public final class MainApp extends Application
 {
@@ -65,11 +66,12 @@ public final class MainApp extends Application
     private OnScreenLineTracker[] vertLines;
     private OnScreenLineTracker[] horizLines;
 
-    @Override public void start(final Stage stage) throws Exception
+    @Override public void start(Stage stage) throws Exception
     {
 	NullCheck.notNull(stage, "stage");
 	this.stage = stage;
 	stage.setResizable(true);
+	stage.setTitle("LUWRAIN");
 	this.root=new StackPane();
 	this.root.resize(1024, 768);
         this.canvas = new ResizableCanvas();
@@ -88,7 +90,9 @@ public final class MainApp extends Application
 	NullCheck.notNull(font2, "font2");
     	this.font=font;
     	this.font2=font2;
-        bounds = TextBuilder.create().text("A").font(font).build().getLayoutBounds();
+	final Text text = new Text("A");
+	text.setFont(font);
+        bounds = text.getLayoutBounds();
     }
 
     Font getInteractionFont()
