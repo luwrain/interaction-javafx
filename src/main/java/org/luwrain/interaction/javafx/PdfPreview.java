@@ -230,40 +230,40 @@ return image;
 	switch(event.getCode())
 	{
 	case ESCAPE:
-	    listener.onInputEvent(new KeyboardEvent(KeyboardEvent.Special.ESCAPE));
+	    listener.onInputEvent(new InputEvent(InputEvent.Special.ESCAPE));
 	    break;
 	case PAGE_DOWN:
-	    listener.onInputEvent(new KeyboardEvent(KeyboardEvent.Special.PAGE_DOWN));
+	    listener.onInputEvent(new InputEvent(InputEvent.Special.PAGE_DOWN));
 	    	    break;
 	case PAGE_UP:
-	    	    listener.onInputEvent(new KeyboardEvent(KeyboardEvent.Special.PAGE_UP));
+	    	    listener.onInputEvent(new InputEvent(InputEvent.Special.PAGE_UP));
 		    	    break;
 	case HOME:
-	    	    listener.onInputEvent(new KeyboardEvent(KeyboardEvent.Special.HOME));
+	    	    listener.onInputEvent(new InputEvent(InputEvent.Special.HOME));
 		    	    break;
 	case END:
-	    	    listener.onInputEvent(new KeyboardEvent(KeyboardEvent.Special.END));
+	    	    listener.onInputEvent(new InputEvent(InputEvent.Special.END));
 		    	    break;
 	case DOWN:
-	    	    listener.onInputEvent(new KeyboardEvent(KeyboardEvent.Special.ARROW_DOWN));
+	    	    listener.onInputEvent(new InputEvent(InputEvent.Special.ARROW_DOWN));
 		    	    break;
 	case UP:
-	    	    listener.onInputEvent(new KeyboardEvent(KeyboardEvent.Special.ARROW_UP));
+	    	    listener.onInputEvent(new InputEvent(InputEvent.Special.ARROW_UP));
 		    	    break;
 	case LEFT:
-	    	    listener.onInputEvent(new KeyboardEvent(KeyboardEvent.Special.ARROW_LEFT));
+	    	    listener.onInputEvent(new InputEvent(InputEvent.Special.ARROW_LEFT));
 		    	    break;
 	case RIGHT:
-	    	    listener.onInputEvent(new KeyboardEvent(KeyboardEvent.Special.ARROW_RIGHT));
+	    	    listener.onInputEvent(new InputEvent(InputEvent.Special.ARROW_RIGHT));
 		    	    break;
 	case EQUALS:
-	    	    listener.onInputEvent(new KeyboardEvent('='));
+	    	    listener.onInputEvent(new InputEvent('='));
 		    	    break;
 	case MINUS:
-	    	    listener.onInputEvent(new KeyboardEvent('-'));
+	    	    listener.onInputEvent(new InputEvent('-'));
 		    	    break;
 	case ENTER:
-	    	    listener.onInputEvent(new KeyboardEvent(KeyboardEvent.Special.ENTER));
+	    	    listener.onInputEvent(new InputEvent(InputEvent.Special.ENTER));
 		    	    break;
 	default:break;
 	}
