@@ -32,20 +32,22 @@ public final class Browser extends Base implements org.luwrain.browser.Browser
 
     private final JavaFxInteraction interaction;
 
-    public Browser(JavaFxInteraction interaction)
+    public Browser(JavaFxInteraction interaction, BrowserEvents events)
     {
-	super(readTextResource(RESCAN_RESOURCE_PATH));
+	super(events, readTextResource(RESCAN_RESOURCE_PATH));
 	NullCheck.notNull(interaction, "interaction");
 	this.interaction = interaction;
     }
 
     @Override public void init(BrowserEvents events)
     {
+	/*
 	NullCheck.notNull(events, "events");
 	Utils.runInFxThreadSync(()->{
 		super.init(events);
 		interaction.registerBrowser(this, webView);
 	    });
+	*/
     }
 
     private boolean initialized()

@@ -19,6 +19,8 @@ package org.luwrain.interaction.javafx;
 
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.*;
+
 import java.io.*;
 
 import javafx.stage.Screen;
@@ -248,12 +250,35 @@ int y)
 	NullCheck.notNull(params, "params");
 	switch(modeName.toUpperCase())
 	{
-	case "BROWSER":
-	return new Browser(this);
+	case "BROWSER": {
+	    final AtomicReference res = new AtomicReference();
+	    Utils.runInFxThreadSync(()->{
+		    try {
+			final Browser browser = new Browser(this, null);
+			final boolean wasEmpty = browsers.isEmpty();
+			this.browsers.add(browser);
+			app.putNew(browser.webView);
+			if(wasEmpty) 
+			    setCurrentBrowser(browser, false);
+			res.set(browser);
+		    }
+		    catch(Throwable e)
+		    {
+			res.set(e);
+		    }
+		});
+	    if (res.get() == null)
+		return null;
+	    if (res.get() instanceof Browser)
+		return (Browser)res.get();
+	    if (res.get() instanceof Throwable)
+		throw new RuntimeException((Throwable)res.get());
+	    return null;
+	}
 	case "PDF": {
-	final PdfPreview preview = new PdfPreview(this, params);
-preview.init();
-return preview;
+	    final PdfPreview preview = new PdfPreview(this, params);
+	    preview.init();
+	    return preview;
 	}
 	default:
 	    Log.error(LOG_COMPONENT, "unknown graphical mode name: " + modeName);
@@ -271,18 +296,6 @@ return preview;
 	    currentBrowser.setVisibility(visibility);
     }
 
-    public void registerBrowser(Browser browser, WebView webView)
-    {
-	NullCheck.notNull(browser, "browser");
-	NullCheck.notNull(webView, "webView");
-	InvalidThreadException.checkThread("JavaFxInteraction.registerBrowser()");
-	final boolean wasEmpty = browsers.isEmpty();
-	browsers.add(browser);
-	app.root.getChildren().add(webView);
-	if(wasEmpty) 
-	    setCurrentBrowser(browser, false);
-    }
-
 public boolean closeBrowser(Browser browser)
     {
 	NullCheck.notNull(browser, "browser");
@@ -298,14 +311,13 @@ return true;
     {
 	NullCheck.notNull(canvas, "canvas");
 	InvalidThreadException.checkThread("JavaFxInteraction.registerBrowser()");
-	app.root.getChildren().add(canvas);
-	canvas.bindWidthAndHeight(app.root);
+	app.putNew(canvas);
     }
 
 void closeCanvas(ResizableCanvas canvas)
     {
 	NullCheck.notNull(canvas, "canvas");
-		app.root.getChildren().remove(canvas);
+		app.remove(canvas);
     }
 
     public void  enableGraphicalMode()

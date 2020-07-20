@@ -53,43 +53,35 @@ abstract class Base
     }
 
     protected final String injectedScript;
-    protected WebView webView = null;
-    protected WebEngine webEngine = null;
+    public final WebView webView;
+    protected final WebEngine webEngine;
     protected DomScanResult domScanRes = null;
 
     protected JSObject injectionRes = null;
     protected JSObject jsWindow = null;
 
-    protected Base(String injectedScript)
+    protected Base(BrowserEvents events, String injectedScript)
     {
 	NullCheck.notNull(injectedScript, "injectedScript");
+	NullCheck.notNull(events, "events");
+	Utils.ensureFxThread();
 	this.injectedScript = injectedScript;
+	this.webView = new WebView();
+	this.webEngine = webView.getEngine();
+	this.webView.setOnKeyReleased((event)->onKeyReleased(event));
+	this.webEngine.getLoadWorker().stateProperty().addListener((ov,oldState,newState)->onStateChanged(events, ov, oldState, newState));
+	this.webEngine.getLoadWorker().progressProperty().addListener((ov,o,n)->events.onProgress(n));
+	this.webEngine.setOnAlert((event)->events.onAlert(event.getData()));
+	this.webEngine.setPromptHandler((event)->events.onPrompt(event.getMessage(),event.getDefaultValue()));
+	this.webEngine.setConfirmHandler((param)->events.onConfirm(param));
+	this.webEngine.setOnError((event)->events.onError(event.getMessage()));
+	this.webView.setVisible(false);
     }
 
     abstract void setVisibility(boolean enabled);
 
     protected void init(BrowserEvents events)
     {
-	NullCheck.notNull(events, "events");
-	Utils.ensureFxThread();
-	try {
-	    this.webView = new WebView();
-	    this.webEngine = webView.getEngine();
-	    webView.setOnKeyReleased((event)->onKeyReleased(event));
-	    webEngine.getLoadWorker().stateProperty().addListener((ov,oldState,newState)->onStateChanged(events, ov, oldState, newState));
-	    webEngine.getLoadWorker().progressProperty().addListener((ov,o,n)->events.onProgress(n));
-	    webEngine.setOnAlert((event)->events.onAlert(event.getData()));
-	    webEngine.setPromptHandler((event)->events.onPrompt(event.getMessage(),event.getDefaultValue()));
-	    webEngine.setConfirmHandler((param)->events.onConfirm(param));
-	    webEngine.setOnError((event)->events.onError(event.getMessage()));
-	    webView.setVisible(false);
-	}
-	catch(Throwable e)
-	{
-	    Log.error(LOG_COMPONENT, "unable to initialize WebEngine and WebView:" + e.getClass().getName() + ":" + e.getMessage());
-	    this.webView = null;
-	    this.webEngine = null;
-	}
     }
 
     DomScanResult getDomScanResult()

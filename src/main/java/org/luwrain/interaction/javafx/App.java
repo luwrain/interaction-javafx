@@ -37,7 +37,7 @@ public final class App extends Application
     static private final int MIN_TABLE_WIDTH = 16;
     static private final int MIN_TABLE_HEIGHT = 8;
 
-    StackPane root = null;
+    private StackPane rootPane = null;
     Stage stage = null;
 
     private ResizableCanvas canvas = null;
@@ -72,14 +72,14 @@ public final class App extends Application
 	this.stage = stage;
 	stage.setResizable(true);
 	stage.setTitle("LUWRAIN");
-	this.root=new StackPane();
-	this.root.resize(1024, 768);
+	this.rootPane = new StackPane();
+	this.rootPane.resize(1024, 768);
         this.canvas = new ResizableCanvas();
-        this.root.getChildren().add(canvas);
-        stage.setScene(new Scene(root));
-	this.canvas.bindWidthAndHeight(root);
+        this.rootPane.getChildren().add(canvas);
+        stage.setScene(new Scene(rootPane));
+	this.canvas.bindWidthAndHeight(rootPane);
         this.gc = canvas.getGraphicsContext2D();
-        this.root.setBackground(new Background(new BackgroundFill(Color.BLACK, CornerRadii.EMPTY, Insets.EMPTY)));
+        this.rootPane.setBackground(new Background(new BackgroundFill(Color.BLACK, CornerRadii.EMPTY, Insets.EMPTY)));
 	ThreadControl.appStarted(this);
     }
 
@@ -88,22 +88,13 @@ public final class App extends Application
     {
 	NullCheck.notNull(font, "font");
 	NullCheck.notNull(font2, "font2");
-    	this.font=font;
-    	this.font2=font2;
+    	this.font = font;
+    	this.font2 = font2;
 	final Text text = new Text("A");
 	text.setFont(font);
         bounds = text.getLayoutBounds();
     }
 
-    Font getInteractionFont()
-    {
-	return 	font;
-    }
-
-    Font getInteractionFont2()
-    {
-	return 	font;
-    }
 
     synchronized boolean initTable()
     {
@@ -185,11 +176,11 @@ public final class App extends Application
 	this.marginBottom = marginBottom;
     }
 
-    void setSizeAndShow(int width,int height)
+    void setSizeAndShow(int width, int height)
     {
-    	this.canvasWidth=width;
-    	this.canvasHeight=height;
-    	this.root.resize(width,height);
+    	this.canvasWidth = width;
+    	this.canvasHeight = height;
+    	this.rootPane.resize(width,height);
     	this.stage.sizeToScene();
     	this.stage.show();
     }
@@ -198,7 +189,7 @@ public final class App extends Application
     {
     	this.canvasWidth=width;
     	this.canvasHeight=height;
-    	this.root.resize(width,height);
+    	this.rootPane.resize(width, height);
     	//canvas.resize(width, height);
     	this.stage.initStyle(StageStyle.UNDECORATED); // WARN: can't change style after first window show
     	this.stage.setWidth(width);
@@ -350,4 +341,29 @@ public final class App extends Application
 	if (horizLines[y] != null)
 	    horizLines[y].cover(left, right);
     }
+
+    void putNew(Node node)
+    {
+	NullCheck.notNull(node, "node");
+	rootPane.getChildren().add(node);
+	if (node instanceof ResizableCanvas)
+	    ((ResizableCanvas)node).bindWidthAndHeight(rootPane);
+    }
+
+    void remove(Node node)
+    {
+	NullCheck.notNull(node, "node");
+	rootPane.getChildren().remove(node);
+    }
+
+        Font getInteractionFont()
+    {
+	return 	font;
+    }
+
+    Font getInteractionFont2()
+    {
+	return 	font;
+    }
+
 }
