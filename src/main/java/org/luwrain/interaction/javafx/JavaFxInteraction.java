@@ -1,5 +1,5 @@
 /*
-   Copyright 2012-2018 Michael Pozhidaev <michael.pozhidaev@gmail.com>
+   Copyright 2012-2020 Michael Pozhidaev <msp@luwrain.org>
    Copyright 2015-2016 Roman Volovodov <gr.rPman@gmail.com>
 
    This file is part of LUWRAIN.
@@ -81,15 +81,15 @@ public final class JavaFxInteraction implements Interaction
 			      Utils.InteractionParamColorToFx(params.splitterColor));
 		app.setMargin(params.marginLeft,params.marginTop,params.marginRight,params.marginBottom);
 		this.keyboard = os.getCustomKeyboardHandler("javafx");
-		app.stage.addEventHandler(KeyEvent.KEY_PRESSED, (event)->{
+		app.getStage().addEventHandler(KeyEvent.KEY_PRESSED, (event)->{
 			if (!graphicalMode)
 			    keyboard.onKeyPressed(event);
 		    });
-		app.stage.addEventHandler(KeyEvent.KEY_RELEASED, (event)->{
+		app.getStage().addEventHandler(KeyEvent.KEY_RELEASED, (event)->{
 			if (!graphicalMode)
 			    keyboard.onKeyReleased(event);
 		    });
-		app.stage.addEventHandler(KeyEvent.KEY_TYPED, (event)->{
+		app.getStage().addEventHandler(KeyEvent.KEY_TYPED, (event)->{
 			if (!graphicalMode)
 			    keyboard.onKeyTyped(event);
 		    });
@@ -328,6 +328,6 @@ void closeCanvas(ResizableCanvas canvas)
     public void disableGraphicalMode()
     {
 	this.graphicalMode = false;
-	app.stage.requestFocus();
+	app.getStage().requestFocus();
     }
 }

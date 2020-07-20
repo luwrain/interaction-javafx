@@ -34,11 +34,12 @@ public final class App extends Application
 {
     static private final String LOG_COMPONENT = JavaFxInteraction.LOG_COMPONENT;
 
-    static private final int MIN_TABLE_WIDTH = 16;
-    static private final int MIN_TABLE_HEIGHT = 8;
+    static private final int
+	MIN_TABLE_WIDTH = 16,
+	MIN_TABLE_HEIGHT = 8;
 
     private StackPane rootPane = null;
-    Stage stage = null;
+    private Stage stage = null;
     private ResizableCanvas textCanvas = null;
     private GraphicsContext gc = null;
     private Bounds charBounds = null;
@@ -142,8 +143,6 @@ public final class App extends Application
 	return true;
     }
 
-
-
     void setColors(Color fontColor, Color font2color,
 		   Color bkgColor, Color splitterColor)
     {
@@ -168,17 +167,19 @@ public final class App extends Application
 
     void setSizeAndShow(int width, int height)
     {
+	InvalidThreadException.checkThread("App.setSizeAndShow()");
     	this.canvasWidth = width;
     	this.canvasHeight = height;
-    	this.rootPane.resize(width,height);
+    	this.rootPane.resize(width, height);
     	this.stage.sizeToScene();
     	this.stage.show();
     }
 
-    void setUndecoratedSizeAndShow(double width,double height)
+    void setUndecoratedSizeAndShow(double width, double height)
     {
-    	this.canvasWidth=width;
-    	this.canvasHeight=height;
+	InvalidThreadException.checkThread("App.setUndecoratedSizeAndShow()");
+    	this.canvasWidth = width;
+    	this.canvasHeight = height;
     	this.rootPane.resize(width, height);
     	//canvas.resize(width, height);
     	this.stage.initStyle(StageStyle.UNDECORATED); // WARN: can't change style after first window show
@@ -346,7 +347,7 @@ public final class App extends Application
 	rootPane.getChildren().remove(node);
     }
 
-        Font getInteractionFont()
+    Font getInteractionFont()
     {
 	return 	font;
     }
@@ -356,8 +357,8 @@ public final class App extends Application
 	return 	font;
     }
 
-        int getTableWidth()
-	    {
+    int getTableWidth()
+    {
 	return tableWidth;
     }
 
@@ -366,5 +367,8 @@ public final class App extends Application
 	return tableHeight;
     }
 
-
+    Stage getStage()
+    {
+	return this.stage;
+    }
 }
