@@ -1,5 +1,5 @@
 /*
-   Copyright 2012-2018 Michael Pozhidaev <michael.pozhidaev@gmail.com>
+   Copyright 2012-2020 Michael Pozhidaev <msp@luwrain.org>
    Copyright 2015-2016 Roman Volovodov <gr.rPman@gmail.com>
 
    This file is part of LUWRAIN.
@@ -39,10 +39,9 @@ public final class App extends Application
 
     private StackPane rootPane = null;
     Stage stage = null;
-
-    private ResizableCanvas canvas = null;
+    private ResizableCanvas textCanvas = null;
     private GraphicsContext gc = null;
-    private Bounds bounds = null;
+    private Bounds charBounds = null;
     private Font font = null;
     private     Font font2 = null;
     private Color fontColor = Color.GREY;
@@ -74,11 +73,11 @@ public final class App extends Application
 	stage.setTitle("LUWRAIN");
 	this.rootPane = new StackPane();
 	this.rootPane.resize(1024, 768);
-        this.canvas = new ResizableCanvas();
-        this.rootPane.getChildren().add(canvas);
+        this.textCanvas = new ResizableCanvas();
+        this.rootPane.getChildren().add(textCanvas);
         stage.setScene(new Scene(rootPane));
-	this.canvas.bindWidthAndHeight(rootPane);
-        this.gc = canvas.getGraphicsContext2D();
+	this.textCanvas.bindWidthAndHeight(rootPane);
+        this.gc = textCanvas.getGraphicsContext2D();
         this.rootPane.setBackground(new Background(new BackgroundFill(Color.BLACK, CornerRadii.EMPTY, Insets.EMPTY)));
 	ThreadControl.appStarted(this);
     }
@@ -92,9 +91,8 @@ public final class App extends Application
     	this.font2 = font2;
 	final Text text = new Text("A");
 	text.setFont(font);
-        bounds = text.getLayoutBounds();
+        this.charBounds = text.getLayoutBounds();
     }
-
 
     synchronized boolean initTable()
     {
@@ -113,8 +111,8 @@ public final class App extends Application
 	}
 	width -= (marginLeft + marginRight);
 	height -= (marginTop + marginBottom);
-	final int width_=(int)Math.floor(width/bounds.getWidth());
-	final int height_=(int)Math.floor(height/bounds.getHeight());
+	final int width_=(int)Math.floor(width/charBounds.getWidth());
+	final int height_=(int)Math.floor(height/charBounds.getHeight());
 	if (width_ < MIN_TABLE_WIDTH || height_ < MIN_TABLE_HEIGHT)
 	{
 	    Log.error(LOG_COMPONENT, "too small table for initialization:" + width_ + "x" + height_);
@@ -144,15 +142,7 @@ public final class App extends Application
 	return true;
     }
 
-    int getTableWidth()
-    {
-	return tableWidth;
-    }
 
-    int getTableHeight()
-    {
-	return tableHeight;
-    }
 
     void setColors(Color fontColor, Color font2color,
 		   Color bkgColor, Color splitterColor)
@@ -249,8 +239,8 @@ public final class App extends Application
     synchronized void paint()
     {
 	InvalidThreadException.checkThread("MainApp.paint()");
-	final double fontWidth=bounds.getWidth();
-	final double fontHeight=bounds.getHeight();
+	final double fontWidth = charBounds.getWidth();
+	final double fontHeight = charBounds.getHeight();
 	if(table==null)
 	    return;
 	gc.setTextBaseline(VPos.TOP);
@@ -365,5 +355,16 @@ public final class App extends Application
     {
 	return 	font;
     }
+
+        int getTableWidth()
+	    {
+	return tableWidth;
+    }
+
+    int getTableHeight()
+    {
+	return tableHeight;
+    }
+
 
 }
