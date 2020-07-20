@@ -1,5 +1,5 @@
 /*
-   Copyright 2012-2018 Michael Pozhidaev <michael.pozhidaev@gmail.com>
+   Copyright 2012-2020 Michael Pozhidaev <msp@luwrain.org>
    Copyright 2015-2016 Roman Volovodov <gr.rPman@gmail.com>
 
    This file is part of LUWRAIN.
@@ -27,17 +27,17 @@ import java.util.concurrent.FutureTask;
 import org.luwrain.core.*;
 import org.luwrain.base.InteractionParamColor;
 
-class Utils
+public class Utils
 {
     static private final String LOG_COMPONENT = JavaFxInteraction.LOG_COMPONENT;
 
-    static void ensureFxThread()
+    static public void ensureFxThread()
     {
 		if(!Platform.isFxApplicationThread())
 		    throw new RuntimeException("Execution in non-jfx thread");
     }
 
-    static Object callInFxThreadSync(Callable callable)
+    static public Object callInFxThreadSync(Callable callable)
     {
 	NullCheck.notNull(callable, "callable");
 	if(Platform.isFxApplicationThread())
@@ -66,7 +66,7 @@ class Utils
 	}
     }
 
-    static void runInFxThreadSync(Runnable runnable)
+    static public void runInFxThreadSync(Runnable runnable)
     {
 	NullCheck.notNull(runnable, "runnable");
 	if(Platform.isFxApplicationThread())
@@ -97,7 +97,7 @@ class Utils
 	}
     }
 
-    static void runInFxThreadAsync(Runnable runnable)
+    static public void runInFxThreadAsync(Runnable runnable)
     {
 	NullCheck.notNull(runnable, "runnable");
 	if(Platform.isFxApplicationThread())

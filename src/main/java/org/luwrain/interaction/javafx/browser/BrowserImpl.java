@@ -1,5 +1,5 @@
 /*
-   Copyright 2012-2018 Michael Pozhidaev <michael.pozhidaev@gmail.com>
+   Copyright 2012-2020 Michael Pozhidaev <msp@luwrain.org>
    Copyright 2015-2016 Roman Volovodov <gr.rPman@gmail.com>
 
    This file is part of LUWRAIN.
@@ -15,7 +15,7 @@
    General Public License for more details.
 */
 
-package org.luwrain.interaction.javafx;
+package org.luwrain.interaction.javafx.browser;
 
 import java.awt.Rectangle;
 import java.io.*;
@@ -37,8 +37,9 @@ import com.sun.webkit.dom.DOMWindowImpl;
 
 import org.luwrain.core.*;
 import org.luwrain.browser.*;
+import org.luwrain.interaction.javafx.*;
 
-final class BrowserImpl extends BrowserBase implements Browser
+public final class BrowserImpl extends BrowserBase implements Browser
 {
     static private final String RESCAN_RESOURCE_PATH = "org/luwrain/interaction/javafx/injection.js";
     static final int LAST_MODIFIED_SCAN_INTERVAL = 100; // lastModifiedTime rescan interval in milliseconds
@@ -46,7 +47,7 @@ final class BrowserImpl extends BrowserBase implements Browser
 
     private final JavaFxInteraction interaction;
 
-    BrowserImpl(JavaFxInteraction interaction)
+    public BrowserImpl(JavaFxInteraction interaction)
     {
 	super(readTextResource(RESCAN_RESOURCE_PATH));
 	NullCheck.notNull(interaction, "interaction");

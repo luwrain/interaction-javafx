@@ -1,5 +1,5 @@
 /*
-   Copyright 2012-2018 Michael Pozhidaev <michael.pozhidaev@gmail.com>
+   Copyright 2012-2020 Michael Pozhidaev <msp@luwrain.org>
    Copyright 2015-2016 Roman Volovodov <gr.rPman@gmail.com>
 
    This file is part of LUWRAIN.
@@ -15,7 +15,7 @@
    General Public License for more details.
 */
 
-package org.luwrain.interaction.javafx;
+package org.luwrain.interaction.javafx.browser;
 
 import java.awt.Rectangle;
 import java.util.*;
@@ -27,6 +27,7 @@ import org.w3c.dom.*;
 
 import org.luwrain.core.*;
 import org.luwrain.browser.*;
+import org.luwrain.interaction.javafx.*;
 
 final class IteratorImpl implements BrowserIterator
 {

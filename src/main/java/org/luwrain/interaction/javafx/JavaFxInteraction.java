@@ -33,8 +33,10 @@ import javafx.scene.web.WebView;
 
 import org.luwrain.core.*;
 import org.luwrain.base.*;
-import org.luwrain.browser.*;
+//import org.luwrain.browser.*;
 import org.luwrain.util.*;
+
+import org.luwrain.interaction.javafx.browser.*;
 
 public final class JavaFxInteraction implements Interaction
 {
@@ -47,8 +49,8 @@ public final class JavaFxInteraction implements Interaction
     private String fontName = "Monospaced";
     private MainApp app = null;
 
-    private final List<BrowserImpl> browsers = new Vector();
-    private BrowserImpl currentBrowser = null;
+    private final List<org.luwrain.interaction.javafx.browser.BrowserImpl> browsers = new Vector();
+    private org.luwrain.interaction.javafx.browser.BrowserImpl currentBrowser = null;
     private boolean graphicalMode = false;
 
     @Override public boolean init(final InteractionParams params,final OperatingSystem os)
@@ -242,18 +244,23 @@ int y)
 	return res;
     }
 
-    @Override public Browser createBrowser()
+    @Override public GraphicalMode openGraphicalMode(String modeName, GraphicalMode.Params params)
     {
+	NullCheck.notEmpty(modeName, "modeName");
+	NullCheck.notNull(params, "params");
+	switch(modeName.toUpperCase())
+	{
+	case "BROWSER":
 	return new BrowserImpl(this);
-    }
-
-    @Override public org.luwrain.interaction.graphical.Pdf createPdfPreview(org.luwrain.interaction.graphical.Pdf.Listener listener, File file) throws Exception
-    {
-	NullCheck.notNull(listener, "listener");
-	NullCheck.notNull(file, "file");
-	final PdfPreview preview = new PdfPreview(this, listener, file);
+	case "PDF": {
+	final PdfPreview preview = new PdfPreview(this, params);
 preview.init();
 return preview;
+	}
+	default:
+	    Log.error(LOG_COMPONENT, "unknown graphical mode name: " + modeName);
+	    return null;
+	}
     }
 
     // change current page to curPage, if it null, change previous current page to not visible 
@@ -266,7 +273,7 @@ return preview;
 	    currentBrowser.setVisibility(visibility);
     }
 
-    void registerBrowser(BrowserImpl browser, WebView webView)
+    public void registerBrowser(BrowserImpl browser, WebView webView)
     {
 	NullCheck.notNull(browser, "browser");
 	NullCheck.notNull(webView, "webView");
@@ -278,7 +285,7 @@ return preview;
 	    setCurrentBrowser(browser, false);
     }
 
-boolean closeBrowser(BrowserImpl browser)
+public boolean closeBrowser(BrowserImpl browser)
     {
 	NullCheck.notNull(browser, "browser");
 	final int pos = browsers.indexOf(browser);
@@ -303,12 +310,12 @@ void closeCanvas(ResizableCanvas canvas)
 		app.root.getChildren().remove(canvas);
     }
 
-    void  enableGraphicalMode()
+    public void  enableGraphicalMode()
     {
 	this.graphicalMode = true;
     }
 
-    void disableGraphicalMode()
+    public void disableGraphicalMode()
     {
 	this.graphicalMode = false;
 	app.stage.requestFocus();

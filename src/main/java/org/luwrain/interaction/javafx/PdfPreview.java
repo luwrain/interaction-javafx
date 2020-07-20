@@ -36,15 +36,16 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.rendering.PDFRenderer;
 
 import org.luwrain.core.*;
+import org.luwrain.base.*;
 import org.luwrain.core.events.*;
 
-final class PdfPreview implements org.luwrain.interaction.graphical.Pdf
+final class PdfPreview implements org.luwrain.graphical.Pdf
 {
     static final String LOG_COMPONENT = "pdf";
 
     private final JavaFxInteraction interaction;
     private ResizableCanvas canvas = null;
-    private final org.luwrain.interaction.graphical.Pdf.Listener listener;
+    private final org.luwrain.graphical.Pdf.Listener listener;
 
         private final PDDocument doc;
     private final PDFRenderer rend;
@@ -55,14 +56,13 @@ final class PdfPreview implements org.luwrain.interaction.graphical.Pdf
     private double offsetX = 0;
     private double offsetY = 0;
 
-    PdfPreview(JavaFxInteraction interaction, org.luwrain.interaction.graphical.Pdf.Listener listener, File file) throws Exception
+    PdfPreview(JavaFxInteraction interaction, GraphicalMode.Params params)
     {
 	NullCheck.notNull(interaction, "interaction");
-	NullCheck.notNull(listener, "listener");
+	NullCheck.notNull(params, "params");
 	this.interaction = interaction;
-	this.listener = listener;
-	this.doc = PDDocument.load(file);
-	Log.debug(LOG_COMPONENT, "PDF file " + file.getAbsolutePath() + " loaded");
+	this.listener = null;//listener;
+	this.doc = null;//PDDocument.load(file);
 	this.rend = new PDFRenderer(doc);
 	Log.debug(LOG_COMPONENT, "PDF renderer created");
     }
