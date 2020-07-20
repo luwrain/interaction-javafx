@@ -22,9 +22,9 @@ import javafx.application.Application;
 final class ThreadControl implements Runnable
 {
     static final Object syncObj = new Object();
-    static volatile MainApp appObj = null;
+    static volatile App appObj = null;
 
-    static MainApp waitAppStart()
+    static App waitAppStart()
     {
 	synchronized(syncObj) {
 	    try {
@@ -39,7 +39,7 @@ final class ThreadControl implements Runnable
 	return appObj;
     }
 
-    static void appStarted(MainApp obj)
+    static void appStarted(App obj)
     {
 	if (obj == null)
 	    return;
@@ -51,7 +51,7 @@ final class ThreadControl implements Runnable
 
     @Override public void run()
     {
-	MainApp.launch(MainApp.class);
+	App.launch(App.class);
 	System.exit(0);
     }
 } //MainJavafxThread

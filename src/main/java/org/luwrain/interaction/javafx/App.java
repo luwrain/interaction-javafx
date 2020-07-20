@@ -30,7 +30,7 @@ import javafx.scene.text.*;
 
 import org.luwrain.core.*;
 
-public final class MainApp extends Application
+public final class App extends Application
 {
     static private final String LOG_COMPONENT = JavaFxInteraction.LOG_COMPONENT;
 

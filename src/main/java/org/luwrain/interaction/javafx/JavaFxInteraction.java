@@ -45,7 +45,7 @@ public final class JavaFxInteraction implements Interaction
     private boolean drawingInProgress = false;
     private int currentFontSize = 14;
     private String fontName = "Monospaced";
-    private MainApp app = null;
+    private App app = null;
 
     private final List<Browser> browsers = new Vector();
     private Browser currentBrowser = null;
