@@ -31,9 +31,9 @@ import org.luwrain.interaction.javafx.*;
 
 final class IteratorImpl implements BrowserIterator
 {
-    static private final String LOG_COMPONENT = BrowserBase.LOG_COMPONENT;
+    static private final String LOG_COMPONENT = Base.LOG_COMPONENT;
 
-    private final BrowserBase browser;
+    private final Base browser;
     private int pos;
 
     //Set by prepare() function
@@ -41,7 +41,7 @@ final class IteratorImpl implements BrowserIterator
     private List<NodeInfo> dom = null;
     private NodeInfo nodeInfo = null;
 
-    IteratorImpl(BrowserBase browser, int pos)
+    IteratorImpl(Base browser, int pos)
     {
 	NullCheck.notNull(browser, "browser");
 	if (pos < 0)
@@ -50,7 +50,7 @@ final class IteratorImpl implements BrowserIterator
 	this.pos = pos;
     }
 
-    IteratorImpl (BrowserBase browser)
+    IteratorImpl (Base browser)
     {
 	this(browser, 0);
     }

@@ -35,7 +35,7 @@ import org.luwrain.core.*;
 import org.luwrain.interaction.javafx.*;
 import org.luwrain.browser.BrowserEvents;
 
-abstract class BrowserBase
+abstract class Base
 {
     static final String LOG_COMPONENT = "web";
 
@@ -60,13 +60,13 @@ abstract class BrowserBase
     protected JSObject injectionRes = null;
     protected JSObject jsWindow = null;
 
-    protected BrowserBase(String injectedScript)
+    protected Base(String injectedScript)
     {
 	NullCheck.notNull(injectedScript, "injectedScript");
 	this.injectedScript = injectedScript;
     }
 
-    public abstract void setVisibility(boolean enabled);
+    abstract void setVisibility(boolean enabled);
 
     protected void init(BrowserEvents events)
     {
@@ -229,7 +229,7 @@ this.domScanRes = new DomScanResult(window);
 	}
     }
 
-	static public long jsLong(Object o)
+	static long jsLong(Object o)
 	{
 		if(o == null) 
 return 0;
