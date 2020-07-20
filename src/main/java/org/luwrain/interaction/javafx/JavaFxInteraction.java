@@ -33,10 +33,8 @@ import javafx.scene.web.WebView;
 
 import org.luwrain.core.*;
 import org.luwrain.base.*;
-//import org.luwrain.browser.*;
 import org.luwrain.util.*;
-
-import org.luwrain.interaction.javafx.browser.*;
+import org.luwrain.interaction.javafx.browser.Browser;
 
 public final class JavaFxInteraction implements Interaction
 {
@@ -49,8 +47,8 @@ public final class JavaFxInteraction implements Interaction
     private String fontName = "Monospaced";
     private MainApp app = null;
 
-    private final List<org.luwrain.interaction.javafx.browser.BrowserImpl> browsers = new Vector();
-    private org.luwrain.interaction.javafx.browser.BrowserImpl currentBrowser = null;
+    private final List<Browser> browsers = new Vector();
+    private Browser currentBrowser = null;
     private boolean graphicalMode = false;
 
     @Override public boolean init(final InteractionParams params,final OperatingSystem os)
@@ -251,7 +249,7 @@ int y)
 	switch(modeName.toUpperCase())
 	{
 	case "BROWSER":
-	return new BrowserImpl(this);
+	return new Browser(this);
 	case "PDF": {
 	final PdfPreview preview = new PdfPreview(this, params);
 preview.init();
@@ -264,7 +262,7 @@ return preview;
     }
 
     // change current page to curPage, if it null, change previous current page to not visible 
-    private void setCurrentBrowser(BrowserImpl newCurrentBrowser, boolean visibility)
+    private void setCurrentBrowser(Browser newCurrentBrowser, boolean visibility)
     {
 	if(currentBrowser != null)
 	    currentBrowser.setVisibility(false);
@@ -273,7 +271,7 @@ return preview;
 	    currentBrowser.setVisibility(visibility);
     }
 
-    public void registerBrowser(BrowserImpl browser, WebView webView)
+    public void registerBrowser(Browser browser, WebView webView)
     {
 	NullCheck.notNull(browser, "browser");
 	NullCheck.notNull(webView, "webView");
@@ -285,7 +283,7 @@ return preview;
 	    setCurrentBrowser(browser, false);
     }
 
-public boolean closeBrowser(BrowserImpl browser)
+public boolean closeBrowser(Browser browser)
     {
 	NullCheck.notNull(browser, "browser");
 	final int pos = browsers.indexOf(browser);

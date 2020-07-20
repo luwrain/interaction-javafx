@@ -19,14 +19,15 @@ package org.luwrain.interaction.javafx.browser;
 
 import java.awt.Rectangle;
 import java.util.*;
-import java.util.concurrent.*;
+//import java.util.concurrent.*;
 
 import org.w3c.dom.css.CSSStyleDeclaration;
 import org.w3c.dom.html.*;
 import org.w3c.dom.*;
 
 import org.luwrain.core.*;
-import org.luwrain.browser.*;
+import org.luwrain.browser.BrowserEvents;
+import org.luwrain.browser.BrowserIterator;
 import org.luwrain.interaction.javafx.*;
 
 final class IteratorImpl implements BrowserIterator
@@ -37,7 +38,7 @@ final class IteratorImpl implements BrowserIterator
     private int pos;
 
     //Set by prepare() function
-    private BrowserImpl.DomScanResult scanRes = null;
+    private Browser.DomScanResult scanRes = null;
     private List<NodeInfo> dom = null;
     private NodeInfo nodeInfo = null;
 
@@ -423,9 +424,9 @@ final String res = nodeInfo.getNode().getNodeName();
 return res != null?res:"";
     }
 
-    @Override public Browser getBrowser()
+    @Override public org.luwrain.browser.Browser getBrowser()
     {
-	return (BrowserImpl)browser;
+	return (Browser)browser;
     }
 
     private Node findNonTextNode(NodeInfo info)

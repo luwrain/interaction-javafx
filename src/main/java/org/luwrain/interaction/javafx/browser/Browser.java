@@ -17,29 +17,14 @@
 
 package org.luwrain.interaction.javafx.browser;
 
-//import java.awt.Rectangle;
 import java.io.*;
-//import java.util.*;
 import java.util.concurrent.*;
-
-//import javafx.application.Platform;
-//import javafx.beans.value.ObservableValue;
-//import javafx.concurrent.Worker.State;
-//import javafx.scene.web.WebEngine;
-//import javafx.scene.web.WebView;
-//import javafx.scene.input.KeyEvent;
-//import netscape.javascript.JSObject;
-
-//import org.w3c.dom.Node;
-//import org.w3c.dom.html.*;
-//import org.w3c.dom.views.DocumentView;
-//import com.sun.webkit.dom.DOMWindowImpl;
 
 import org.luwrain.core.*;
 import org.luwrain.browser.BrowserEvents;
 import org.luwrain.interaction.javafx.*;
 
-public final class BrowserImpl extends Base implements org.luwrain.browser.Browser
+public final class Browser extends Base implements org.luwrain.browser.Browser
 {
     static private final String RESCAN_RESOURCE_PATH = "org/luwrain/interaction/javafx/injection.js";
     static final int LAST_MODIFIED_SCAN_INTERVAL = 100; // lastModifiedTime rescan interval in milliseconds
@@ -47,7 +32,7 @@ public final class BrowserImpl extends Base implements org.luwrain.browser.Brows
 
     private final JavaFxInteraction interaction;
 
-    public BrowserImpl(JavaFxInteraction interaction)
+    public Browser(JavaFxInteraction interaction)
     {
 	super(readTextResource(RESCAN_RESOURCE_PATH));
 	NullCheck.notNull(interaction, "interaction");
