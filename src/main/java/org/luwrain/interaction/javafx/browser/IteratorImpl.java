@@ -38,7 +38,7 @@ final class IteratorImpl implements BrowserIterator
     private int pos;
 
     //Set by prepare() function
-    private Browser.DomScanResult scanRes = null;
+    private DomScanResult scanRes = null;
     private List<NodeInfo> dom = null;
     private NodeInfo nodeInfo = null;
 

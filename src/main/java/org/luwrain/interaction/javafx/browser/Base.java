@@ -39,6 +39,7 @@ abstract class Base
 {
     static final String LOG_COMPONENT = "web";
 
+    /*
     static final class DomScanResult
     {
 	final DOMWindowImpl window;
@@ -51,6 +52,7 @@ abstract class Base
 	    this.window = window;
 	}
     }
+    */
 
     protected final String injectedScript;
     public final WebView webView;
@@ -80,14 +82,6 @@ abstract class Base
 
     abstract void setVisibility(boolean enabled);
 
-    protected void init(BrowserEvents events)
-    {
-    }
-
-    DomScanResult getDomScanResult()
-    {
-	return this.domScanRes;
-    }
 
 Object executeScript(String script)
     {
@@ -233,4 +227,10 @@ return (long)(int)o;
 		// FIXME: it can be happened or not?
 		return (long)Double.parseDouble(o.toString());
 	}
+
+        DomScanResult getDomScanResult()
+    {
+	return this.domScanRes;
+    }
+
 }

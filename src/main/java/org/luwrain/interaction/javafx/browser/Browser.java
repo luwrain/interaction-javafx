@@ -39,26 +39,8 @@ public final class Browser extends Base implements org.luwrain.browser.Browser
 	this.interaction = interaction;
     }
 
-    @Override public void init(BrowserEvents events)
-    {
-	/*
-	NullCheck.notNull(events, "events");
-	Utils.runInFxThreadSync(()->{
-		super.init(events);
-		interaction.registerBrowser(this, webView);
-	    });
-	*/
-    }
-
-    private boolean initialized()
-    {
-	return webEngine != null && webView != null;
-    }
-
     @Override public void rescanDom()
     {
-	if (!initialized())
-	    return;
 	Utils.runInFxThreadSync(()->super.rescanDom());
     }
 
@@ -69,8 +51,6 @@ public final class Browser extends Base implements org.luwrain.browser.Browser
 
     @Override public void setVisibility(boolean enable)
     {
-	if (!initialized())
-	    return;
 	if(enable)
 	{
 	    interaction.enableGraphicalMode();
@@ -86,29 +66,23 @@ public final class Browser extends Base implements org.luwrain.browser.Browser
 
     @Override public boolean getVisibility()
     {
-	if (!initialized())
-	    return false;
 	return webView.isVisible();//FIXME:
     }
 
     @Override public void loadByUrl(String url)
     {
 	NullCheck.notNull(url, "url");
-	if (initialized())
 	    Utils.runInFxThreadSync(()->webEngine.load(url));
     }
 
     @Override public void loadByText(String text)
     {
 	NullCheck.notNull(text, "text");
-	if (initialized())
 	    Utils.runInFxThreadSync(()->webEngine.loadContent(text));
     }
 
     @Override public boolean goHistoryPrev()
     {
-	if (!initialized())
-	    return false;
 	final Object res = Utils.callInFxThreadSync(()->{
 		if (webEngine.getHistory().getCurrentIndex() <= 0)
 		    return new Boolean(false);
