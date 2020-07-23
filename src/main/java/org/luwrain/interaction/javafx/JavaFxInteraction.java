@@ -298,15 +298,17 @@ int y)
 	    currentBrowser.setVisibility(visibility);
     }
 
-public boolean closeBrowser(Browser browser)
+    public void closeBrowser(Browser browser)
     {
 	NullCheck.notNull(browser, "browser");
-	final int pos = browsers.indexOf(browser);
-	if (pos < 0)
-	    return false;
-browsers.remove(this);
-//FIXME:choosing another current browser
-return true;
+	Utils.runInFxThreadSync(()->{
+		final int pos = browsers.indexOf(browser);
+		if (pos < 0)
+		    return;
+		browsers.remove(this);
+		app.remove(browser.webView);
+		//FIXME:choosing another current browser
+	    });
     }
 
         void registerCanvas(ResizableCanvas canvas)

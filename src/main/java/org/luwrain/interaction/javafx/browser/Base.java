@@ -114,7 +114,7 @@ Object executeScript(String script)
 	}
     }
 
-protected void rescanDom()
+protected void update()
     {
 	InvalidThreadException.checkThread("BrowserBase.rescanDom()"); 
 	try {

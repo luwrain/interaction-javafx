@@ -38,19 +38,19 @@ public final class Browser extends Base implements org.luwrain.browser.Browser
 	this.interaction = interaction;
     }
 
-    @Override public void rescanDom()
+    @Override public void update()
     {
-	Utils.runInFxThreadSync(()->super.rescanDom());
+	Utils.runInFxThreadSync(()->super.update());
     }
 
     @Override public void close()
     {
-	Utils.runInFxThreadSync(()->interaction.closeBrowser(this));
+	interaction.closeBrowser(this);
     }
 
-    @Override public void setVisibility(boolean enable)
+    @Override public void setVisibility(boolean visible)
     {
-	if(enable)
+	if(visible)
 	{
 	    interaction.enableGraphicalMode();
 	    Utils.runInFxThreadSync(()->{
@@ -132,7 +132,7 @@ public final class Browser extends Base implements org.luwrain.browser.Browser
 	return new IteratorImpl(this);
     }
 
-    @Override public int numElements()
+    @Override public int getElementCount()
     {
 	if (domScanRes == null)
 	    return 0;
