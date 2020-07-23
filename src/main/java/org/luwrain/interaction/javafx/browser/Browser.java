@@ -26,15 +26,14 @@ import org.luwrain.interaction.javafx.*;
 
 public final class Browser extends Base implements org.luwrain.browser.Browser
 {
-    static private final String RESCAN_RESOURCE_PATH = "org/luwrain/interaction/javafx/injection.js";
     static final int LAST_MODIFIED_SCAN_INTERVAL = 100; // lastModifiedTime rescan interval in milliseconds
     static final String LUWRAIN_NODE_TEXT="luwrain_node_text"; // javascript window's property names for using in executeScrypt
 
     private final JavaFxInteraction interaction;
 
-    public Browser(JavaFxInteraction interaction, BrowserEvents events)
+    public Browser(JavaFxInteraction interaction, BrowserEvents events) throws IOException
     {
-	super(events, readTextResource(RESCAN_RESOURCE_PATH));
+	super(events);
 	NullCheck.notNull(interaction, "interaction");
 	this.interaction = interaction;
     }
@@ -138,29 +137,5 @@ public final class Browser extends Base implements org.luwrain.browser.Browser
 	if (domScanRes == null)
 	    return 0;
 	return domScanRes.dom.size();
-    }
-
-    static String readTextResource(String path)
-    {
-	NullCheck.notEmpty(path, "path");
-    	try {
-	    final InputStream s = ClassLoader.getSystemClassLoader().getResourceAsStream(path);
-	    if (s == null)
-	    {
-		Log.error(LOG_COMPONENT, "inaccessible resource:" + path);
-		return null;
-	    }
-	    final BufferedReader r = new BufferedReader(new InputStreamReader(s));
-	    final StringBuilder b = new StringBuilder();
-	    String line = null;
-	    while((line = r.readLine()) != null)
-		b.append(line + "\n");
-	    return new String(b);
-    	}
-    	catch(IOException e)
-    	{
-	    Log.error(LOG_COMPONENT, "unable to read system resource:" + path + ":" + e.getClass().getName() + ":" + e.getMessage());
-	    return null;
-    	}
     }
 }

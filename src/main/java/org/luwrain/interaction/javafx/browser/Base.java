@@ -17,6 +17,7 @@
 
 package org.luwrain.interaction.javafx.browser;
 
+import java.io.*;
 import java.util.*;
 
 import javafx.beans.value.ObservableValue;
@@ -37,6 +38,7 @@ import org.luwrain.browser.BrowserEvents;
 
 abstract class Base
 {
+    static private final String RESCAN_RESOURCE_PATH = "org/luwrain/interaction/javafx/injection.js";
     static final String LOG_COMPONENT = "web";
 
     /*
@@ -62,12 +64,11 @@ abstract class Base
     protected JSObject injectionRes = null;
     protected JSObject jsWindow = null;
 
-    protected Base(BrowserEvents events, String injectedScript)
+    protected Base(BrowserEvents events) throws IOException
     {
-	NullCheck.notNull(injectedScript, "injectedScript");
 	NullCheck.notNull(events, "events");
 	Utils.ensureFxThread();
-	this.injectedScript = injectedScript;
+	this.injectedScript = readInjectedScript();
 	this.webView = new WebView();
 	this.webEngine = webView.getEngine();
 	this.webView.setOnKeyReleased((event)->onKeyReleased(event));
@@ -215,6 +216,25 @@ this.domScanRes = new DomScanResult(window);
 	}
     }
 
+        private String readInjectedScript() throws IOException
+    {
+	final InputStream is = getClass().getClassLoader().getResourceAsStream(RESCAN_RESOURCE_PATH);
+	if (is == null)
+	    throw new IOException("No resource with the path 'RESCAN_RESOURCE_PATH'");
+	final BufferedReader r = new BufferedReader(new InputStreamReader(is));
+	try {
+	    final StringBuilder b = new StringBuilder();
+	    String line = null;
+	    while((line = r.readLine()) != null)
+		b.append(line + "\n");
+	    return new String(b);
+    	}
+	finally {
+	    r.close();
+	    is.close();
+	}
+    }
+
 	static long jsLong(Object o)
 	{
 		if(o == null) 
@@ -232,5 +252,4 @@ return (long)(int)o;
     {
 	return this.domScanRes;
     }
-
 }
