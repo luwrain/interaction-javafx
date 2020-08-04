@@ -34,7 +34,7 @@ public class Utils
     static public void ensureFxThread()
     {
 		if(!Platform.isFxApplicationThread())
-		    throw new RuntimeException("Execution in non-jfx thread");
+		    throw new IllegalStateException("Execution in non-jfx thread");
     }
 
     static public Object callInFxThreadSync(Callable callable)
@@ -47,7 +47,7 @@ public class Utils
 	    catch(Throwable e) 
 	    {
 		Log.error(LOG_COMPONENT, "callable object thrown an exception:" + e.getClass().getName() + ":" + e.getMessage());
-	    	return null;
+		throw new RuntimeException(e);
 	    }
 	final FutureTask<Object> query=new FutureTask<Object>(callable);
 	Platform.runLater(query);
@@ -61,8 +61,8 @@ public class Utils
 	}
 	catch(ExecutionException e) 
 	{
-	    Log.error(LOG_COMPONENT, "execution exception on callable object processing:" + e.getClass().getName() + ":" + e.getMessage());
-	    return null;
+	    Log.error(LOG_COMPONENT, "execution exception in callable object processing:" + e.getClass().getName() + ":" + e.getMessage());
+	    throw new RuntimeException(e);
 	}
     }
 
@@ -92,8 +92,8 @@ public class Utils
 	}
 	catch(ExecutionException e) 
 	{
-	    Log.error(LOG_COMPONENT, "execution exception on runnable object processing:" + e.getClass().getName() + ":" + e.getMessage());
-	    return;
+	    Log.error(LOG_COMPONENT, "execution exception in runnable object processing:" + e.getClass().getName() + ":" + e.getMessage());
+	    throw new RuntimeException(e);
 	}
     }
 
@@ -107,8 +107,8 @@ public class Utils
 	    }
 	    catch(Throwable e) 
 	    {
-		Log.error(LOG_COMPONENT, "runnable object thrown an exception:" + e.getClass().getName() + ":" + e.getMessage());
-	    	return;
+		Log.error(LOG_COMPONENT, "runnable object has thrown an exception:" + e.getClass().getName() + ":" + e.getMessage());
+		throw new RuntimeException(e);
 	    }
 	final FutureTask<Object> query=new FutureTask<Object>(runnable, null);
 	Platform.runLater(query);

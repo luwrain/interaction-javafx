@@ -255,8 +255,7 @@ int y)
 	    Utils.runInFxThreadSync(()->{
 		    try {
 			final org.luwrain.browser.BrowserParams browserParams = (org.luwrain.browser.BrowserParams)params;
-			NullCheck.notNull(browserParams.events, "browserParams.events");
-			final Browser browser = new Browser(this, browserParams.events);
+			final Browser browser = new Browser(this, browserParams);
 			final boolean wasEmpty = browsers.isEmpty();
 			this.browsers.add(browser);
 			app.putNew(browser.webView);

@@ -22,6 +22,7 @@ import java.util.concurrent.*;
 
 import org.luwrain.core.*;
 import org.luwrain.browser.BrowserEvents;
+import org.luwrain.browser.BrowserParams;
 import org.luwrain.interaction.javafx.*;
 
 public final class Browser extends Base implements org.luwrain.browser.Browser
@@ -31,9 +32,9 @@ public final class Browser extends Base implements org.luwrain.browser.Browser
 
     private final JavaFxInteraction interaction;
 
-    public Browser(JavaFxInteraction interaction, BrowserEvents events) throws IOException
+    public Browser(JavaFxInteraction interaction, BrowserParams params) throws IOException
     {
-	super(events);
+	super(params);
 	NullCheck.notNull(interaction, "interaction");
 	this.interaction = interaction;
     }

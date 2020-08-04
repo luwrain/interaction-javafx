@@ -35,6 +35,7 @@ import com.sun.webkit.dom.DOMWindowImpl;
 import org.luwrain.core.*;
 import org.luwrain.interaction.javafx.*;
 import org.luwrain.browser.BrowserEvents;
+import org.luwrain.browser.BrowserParams;
 
 abstract class Base
 {
@@ -64,20 +65,27 @@ abstract class Base
     protected JSObject injectionRes = null;
     protected JSObject jsWindow = null;
 
-    protected Base(BrowserEvents events) throws IOException
+    protected Base(BrowserParams params) throws IOException
     {
-	NullCheck.notNull(events, "events");
+	NullCheck.notNull(params, "params");
+	NullCheck.notNull(params.events, "params.events");
+	NullCheck.notNull(params.userAgent, "params.userAgent");
+	NullCheck.notNull(params.userDataDir, "params.userDataDir");
 	Utils.ensureFxThread();
+	final BrowserEvents events = params.events;
 	this.injectedScript = readInjectedScript();
 	this.webView = new WebView();
 	this.webEngine = webView.getEngine();
-	this.webView.setOnKeyReleased((event)->onKeyReleased(event));
+	this.webEngine.setUserDataDirectory(params.userDataDir);
+	this.webEngine.setUserAgent(params.userAgent);
+	this.webEngine.setJavaScriptEnabled(params.javaScriptEnabled);
 	this.webEngine.getLoadWorker().stateProperty().addListener((ov,oldState,newState)->onStateChanged(events, ov, oldState, newState));
 	this.webEngine.getLoadWorker().progressProperty().addListener((ov,o,n)->events.onProgress(n));
 	this.webEngine.setOnAlert((event)->events.onAlert(event.getData()));
 	this.webEngine.setPromptHandler((event)->events.onPrompt(event.getMessage(),event.getDefaultValue()));
 	this.webEngine.setConfirmHandler((param)->events.onConfirm(param));
 	this.webEngine.setOnError((event)->events.onError(event.getMessage()));
+		this.webView.setOnKeyReleased((event)->onKeyReleased(event));
 	this.webView.setVisible(false);
     }
 
