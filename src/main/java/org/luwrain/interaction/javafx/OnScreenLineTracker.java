@@ -21,7 +21,7 @@ import java.util.*;
 
 import org.luwrain.core.*;
 
-public final class OnScreenLineTracker
+final class OnScreenLineTracker
 {
     final class Vertex
     {
@@ -75,7 +75,7 @@ public final class OnScreenLineTracker
 	vertices.clear();
     }
 
-    public OnScreenLine[] getLines()
+    OnScreenLine[] getLines()
     {
 	if (vertices.size() < 2)
 	    return new OnScreenLine[0];
@@ -98,8 +98,8 @@ public final class OnScreenLineTracker
 	int i = 0;
 	while(i < vertices.size() && vertices.get(i).pos < pos)
 	    i++;
-	    if (i < vertices.size() && vertices.get(i).pos == pos)
-		return;
+	if (i < vertices.size() && vertices.get(i).pos == pos)
+	    return;
 	boolean followed = i > 0?vertices.get(i - 1).followed:false;
 	if (i < vertices.size())
 	    vertices.add(i, new Vertex(pos, followed)); else
@@ -119,23 +119,19 @@ public final class OnScreenLineTracker
 	}
 	if (offset > 0)
 	{
-	    final List<Vertex> t = vertices.subList(offset, vertices.size());
-	    vertices.clear();
-	    vertices.addAll(t);
+	    vertices = new ArrayList(vertices.subList(offset, vertices.size()));
 	}
 	if (vertices.size() < 2)
 	    return;
-	    //The doubling removing;
-	    offset = 0;
+	// Removing the items which present twice
+	offset = 0;
 	for(int i = 1;i < vertices.size();i++)
 	{
 	    if (vertices.get(i - 1 - offset).followed == vertices.get(i).followed)
 		offset++; else
 		vertices.set(i - offset, vertices.get(i));
 	}
-	final List<Vertex> t = vertices.subList(0, vertices.size() - offset);
-	vertices.clear();
-	vertices.addAll(t);
+	vertices = new ArrayList(vertices.subList(0, vertices.size() - offset));
 	if (!vertices.isEmpty() && (vertices.size() % 2) != 0)
 	{
 	    Log.warning("interaction", "on screen lines tracking has odd vertex count:" + vertices.size() + ", clearing content");
