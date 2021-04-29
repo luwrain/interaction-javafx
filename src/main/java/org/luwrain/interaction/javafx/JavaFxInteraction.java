@@ -36,7 +36,6 @@ import javafx.scene.web.WebView;
 import org.luwrain.core.*;
 import org.luwrain.base.*;
 import org.luwrain.util.*;
-import org.luwrain.interaction.javafx.browser.Browser;
 import org.luwrain.graphical.javafx.*;
 
 public final class JavaFxInteraction implements Interaction
@@ -50,8 +49,8 @@ public final class JavaFxInteraction implements Interaction
     private String fontName = "Monospaced";
     private App app = null;
 
-    private final List<Browser> browsers = new Vector();
-    private Browser currentBrowser = null;
+    //    private final List<Browser> browsers = new Vector();
+    //    private Browser currentBrowser = null;
     private boolean graphicalMode = false;
 
     @Override public boolean init(final InteractionParams params,final OperatingSystem os)
@@ -260,7 +259,9 @@ int y)
 	NullCheck.notNull(params, "params");
 	switch(modeName.toUpperCase())
 	{
-	case "BROWSER": {
+	case "BROWSER": 
+	    /*
+{
 	    final AtomicReference res = new AtomicReference();
 	    Utils.runInFxThreadSync(()->{
 		    try {
@@ -286,6 +287,8 @@ int y)
 		throw new RuntimeException((Throwable)res.get());
 	    return null;
 	}
+	    */
+	    return null;
 	case "PDF": {
 	    /*
 	    final PdfPreview preview = new PdfPreview(this, params);
@@ -300,7 +303,8 @@ int y)
 	}
     }
 
-    // change current page to curPage, if it null, change previous current page to not visible 
+    // change current page to curPage, if it null, change previous current page to not visible
+    /*
     private void setCurrentBrowser(Browser newCurrentBrowser, boolean visibility)
     {
 	if(currentBrowser != null)
@@ -309,7 +313,9 @@ int y)
 	if(currentBrowser != null)
 	    currentBrowser.setVisibility(visibility);
     }
+    */
 
+    /*
     public void closeBrowser(Browser browser)
     {
 	NullCheck.notNull(browser, "browser");
@@ -322,6 +328,7 @@ int y)
 		//FIXME:choosing another current browser
 	    });
     }
+    */
 
         void registerCanvas(ResizableCanvas canvas)
     {
