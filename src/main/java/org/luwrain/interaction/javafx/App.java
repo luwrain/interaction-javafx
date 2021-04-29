@@ -29,6 +29,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.*;
 
 import org.luwrain.core.*;
+import org.luwrain.graphical.javafx.*;
 
 public final class App extends Application
 {

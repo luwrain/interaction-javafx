@@ -37,6 +37,7 @@ import org.luwrain.core.*;
 import org.luwrain.base.*;
 import org.luwrain.util.*;
 import org.luwrain.interaction.javafx.browser.Browser;
+import org.luwrain.graphical.javafx.*;
 
 public final class JavaFxInteraction implements Interaction
 {
@@ -244,6 +245,15 @@ int y)
 	return res;
     }
 
+    @Override public void showGraphical(Object obj)
+    {
+	NullCheck.notNull(obj, "obj");
+	if (!(obj instanceof javafx.scene.Node))
+	    throw new ClassCastException("The object must be an instance of javafx.scene.Node");
+	app.putNew((javafx.scene.Node)obj);
+	this.graphicalMode = true;
+    }
+
     @Override public GraphicalMode openGraphicalMode(String modeName, GraphicalMode.Params params)
     {
 	NullCheck.notEmpty(modeName, "modeName");
@@ -277,9 +287,12 @@ int y)
 	    return null;
 	}
 	case "PDF": {
+	    /*
 	    final PdfPreview preview = new PdfPreview(this, params);
 	    preview.init();
 	    return preview;
+	    */
+	    return null;
 	}
 	default:
 	    Log.error(LOG_COMPONENT, "unknown graphical mode name: " + modeName);

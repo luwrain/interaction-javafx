@@ -1,5 +1,5 @@
 /*
-   Copyright 2012-2020 Michael Pozhidaev <msp@luwrain.org>
+   Copyright 2012-2021 Michael Pozhidaev <msp@luwrain.org>
    Copyright 2015-2016 Roman Volovodov <gr.rPman@gmail.com>
 
    This file is part of LUWRAIN.
@@ -17,26 +17,26 @@
 
 package org.luwrain.interaction.javafx;
 
-import java.util.Vector;
-import org.luwrain.core.Log;
+import java.util.*;
 
-public class OnScreenLineTracker
+import org.luwrain.core.*;
+
+public final class OnScreenLineTracker
 {
-    class Vertex
+    final class Vertex
     {
-	public int pos = 0;
-	public boolean followed = false;
-
-	public Vertex(int pos, boolean followed)
+	final int pos;
+	boolean followed;
+	Vertex(int pos, boolean followed)
 	{
 	    this.pos = pos;
 	    this.followed = followed;
 	}
     }
 
-    private Vector<Vertex> vertices = new Vector<Vertex>();
+    private ArrayList<Vertex> vertices = new ArrayList();
 
-    public void cover(int pos1, int pos2)
+    void cover(int pos1, int pos2)
     {
 	if (pos1 < 0 || pos1 > pos2)
 	    return;
@@ -44,7 +44,7 @@ public class OnScreenLineTracker
 	addVertex(pos2 + 1);
 	for(int i = 0;i < vertices.size();i++)
 	{
-	    Vertex v = vertices.get(i);
+	    final Vertex v = vertices.get(i);
 	    if (v.pos >= pos1 && v.pos <= pos2)
 		v.followed = true;
 	    if (v.pos > pos2)
@@ -53,7 +53,7 @@ public class OnScreenLineTracker
 	removeNeedless();
     }
 
-    public void uncover(int pos1, int pos2)
+    void uncover(int pos1, int pos2)
     {
 	if (pos1 < 0 || pos1 > pos2)
 	    return;
@@ -70,7 +70,7 @@ public class OnScreenLineTracker
 	removeNeedless();
     }
 
-    public void clear()
+    void clear()
     {
 	vertices.clear();
     }
@@ -79,7 +79,7 @@ public class OnScreenLineTracker
     {
 	if (vertices.size() < 2)
 	    return new OnScreenLine[0];
-	OnScreenLine[] lines = new OnScreenLine[vertices.size() / 2];
+	final OnScreenLine[] lines = new OnScreenLine[vertices.size() / 2];
 	for(int i = 0;i < vertices.size() / 2;i++)
 	{
 	    if (!vertices.get(2 * i).followed || vertices.get((2 * i) + 1).followed ||
@@ -119,9 +119,9 @@ public class OnScreenLineTracker
 	}
 	if (offset > 0)
 	{
-	    for(int i = offset;i < vertices.size();i++)
-		vertices.set(i - offset, vertices.get(i));
-		vertices.setSize(vertices.size() - offset);
+	    final List<Vertex> t = vertices.subList(offset, vertices.size());
+	    vertices.clear();
+	    vertices.addAll(t);
 	}
 	if (vertices.size() < 2)
 	    return;
@@ -133,7 +133,9 @@ public class OnScreenLineTracker
 		offset++; else
 		vertices.set(i - offset, vertices.get(i));
 	}
-	vertices.setSize(vertices.size() - offset);
+	final List<Vertex> t = vertices.subList(0, vertices.size() - offset);
+	vertices.clear();
+	vertices.addAll(t);
 	if (!vertices.isEmpty() && (vertices.size() % 2) != 0)
 	{
 	    Log.warning("interaction", "on screen lines tracking has odd vertex count:" + vertices.size() + ", clearing content");
