@@ -244,63 +244,27 @@ int y)
 	return res;
     }
 
-    @Override public void showGraphical(Object obj)
+    @Override public void showGraphical(GraphicalMode graphicalMode)
     {
-	NullCheck.notNull(obj, "obj");
+	NullCheck.notNull(graphicalMode, "graphicalMode");
+	final AtomicReference<RuntimeException> ex = new AtomicReference();
+FxThread.runSync(()->{
+final Object obj = graphicalMode.getGraphicalObj();
+if (obj == null)
+{
+    ex.set(new NullPointerException("getGraphicalObj() returned null"));
+    return;
+}
 	if (!(obj instanceof javafx.scene.Node))
-	    throw new ClassCastException("The object must be an instance of javafx.scene.Node");
+	{
+	    ex.set(new ClassCastException("getGraphicalObj() returned not an instance of javafx.scene.Node"));
+	    return;
+	}
 	app.putNew((javafx.scene.Node)obj);
 	this.graphicalMode = true;
-    }
-
-    @Override public GraphicalMode openGraphicalMode(String modeName, GraphicalMode.Params params)
-    {
-	NullCheck.notEmpty(modeName, "modeName");
-	NullCheck.notNull(params, "params");
-	switch(modeName.toUpperCase())
-	{
-	case "BROWSER": 
-	    /*
-{
-	    final AtomicReference res = new AtomicReference();
-	    Utils.runInFxThreadSync(()->{
-		    try {
-			final org.luwrain.browser.BrowserParams browserParams = (org.luwrain.browser.BrowserParams)params;
-			final Browser browser = new Browser(this, browserParams);
-			final boolean wasEmpty = browsers.isEmpty();
-			this.browsers.add(browser);
-			app.putNew(browser.webView);
-			if(wasEmpty) 
-			    setCurrentBrowser(browser, false);
-			res.set(browser);
-		    }
-		    catch(Throwable e)
-		    {
-			res.set(e);
-		    }
-		});
-	    if (res.get() == null)
-		return null;
-	    if (res.get() instanceof Browser)
-		return (Browser)res.get();
-	    if (res.get() instanceof Throwable)
-		throw new RuntimeException((Throwable)res.get());
-	    return null;
-	}
-	    */
-	    return null;
-	case "PDF": {
-	    /*
-	    final PdfPreview preview = new PdfPreview(this, params);
-	    preview.init();
-	    return preview;
-	    */
-	    return null;
-	}
-	default:
-	    Log.error(LOG_COMPONENT, "unknown graphical mode name: " + modeName);
-	    return null;
-	}
+    });
+if (ex.get() != null)
+    throw ex.get();
     }
 
     // change current page to curPage, if it null, change previous current page to not visible
