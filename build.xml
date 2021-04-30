@@ -27,9 +27,6 @@
       <fileset dir="./build/main">
         <include name="**/*.class"/>
       </fileset>
-      <fileset dir="./src/main/resources">
-	<include name="**/*.js"/>
-      </fileset>
     </jar>
   </target>
     <target name="compile-test" depends="jar">

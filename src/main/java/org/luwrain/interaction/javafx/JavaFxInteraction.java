@@ -36,7 +36,7 @@ import javafx.scene.web.WebView;
 import org.luwrain.core.*;
 import org.luwrain.base.*;
 import org.luwrain.util.*;
-import org.luwrain.graphical.javafx.*;
+import org.luwrain.graphical.*;
 
 public final class JavaFxInteraction implements Interaction
 {
@@ -75,10 +75,10 @@ public final class JavaFxInteraction implements Interaction
 		int wndHeight = params.wndHeight;
 		app.setInteractionFont(createFont(currentFontSize),createFont2(currentFontSize));
 		app.setColors(
-			      Utils.InteractionParamColorToFx(params.fontColor),
-			      Utils.InteractionParamColorToFx(params.font2Color),
-			      Utils.InteractionParamColorToFx(params.bkgColor),
-			      Utils.InteractionParamColorToFx(params.splitterColor));
+			      ColorUtils.InteractionParamColorToFx(params.fontColor),
+			      ColorUtils.InteractionParamColorToFx(params.font2Color),
+			      ColorUtils.InteractionParamColorToFx(params.bkgColor),
+			      ColorUtils.InteractionParamColorToFx(params.splitterColor));
 		app.setMargin(params.marginLeft,params.marginTop,params.marginRight,params.marginBottom);
 		this.keyboard = os.getCustomKeyboardHandler("javafx");
 		app.getStage().addEventHandler(KeyEvent.KEY_PRESSED, (event)->{
@@ -140,7 +140,7 @@ public final class JavaFxInteraction implements Interaction
 
     @Override public boolean setDesirableFontSize(int size)
     {
-	final Object res = Utils.callInFxThreadSync(()->{
+	final Object res = FxThread.call(()->{
 		final Font oldFont = app.getInteractionFont();
 		final Font oldFont2 = app.getInteractionFont2();
 		final Font probeFont = createFont(size);
@@ -200,14 +200,14 @@ public final class JavaFxInteraction implements Interaction
     {
 	drawingInProgress = false;
 	if (!graphicalMode)
-	    Utils.runInFxThreadAsync(()->app.paint());
+	    FxThread.runAsync(()->app.paint());
     }
 
     @Override public void setHotPoint(final int x,final int y)
     {
 	app.setHotPoint(x, y);
 	if(!drawingInProgress) 
-	    Utils.runInFxThreadAsync(()->app.paint());
+	    FxThread.runAsync(()->app.paint());
     }
 
     @Override public void drawVerticalLine(int top, int bottom,
@@ -333,7 +333,7 @@ int y)
         void registerCanvas(ResizableCanvas canvas)
     {
 	NullCheck.notNull(canvas, "canvas");
-	InvalidThreadException.checkThread("JavaFxInteraction.registerBrowser()");
+	FxThread.ensure();
 	app.putNew(canvas);
     }
 

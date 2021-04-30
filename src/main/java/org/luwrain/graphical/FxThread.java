@@ -1,5 +1,5 @@
 /*
-   Copyright 2012-2020 Michael Pozhidaev <msp@luwrain.org>
+   Copyright 2012-2021 Michael Pozhidaev <msp@luwrain.org>
    Copyright 2015-2016 Roman Volovodov <gr.rPman@gmail.com>
 
    This file is part of LUWRAIN.
@@ -15,29 +15,24 @@
    General Public License for more details.
 */
 
-package org.luwrain.interaction.javafx;
+package org.luwrain.graphical;
 
+import java.util.concurrent.*;
 import javafx.application.Platform;
-import javafx.scene.paint.Color;
-
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.FutureTask;
 
 import org.luwrain.core.*;
-import org.luwrain.base.InteractionParamColor;
 
-public class Utils
+public final class FxThread
 {
-    static private final String LOG_COMPONENT = JavaFxInteraction.LOG_COMPONENT;
+    static private final String LOG_COMPONENT = "fx";
 
-    static public void ensureFxThread()
+    static public void ensure()
     {
 		if(!Platform.isFxApplicationThread())
 		    throw new IllegalStateException("Execution in non-jfx thread");
     }
 
-    static public Object callInFxThreadSync(Callable callable)
+    static public Object call(Callable callable)
     {
 	NullCheck.notNull(callable, "callable");
 	if(Platform.isFxApplicationThread())
@@ -46,7 +41,7 @@ public class Utils
 	    }
 	    catch(Throwable e) 
 	    {
-		Log.error(LOG_COMPONENT, "callable object thrown an exception:" + e.getClass().getName() + ":" + e.getMessage());
+		Log.error(LOG_COMPONENT, "callable object thrown an exception: " + e.getClass().getName() + ": " + e.getMessage());
 		throw new RuntimeException(e);
 	    }
 	final FutureTask<Object> query=new FutureTask<Object>(callable);
@@ -61,12 +56,12 @@ public class Utils
 	}
 	catch(ExecutionException e) 
 	{
-	    Log.error(LOG_COMPONENT, "execution exception in callable object processing:" + e.getClass().getName() + ":" + e.getMessage());
+	    Log.error(LOG_COMPONENT, "execution exception during processing of the callable object: " + e.getClass().getName() + ": " + e.getMessage());
 	    throw new RuntimeException(e);
 	}
     }
 
-    static public void runInFxThreadSync(Runnable runnable)
+    static public void runSync(Runnable runnable)
     {
 	NullCheck.notNull(runnable, "runnable");
 	if(Platform.isFxApplicationThread())
@@ -97,7 +92,7 @@ public class Utils
 	}
     }
 
-    static public void runInFxThreadAsync(Runnable runnable)
+    static public void runAsync(Runnable runnable)
     {
 	NullCheck.notNull(runnable, "runnable");
 	if(Platform.isFxApplicationThread())
@@ -113,29 +108,5 @@ public class Utils
 	final FutureTask<Object> query=new FutureTask<Object>(runnable, null);
 	Platform.runLater(query);
 	return;
-    }
-
-    static Color InteractionParamColorToFx(InteractionParamColor ipc)
-    {
-	if(ipc.getPredefined()==null)
-	    return new Color(ipc.getRed()/256,ipc.getGreen()/256,ipc.getBlue()/256,1);
-	switch(ipc.getPredefined())
-	{
-	case BLACK:		return Color.BLACK;
-	case BLUE:		return Color.BLUE;
-	case CYAN:		return Color.CYAN;
-	case DARK_GRAY:	return Color.DARKGRAY;
-	case GRAY:		return Color.GRAY;
-	case GREEN:		return Color.GREEN;
-	case LIGHT_GRAY:return Color.LIGHTGRAY;
-	case MAGENTA:	return Color.MAGENTA;
-	case ORANGE:	return Color.ORANGE;
-	case PINK:		return Color.PINK;
-	case RED:		return Color.RED;
-	case WHITE:		return Color.WHITE;
-	case YELLOW:	return Color.YELLOW;	
-	    // WARN: not predefined colors have opacity = 1
-	default: 		return new Color(ipc.getRed()/256,ipc.getGreen()/256,ipc.getBlue()/256,1);
-	}
     }
 }

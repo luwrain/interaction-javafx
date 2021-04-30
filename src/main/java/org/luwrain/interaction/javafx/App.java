@@ -29,7 +29,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.*;
 
 import org.luwrain.core.*;
-import org.luwrain.graphical.javafx.*;
+import org.luwrain.graphical.*;
 
 public final class App extends Application
 {
@@ -98,7 +98,7 @@ public final class App extends Application
 
     synchronized boolean initTable()
     {
-	InvalidThreadException.checkThread("MainApp.initTable()");
+	FxThread.ensure();
 	double width = canvasWidth;
 	double height = canvasHeight;
 	if (width < marginLeft + marginRight)
@@ -168,7 +168,7 @@ public final class App extends Application
 
     void setSizeAndShow(int width, int height)
     {
-	InvalidThreadException.checkThread("App.setSizeAndShow()");
+	FxThread.ensure();
     	this.canvasWidth = width;
     	this.canvasHeight = height;
     	this.rootPane.resize(width, height);
@@ -178,7 +178,7 @@ public final class App extends Application
 
     void setUndecoratedSizeAndShow(double width, double height)
     {
-	InvalidThreadException.checkThread("App.setUndecoratedSizeAndShow()");
+	FxThread.ensure();
     	this.canvasWidth = width;
     	this.canvasHeight = height;
     	this.rootPane.resize(width, height);
@@ -240,7 +240,7 @@ public final class App extends Application
 
     synchronized void paint()
     {
-	InvalidThreadException.checkThread("MainApp.paint()");
+	FxThread.ensure();
 	final double fontWidth = charBounds.getWidth();
 	final double fontHeight = charBounds.getHeight();
 	if(table==null)
