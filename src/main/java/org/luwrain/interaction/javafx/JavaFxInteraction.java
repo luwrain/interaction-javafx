@@ -40,17 +40,14 @@ import org.luwrain.graphical.*;
 
 public final class JavaFxInteraction implements Interaction
 {
-    static final String LOG_COMPONENT = "javafx";
+    static final String LOG_COMPONENT = "fx";
     static private final int MIN_FONT_SIZE = 4;
 
+    private App app = null;
     private org.luwrain.interaction.KeyboardHandler keyboard;
     private boolean drawingInProgress = false;
     private int currentFontSize = 14;
     private String fontName = "Monospaced";
-    private App app = null;
-
-    //    private final List<Browser> browsers = new Vector();
-    //    private Browser currentBrowser = null;
     private boolean graphicalMode = false;
 
     @Override public boolean init(final InteractionParams params,final OperatingSystem os)
@@ -232,7 +229,41 @@ int y)
 	    app.drawHorizontalLine(left, right, y);
     }
 
-    private Font createFont(int desirableFontSize)
+    @Override public void showGraphical(GraphicalMode graphicalMode)
+    {
+	NullCheck.notNull(graphicalMode, "graphicalMode");
+	if (this.graphicalMode)
+	    throw new IllegalStateException("Already in graphical mode");
+	final AtomicReference<RuntimeException> ex = new AtomicReference();
+	final AtomicReference<javafx.scene.Node> node = new AtomicReference();
+	FxThread.runSync(()->{
+		final Object obj = graphicalMode.getGraphicalObj(()->{
+			if (node.get() != null)
+			    FxThread.runSync(()->{
+				    app.remove(node.get());
+				    this.graphicalMode = false;
+				});
+			throw new IllegalStateException("There is no node of the opened graphical mode");
+		    });
+		if (obj == null)
+		{
+		    ex.set(new NullPointerException("getGraphicalObj() returned null"));
+		    return;
+		}
+		if (!(obj instanceof javafx.scene.Node))
+		{
+		    ex.set(new ClassCastException("getGraphicalObj() returned not an instance of javafx.scene.Node"));
+		    return;
+		}
+		node.set((javafx.scene.Node)obj);
+		app.putNew(node.get());
+		this.graphicalMode = true;
+	    });
+	if (ex.get() != null)
+	    throw ex.get();
+    }
+
+        private Font createFont(int desirableFontSize)
     {
 	final Font res = Font.font(fontName,desirableFontSize);
 	return res;
@@ -242,79 +273,5 @@ int y)
     {
 	final Font res = Font.font(fontName, javafx.scene.text.FontWeight.BOLD, desirableFontSize);
 	return res;
-    }
-
-    @Override public void showGraphical(GraphicalMode graphicalMode)
-    {
-	NullCheck.notNull(graphicalMode, "graphicalMode");
-	final AtomicReference<RuntimeException> ex = new AtomicReference();
-FxThread.runSync(()->{
-final Object obj = graphicalMode.getGraphicalObj();
-if (obj == null)
-{
-    ex.set(new NullPointerException("getGraphicalObj() returned null"));
-    return;
-}
-	if (!(obj instanceof javafx.scene.Node))
-	{
-	    ex.set(new ClassCastException("getGraphicalObj() returned not an instance of javafx.scene.Node"));
-	    return;
-	}
-	app.putNew((javafx.scene.Node)obj);
-	this.graphicalMode = true;
-    });
-if (ex.get() != null)
-    throw ex.get();
-    }
-
-    // change current page to curPage, if it null, change previous current page to not visible
-    /*
-    private void setCurrentBrowser(Browser newCurrentBrowser, boolean visibility)
-    {
-	if(currentBrowser != null)
-	    currentBrowser.setVisibility(false);
-	currentBrowser = newCurrentBrowser;
-	if(currentBrowser != null)
-	    currentBrowser.setVisibility(visibility);
-    }
-    */
-
-    /*
-    public void closeBrowser(Browser browser)
-    {
-	NullCheck.notNull(browser, "browser");
-	Utils.runInFxThreadSync(()->{
-		final int pos = browsers.indexOf(browser);
-		if (pos < 0)
-		    return;
-		browsers.remove(this);
-		app.remove(browser.webView);
-		//FIXME:choosing another current browser
-	    });
-    }
-    */
-
-        void registerCanvas(ResizableCanvas canvas)
-    {
-	NullCheck.notNull(canvas, "canvas");
-	FxThread.ensure();
-	app.putNew(canvas);
-    }
-
-void closeCanvas(ResizableCanvas canvas)
-    {
-	NullCheck.notNull(canvas, "canvas");
-		app.remove(canvas);
-    }
-
-    public void  enableGraphicalMode()
-    {
-	this.graphicalMode = true;
-    }
-
-    public void disableGraphicalMode()
-    {
-	this.graphicalMode = false;
-	app.getStage().requestFocus();
     }
 }
