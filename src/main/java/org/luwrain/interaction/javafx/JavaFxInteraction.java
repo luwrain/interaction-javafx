@@ -1,5 +1,5 @@
 /*
-   Copyright 2012-2020 Michael Pozhidaev <msp@luwrain.org>
+   Copyright 2012-2021 Michael Pozhidaev <msp@luwrain.org>
    Copyright 2015-2016 Roman Volovodov <gr.rPman@gmail.com>
 
    This file is part of LUWRAIN.
@@ -17,21 +17,14 @@
 
 package org.luwrain.interaction.javafx;
 
-import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
 
-import java.io.*;
-
-import javafx.stage.Screen;
 import javafx.application.Platform;
-import javafx.event.EventHandler;
+import javafx.stage.Screen;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.input.KeyEvent;
-import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
-import javafx.embed.swing.SwingNode;
-import javafx.scene.web.WebView;
 
 import org.luwrain.core.*;
 import org.luwrain.base.*;
