@@ -18,7 +18,7 @@
 package org.luwrain.interaction.javafx;
 
 import javafx.scene.paint.Color;
-import org.luwrain.base.InteractionParamColor;
+import org.luwrain.core.InteractionParamColor;
 
 final class ColorUtils
 {

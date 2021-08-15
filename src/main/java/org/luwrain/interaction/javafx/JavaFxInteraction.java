@@ -27,7 +27,6 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.text.Font;
 
 import org.luwrain.core.*;
-import org.luwrain.base.*;
 import org.luwrain.util.*;
 import org.luwrain.graphical.*;
 
