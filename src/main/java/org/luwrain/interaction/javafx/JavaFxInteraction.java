@@ -58,7 +58,7 @@ public final class JavaFxInteraction implements Interaction
 	 */
 	new Thread(new ThreadControl()).start();
 	this.app = ThreadControl.waitAppStart();
-	final FutureTask<Boolean> task = new FutureTask(()->{
+	final FutureTask<Boolean> task = new FutureTask<>(()->{
 		this.currentFontSize = params.initialFontSize;
 		int wndWidth = params.wndWidth;
 		int wndHeight = params.wndHeight;
@@ -226,8 +226,8 @@ int y)
 	NullCheck.notNull(graphicalMode, "graphicalMode");
 	if (this.graphicalMode)
 	    throw new IllegalStateException("Already in graphical mode");
-	final AtomicReference<RuntimeException> ex = new AtomicReference();
-	final AtomicReference<javafx.scene.Node> node = new AtomicReference();
+	final AtomicReference<RuntimeException> ex = new AtomicReference<>();
+	final AtomicReference<javafx.scene.Node> node = new AtomicReference<>();
 	FxThread.runSync(()->{
 		final Object obj = graphicalMode.getGraphicalObj(()->{
 			if (node.get() != null)

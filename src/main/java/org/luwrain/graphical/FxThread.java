@@ -32,7 +32,7 @@ public final class FxThread
 		    throw new IllegalStateException("Execution in non-jfx thread");
     }
 
-    static public Object call(Callable callable)
+    static public Object call(Callable<Object> callable)
     {
 	NullCheck.notNull(callable, "callable");
 	if(Platform.isFxApplicationThread())

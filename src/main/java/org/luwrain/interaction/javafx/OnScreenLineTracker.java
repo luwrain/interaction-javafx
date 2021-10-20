@@ -34,7 +34,7 @@ final class OnScreenLineTracker
 	}
     }
 
-    private ArrayList<Vertex> vertices = new ArrayList();
+    private ArrayList<Vertex> vertices = new ArrayList<>();
 
     void cover(int pos1, int pos2)
     {
@@ -119,7 +119,7 @@ final class OnScreenLineTracker
 	}
 	if (offset > 0)
 	{
-	    vertices = new ArrayList(vertices.subList(offset, vertices.size()));
+	    vertices = new ArrayList<>(vertices.subList(offset, vertices.size()));
 	}
 	if (vertices.size() < 2)
 	    return;
@@ -131,7 +131,7 @@ final class OnScreenLineTracker
 		offset++; else
 		vertices.set(i - offset, vertices.get(i));
 	}
-	vertices = new ArrayList(vertices.subList(0, vertices.size() - offset));
+	vertices = new ArrayList<>(vertices.subList(0, vertices.size() - offset));
 	if (!vertices.isEmpty() && (vertices.size() % 2) != 0)
 	{
 	    Log.warning("interaction", "on screen lines tracking has odd vertex count:" + vertices.size() + ", clearing content");
