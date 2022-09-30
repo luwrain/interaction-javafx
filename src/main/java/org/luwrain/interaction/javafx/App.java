@@ -338,6 +338,7 @@ public final class App extends Application
 	rootPane.getChildren().add(node);
 	if (node instanceof ResizableCanvas)
 	    ((ResizableCanvas)node).bindWidthAndHeight(rootPane);
+	node.requestFocus();
     }
 
     void remove(Node node)
