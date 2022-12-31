@@ -65,13 +65,8 @@ public final class FxThread
     {
 	NullCheck.notNull(runnable, "runnable");
 	if(Platform.isFxApplicationThread())
-	    try {
+	{
 		runnable.run();
-	    	return;
-	    }
-	    catch(Throwable e) 
-	    {
-		Log.error(LOG_COMPONENT, "runnable object thrown an exception:" + e.getClass().getName() + ":" + e.getMessage());
 	    	return;
 	    }
 	final FutureTask<Object> query=new FutureTask<Object>(runnable, null);
@@ -87,7 +82,6 @@ public final class FxThread
 	}
 	catch(ExecutionException e) 
 	{
-	    Log.error(LOG_COMPONENT, "execution exception in runnable object processing:" + e.getClass().getName() + ":" + e.getMessage());
 	    throw new RuntimeException(e);
 	}
     }
