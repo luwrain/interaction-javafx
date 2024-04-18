@@ -1,5 +1,5 @@
 /*
-   Copyright 2012-2021 Michael Pozhidaev <msp@luwrain.org>
+   Copyright 2012-2024 Michael Pozhidaev <msp@luwrain.org>
    Copyright 2015-2016 Roman Volovodov <gr.rPman@gmail.com>
 
    This file is part of LUWRAIN.
@@ -234,7 +234,7 @@ int y)
 			    FxThread.runSync(()->{
 				    app.remove(node.get());
 				    this.graphicalMode = false;
-				});
+				}); else
 			throw new IllegalStateException("There is no node of the opened graphical mode");
 		    });
 		if (obj == null)
